@@ -58,28 +58,23 @@ pType =
 ------------
 -- tokens --
 ------------
-lineComment :: Parser ()
+lineComment, blockComment :: Parser ()
 lineComment = L.skipLineComment "//"
+blockComment = empty
 
-scn :: Parser ()
-scn = L.space space1 lineComment empty
-
-sc :: Parser ()
-sc = L.space hspace1 lineComment empty
+scn, sc :: Parser ()
+scn = L.space space1 lineComment blockComment
+sc = L.space hspace1 lineComment blockComment
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 
-symbol :: String -> Parser String
-symbol = L.symbol sc
+symbol :: String -> Parser ()
+symbol s = L.symbol sc s *> return ()
 
-parens :: Parser a -> Parser a
+parens, brackets, braces :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
-
-brackets :: Parser a -> Parser a
 brackets = between (symbol "[") (symbol "]")
-
-braces :: Parser a -> Parser a
 braces = between (symbol "{") (symbol "}")
 
 keyword :: String -> Parser ()
