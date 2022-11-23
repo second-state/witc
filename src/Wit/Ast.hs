@@ -15,4 +15,5 @@ data Type
   | PrimI32
   | PrimI64
   | Optional Type
+  | ListTy Type
   deriving (Show, Eq)

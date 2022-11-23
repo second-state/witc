@@ -31,16 +31,16 @@ pType :: Parser Type
 pType =
   do
     try optionalTy
+    <|> try listTy
     <|> primitiveTy
   where
-    optionalTy :: Parser Type
+    listTy, optionalTy, primitiveTy :: Parser Type
+    listTy = do
+      keyword "list"
+      ListTy <$> angles pType
     optionalTy = do
       keyword "optional"
-      symbol "<"
-      ty <- pType
-      symbol ">"
-      return $ Optional ty
-    primitiveTy :: Parser Type
+      Optional <$> angles pType
     primitiveTy = do
       name <- identifier
       case name of
@@ -71,10 +71,14 @@ lexeme = L.lexeme whitespace
 symbol :: String -> Parser ()
 symbol s = L.symbol whitespace s *> return ()
 
-parens, brackets, braces :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
-brackets = between (symbol "[") (symbol "]")
-braces = between (symbol "{") (symbol "}")
+wrap :: String -> String -> (Parser a -> Parser a)
+wrap l r = between (symbol l) (symbol r)
+
+parens, brackets, braces, angles :: Parser a -> Parser a
+parens = wrap "(" ")"
+brackets = wrap "[" "]"
+braces = wrap "{" "}"
+angles = wrap "<" ">"
 
 keyword :: String -> Parser ()
 keyword kw = do
