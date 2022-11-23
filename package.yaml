@@ -1,7 +1,7 @@
 name: witc
 version: 0.1.0.0
 github: "second-state/witc"
-license: APACHE2
+license: Apache-2.0
 author: "secondstate"
 maintainer:
   - "dannypsnl@secondstate.io"
@@ -36,10 +36,11 @@ ghc-options:
   - -Wpartial-fields
   - -Wredundant-constraints
 
+default-extensions:
+  - ImportQualifiedPost
+
 library:
   source-dirs: src
-  default-extensions:
-    - ImportQualifiedPost
 
 executables:
   witc-exe:
@@ -62,3 +63,5 @@ tests:
       - -with-rtsopts=-N
     dependencies:
       - witc
+      - hspec
+      - hspec-megaparsec
