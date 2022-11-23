@@ -1,7 +1,8 @@
 module Wit.Ast (TypeDefinition (..), Type (..)) where
 
 data TypeDefinition
-  = Record String [(String, Type)]
+  = Record String [(String, Type)] -- record event { specversion: string, ty: string }
+  | TypeAlias String Type -- type payload = list<u8>
   deriving (Show, Eq)
 
 data Type
@@ -16,4 +17,5 @@ data Type
   | PrimI64
   | Optional Type
   | ListTy Type
+  | TupleTy [Type]
   deriving (Show, Eq)

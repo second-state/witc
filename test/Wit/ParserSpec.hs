@@ -11,7 +11,7 @@ spec = describe "parse type definitions" $ do
   context "record" $ do
     it "simple" $ do
       let input = "record person { name: string, email: optional<string> }"
-      parse pRecord "" input `shouldParse` (Record "person" [("name", PrimString), ("email", Optional PrimString)])
+      parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString)]
     it "cross-line" $ do
       let input =
             unlines
@@ -20,4 +20,11 @@ spec = describe "parse type definitions" $ do
                 "  email: optional<string>",
                 "}"
               ]
-      parse pRecord "" input `shouldParse` (Record "person" [("name", PrimString), ("email", Optional PrimString)])
+      parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString)]
+  context "type alias" $ do
+    it "payload is list<u8>" $ do
+      let input = "type payload = list<u8>"
+      parse pTypeAlias "" input `shouldParse` TypeAlias "payload" (ListTy PrimU8)
+    it "map is a pair list" $ do
+      let input = "type map = list<tuple<string, string>>"
+      parse pTypeAlias "" input `shouldParse` TypeAlias "map" (ListTy (TupleTy [PrimString, PrimString]))

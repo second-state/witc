@@ -1,5 +1,6 @@
 module Wit.Parser
   ( pRecord,
+    pTypeAlias,
   )
 where
 
@@ -13,7 +14,7 @@ import Wit.Ast
 
 type Parser = Parsec Void String
 
-pRecord :: Parser TypeDefinition
+pRecord, pTypeAlias :: Parser TypeDefinition
 pRecord = do
   keyword "record"
   record_name <- identifier
@@ -26,15 +27,25 @@ pRecord = do
       symbol ":"
       ty <- pType
       return (field_name, ty)
+pTypeAlias = do
+  keyword "type"
+  name <- identifier
+  symbol "="
+  ty <- pType
+  return $ TypeAlias name ty
 
 pType :: Parser Type
 pType =
   do
-    try optionalTy
+    try tupleTy
     <|> try listTy
+    <|> try optionalTy
     <|> primitiveTy
   where
-    listTy, optionalTy, primitiveTy :: Parser Type
+    tupleTy, listTy, optionalTy, primitiveTy :: Parser Type
+    tupleTy = do
+      keyword "tuple"
+      TupleTy <$> (angles $ sepBy1 pType (symbol ","))
     listTy = do
       keyword "list"
       ListTy <$> angles pType
@@ -82,7 +93,7 @@ angles = wrap "<" ">"
 
 keyword :: String -> Parser ()
 keyword kw = do
-  _ <- string kw <?> "keyword: `" ++ kw ++ "`"
+  _ <- string kw <?> ("keyword: `" ++ kw ++ "`")
   (takeWhile1P Nothing isAlphaNum *> empty) <|> whitespace
 
 identifier :: Parser String
