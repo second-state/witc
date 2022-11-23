@@ -10,5 +10,14 @@ spec :: Spec
 spec = describe "parse type definitions" $ do
   context "record" $ do
     it "simple" $ do
-      let input = "record person { name: string, email: optional<string>}"
+      let input = "record person { name: string, email: optional<string> }"
+      parse pRecord "" input `shouldParse` (Record "person" [("name", PrimString), ("email", Optional PrimString)])
+    it "cross-line" $ do
+      let input =
+            unlines
+              [ "record person {",
+                "  name: string,",
+                "  email: optional<string>",
+                "}"
+              ]
       parse pRecord "" input `shouldParse` (Record "person" [("name", PrimString), ("email", Optional PrimString)])

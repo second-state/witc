@@ -62,15 +62,14 @@ lineComment, blockComment :: Parser ()
 lineComment = L.skipLineComment "//"
 blockComment = empty
 
-scn, sc :: Parser ()
-scn = L.space space1 lineComment blockComment
-sc = L.space hspace1 lineComment blockComment
+whitespace :: Parser ()
+whitespace = L.space space1 lineComment blockComment
 
 lexeme :: Parser a -> Parser a
-lexeme = L.lexeme sc
+lexeme = L.lexeme whitespace
 
 symbol :: String -> Parser ()
-symbol s = L.symbol sc s *> return ()
+symbol s = L.symbol whitespace s *> return ()
 
 parens, brackets, braces :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
@@ -79,14 +78,14 @@ braces = between (symbol "{") (symbol "}")
 
 keyword :: String -> Parser ()
 keyword kw = do
-  _ <- string kw
-  (takeWhile1P Nothing isAlphaNum *> empty) <|> scn
+  _ <- string kw <?> "keyword: `" ++ kw ++ "`"
+  (takeWhile1P Nothing isAlphaNum *> empty) <|> whitespace
 
 identifier :: Parser String
 identifier = do
   x <- takeWhile1P Nothing isValidChar
   guard (not (isKeyword x))
-  x <$ scn
+  x <$ whitespace
   where
     isValidChar :: Char -> Bool
     isValidChar '-' = True
