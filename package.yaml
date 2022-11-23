@@ -38,6 +38,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  default-extensions:
+    - ImportQualifiedPost
 
 executables:
   witc-exe:

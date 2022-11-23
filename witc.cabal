@@ -27,11 +27,14 @@ source-repository head
 library
   exposed-modules:
       Wit
+      Wit.Ast
       Wit.Parse
   other-modules:
       Paths_witc
   hs-source-dirs:
       src
+  default-extensions:
+      ImportQualifiedPost
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
