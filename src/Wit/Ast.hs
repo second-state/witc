@@ -1,7 +1,14 @@
-module Wit.Ast (TypeDefinition (..), Type (..)) where
+module Wit.Ast (WitFile(..), TypeDefinition (..), Type (..)) where
+
+import Text.Megaparsec
+
+data WitFile = WitFile
+  { type_definition_list :: [TypeDefinition]
+  }
 
 data TypeDefinition
-  = Record String [(String, Type)] -- record event { specversion: string, ty: string }
+  = SrcPos SourcePos TypeDefinition
+  | Record String [(String, Type)] -- record event { specversion: string, ty: string }
   | TypeAlias String Type -- type payload = list<u8>
   | Variant String [(String, [Type])]
   deriving (Show, Eq)

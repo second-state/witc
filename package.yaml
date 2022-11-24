@@ -38,6 +38,9 @@ ghc-options:
 
 default-extensions:
   - ImportQualifiedPost
+  - DuplicateRecordFields
+  - OverloadedRecordDot
+  - LambdaCase
 
 library:
   source-dirs: src

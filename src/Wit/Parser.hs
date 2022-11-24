@@ -15,6 +15,17 @@ import Wit.Ast
 
 type Parser = Parsec Void String
 
+pWitFile :: Parser WitFile
+pWitFile = do
+  ty_def_list <- many $ withPos pTypeDefinition
+  return WitFile { type_definition_list = ty_def_list }
+
+pTypeDefinition :: Parser TypeDefinition
+pTypeDefinition =
+  try pRecord
+  <|> try pTypeAlias
+  <|> try pVariant
+
 pRecord, pTypeAlias, pVariant :: Parser TypeDefinition
 pRecord = do
   keyword "record"
@@ -79,6 +90,12 @@ pType =
         "i32" -> return PrimI32
         "i64" -> return PrimI64
         name -> return $ User name
+
+------------
+-- helper --
+------------
+withPos :: Parser TypeDefinition -> Parser TypeDefinition
+withPos p = SrcPos <$> getSourcePos <*> p
 
 ------------
 -- tokens --
