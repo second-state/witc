@@ -64,7 +64,7 @@ pType =
       keyword "list"
       ListTy <$> angles pType
     optionalTy = do
-      keyword "optional"
+      keyword "option"
       Optional <$> angles pType
     primitiveTy = do
       name <- identifier
@@ -78,7 +78,7 @@ pType =
         "i16" -> return PrimI16
         "i32" -> return PrimI32
         "i64" -> return PrimI64
-        _ -> error "not primitive"
+        name -> return $ User name
 
 ------------
 -- tokens --

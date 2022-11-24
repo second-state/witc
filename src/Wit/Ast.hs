@@ -19,4 +19,6 @@ data Type
   | Optional Type
   | ListTy Type
   | TupleTy [Type]
+  -- user defined types
+  | User String
   deriving (Show, Eq)
