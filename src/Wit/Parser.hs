@@ -1,6 +1,7 @@
 module Wit.Parser
   ( pRecord,
     pTypeAlias,
+    pVariant,
   )
 where
 
@@ -14,7 +15,7 @@ import Wit.Ast
 
 type Parser = Parsec Void String
 
-pRecord, pTypeAlias :: Parser TypeDefinition
+pRecord, pTypeAlias, pVariant :: Parser TypeDefinition
 pRecord = do
   keyword "record"
   record_name <- identifier
@@ -33,6 +34,19 @@ pTypeAlias = do
   symbol "="
   ty <- pType
   return $ TypeAlias name ty
+pVariant = do
+  keyword "variant"
+  name <- identifier
+  case_list <- braces $ sepBy pVariantCase (symbol ",")
+  return $ Variant name case_list
+  where
+    -- tag-name "(" type ("," type)* ")"
+    pVariantCase :: Parser (String, [Type])
+    pVariantCase = do
+      tag_name <- identifier
+      type_list <- parens $ sepBy pType (symbol ",")
+      return (tag_name, type_list)
+
 
 pType :: Parser Type
 pType =

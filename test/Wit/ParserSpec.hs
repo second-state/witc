@@ -28,3 +28,11 @@ spec = describe "parse type definitions" $ do
     it "map is a pair list" $ do
       let input = "type map = list<tuple<string, string>>"
       parse pTypeAlias "" input `shouldParse` TypeAlias "map" (ListTy (TupleTy [PrimString, PrimString]))
+  context "variant" $ do
+    it "an error variant" $ do
+      let input = unlines
+                    [ "variant error {",
+	                    "  error-with-description(string)",
+                      "}"
+                    ]
+      parse pVariant "" input `shouldParse` Variant "error" [("error-with-description", [PrimString])]
