@@ -19,7 +19,7 @@ pRecord, pTypeAlias, pVariant :: Parser TypeDefinition
 pRecord = do
   keyword "record"
   record_name <- identifier
-  field_list <- braces $ sepBy pRecordField (symbol ",")
+  field_list <- braces $ sepEndBy pRecordField (symbol ",")
   return $ Record record_name field_list
   where
     pRecordField :: Parser (String, Type)
@@ -37,7 +37,7 @@ pTypeAlias = do
 pVariant = do
   keyword "variant"
   name <- identifier
-  case_list <- braces $ sepBy pVariantCase (symbol ",")
+  case_list <- braces $ sepEndBy pVariantCase (symbol ",")
   return $ Variant name case_list
   where
     -- tag-name "(" type ("," type)* ")"

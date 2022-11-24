@@ -18,7 +18,7 @@ spec = describe "parse type definitions" $ do
               [ "record person {",
                 "  name: string,",
                 "  email: option<string>,",
-                "  data: option<payload>",
+                "  data: option<payload>,",
                 "}"
               ]
       parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString), ("data", Optional $ User "payload")]
