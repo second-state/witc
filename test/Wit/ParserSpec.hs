@@ -21,6 +21,9 @@ spec = describe "parse type definitions" $ do
                 "}"
               ]
       parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString)]
+    it "no fields record" $ do
+      let input = "record person {}"
+      parse pRecord "" input `shouldParse` Record "person" []
   context "type alias" $ do
     it "payload is list<u8>" $ do
       let input = "type payload = list<u8>"

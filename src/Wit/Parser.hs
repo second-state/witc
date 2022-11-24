@@ -19,7 +19,7 @@ pRecord, pTypeAlias, pVariant :: Parser TypeDefinition
 pRecord = do
   keyword "record"
   record_name <- identifier
-  field_list <- braces $ sepBy1 pRecordField (symbol ",")
+  field_list <- braces $ sepBy pRecordField (symbol ",")
   return $ Record record_name field_list
   where
     pRecordField :: Parser (String, Type)
