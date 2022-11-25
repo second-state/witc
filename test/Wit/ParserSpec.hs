@@ -1,5 +1,7 @@
 module Wit.ParserSpec (spec) where
 
+import Control.Monad
+import System.IO
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
@@ -8,6 +10,11 @@ import Wit.Parser
 
 spec :: Spec
 spec = describe "parse wit" $ do
+  context "parse file" $ do
+    it "types.wit" $ do
+      handle <- openFile "test/slight-samples/types.wit" ReadMode
+      contents <- hGetContents handle
+      parse pWitFile "" `shouldSucceedOn` contents
   context "type definitions" $ do
     -- type definition check
     it "type defintion: record" $ do

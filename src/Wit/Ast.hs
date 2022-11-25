@@ -10,6 +10,7 @@ import Text.Megaparsec
 newtype WitFile = WitFile
   { type_definition_list :: [TypeDefinition]
   }
+  deriving (Show, Eq)
 
 data TypeDefinition
   = SrcPos SourcePos TypeDefinition
