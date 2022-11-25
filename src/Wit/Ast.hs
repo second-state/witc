@@ -1,5 +1,6 @@
 module Wit.Ast
   ( WitFile (..),
+    Use (..),
     TypeDefinition (..),
     Type (..),
   )
@@ -7,9 +8,13 @@ where
 
 import Text.Megaparsec
 
-newtype WitFile = WitFile
-  { type_definition_list :: [TypeDefinition]
+data WitFile = WitFile
+  { use_list :: [Use],
+    type_definition_list :: [TypeDefinition]
   }
+  deriving (Show, Eq)
+
+data Use = Use SourcePos [String] String
   deriving (Show, Eq)
 
 data TypeDefinition

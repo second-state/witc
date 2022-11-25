@@ -1,6 +1,8 @@
 module Wit.Parser
   ( -- file level parser
     pWitFile,
+    -- use statement
+    pUse,
     -- type definition
     pTypeDefinition,
     pRecord,
@@ -22,8 +24,17 @@ type Parser = Parsec Void String
 
 pWitFile :: Parser WitFile
 pWitFile = do
+  use_list <- many pUse
   ty_def_list <- many $ withPos pTypeDefinition
-  return WitFile {type_definition_list = ty_def_list}
+  return WitFile{ use_list = use_list, type_definition_list = ty_def_list}
+
+pUse :: Parser Use
+pUse = do
+  pos <- getSourcePos
+  keyword "use"
+  id_list <- braces $ sepEndBy identifier (symbol ",")
+  keyword "from"
+  Use pos id_list <$> identifier
 
 pTypeDefinition :: Parser TypeDefinition
 pTypeDefinition =
