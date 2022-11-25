@@ -128,10 +128,10 @@ pType =
         "u16" -> return PrimU16
         "u32" -> return PrimU32
         "u64" -> return PrimU64
-        "i8" -> return PrimI8
-        "i16" -> return PrimI16
-        "i32" -> return PrimI32
-        "i64" -> return PrimI64
+        "s8" -> return PrimI8
+        "s16" -> return PrimI16
+        "s32" -> return PrimI32
+        "s64" -> return PrimI64
         name' -> return $ User name'
 
 ------------
