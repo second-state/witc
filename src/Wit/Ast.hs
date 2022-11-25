@@ -1,8 +1,13 @@
-module Wit.Ast (WitFile(..), TypeDefinition (..), Type (..)) where
+module Wit.Ast
+  ( WitFile (..),
+    TypeDefinition (..),
+    Type (..),
+  )
+where
 
 import Text.Megaparsec
 
-data WitFile = WitFile
+newtype WitFile = WitFile
   { type_definition_list :: [TypeDefinition]
   }
 
@@ -26,6 +31,5 @@ data Type
   | Optional Type
   | ListTy Type
   | TupleTy [Type]
-  -- user defined types
-  | User String
+  | User String -- user defined types
   deriving (Show, Eq)

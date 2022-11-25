@@ -1,5 +1,9 @@
 module Wit.Parser
-  ( pRecord,
+  ( -- file level parser
+    pWitFile,
+    -- type definition
+    pTypeDefinition,
+    pRecord,
     pTypeAlias,
     pVariant,
   )
@@ -7,6 +11,7 @@ where
 
 import Control.Monad
 import Data.Char
+import Data.Functor
 import Data.Void
 import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
@@ -18,13 +23,15 @@ type Parser = Parsec Void String
 pWitFile :: Parser WitFile
 pWitFile = do
   ty_def_list <- many $ withPos pTypeDefinition
-  return WitFile { type_definition_list = ty_def_list }
+  return WitFile {type_definition_list = ty_def_list}
 
 pTypeDefinition :: Parser TypeDefinition
 pTypeDefinition =
-  try pRecord
-  <|> try pTypeAlias
-  <|> try pVariant
+  choice
+    [ pRecord,
+      pTypeAlias,
+      pVariant
+    ]
 
 pRecord, pTypeAlias, pVariant :: Parser TypeDefinition
 pRecord = do
@@ -43,8 +50,7 @@ pTypeAlias = do
   keyword "type"
   name <- identifier
   symbol "="
-  ty <- pType
-  return $ TypeAlias name ty
+  TypeAlias name <$> pType
 pVariant = do
   keyword "variant"
   name <- identifier
@@ -58,19 +64,19 @@ pVariant = do
       type_list <- parens $ sepBy pType (symbol ",")
       return (tag_name, type_list)
 
-
 pType :: Parser Type
 pType =
-  do
-    try tupleTy
-    <|> try listTy
-    <|> try optionalTy
-    <|> primitiveTy
+  choice
+    [ tupleTy,
+      listTy,
+      optionalTy,
+      primitiveTy
+    ]
   where
     tupleTy, listTy, optionalTy, primitiveTy :: Parser Type
     tupleTy = do
       keyword "tuple"
-      TupleTy <$> (angles $ sepBy1 pType (symbol ","))
+      TupleTy <$> angles (sepBy1 pType (symbol ","))
     listTy = do
       keyword "list"
       ListTy <$> angles pType
@@ -89,7 +95,7 @@ pType =
         "i16" -> return PrimI16
         "i32" -> return PrimI32
         "i64" -> return PrimI64
-        name -> return $ User name
+        name' -> return $ User name'
 
 ------------
 -- helper --
@@ -111,7 +117,7 @@ lexeme :: Parser a -> Parser a
 lexeme = L.lexeme whitespace
 
 symbol :: String -> Parser ()
-symbol s = L.symbol whitespace s *> return ()
+symbol s = L.symbol whitespace s $> ()
 
 wrap :: String -> String -> (Parser a -> Parser a)
 wrap l r = between (symbol l) (symbol r)

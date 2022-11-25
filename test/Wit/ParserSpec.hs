@@ -7,12 +7,13 @@ import Wit.Ast
 import Wit.Parser
 
 spec :: Spec
-spec = describe "parse type definitions" $ do
-  context "record" $ do
-    it "simple" $ do
+spec = describe "parse wit" $ do
+  context "type definitions" $ do
+    -- record
+    it "record: oneline" $ do
       let input = "record person { name: string, email: option<string> }"
       parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString)]
-    it "cross-line" $ do
+    it "record: cross-line" $ do
       let input =
             unlines
               [ "record person {",
@@ -22,21 +23,22 @@ spec = describe "parse type definitions" $ do
                 "}"
               ]
       parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString), ("data", Optional $ User "payload")]
-    it "no fields record" $ do
+    it "record: no fields" $ do
       let input = "record person {}"
       parse pRecord "" input `shouldParse` Record "person" []
-  context "type alias" $ do
-    it "payload is list<u8>" $ do
+    -- type alias
+    it "type alias: payload is list<u8>" $ do
       let input = "type payload = list<u8>"
       parse pTypeAlias "" input `shouldParse` TypeAlias "payload" (ListTy PrimU8)
-    it "map is a pair list" $ do
+    it "type alias: map is a pair list" $ do
       let input = "type map = list<tuple<string, string>>"
       parse pTypeAlias "" input `shouldParse` TypeAlias "map" (ListTy (TupleTy [PrimString, PrimString]))
-  context "variant" $ do
-    it "an error variant" $ do
-      let input = unlines
-                    [ "variant error {",
-	                    "  error-with-description(string)",
-                      "}"
-                    ]
+    -- variant
+    it "variant: error" $ do
+      let input =
+            unlines
+              [ "variant error {",
+                "  error-with-description(string)",
+                "}"
+              ]
       parse pVariant "" input `shouldParse` Variant "error" [("error-with-description", [PrimString])]
