@@ -19,6 +19,13 @@ spec = describe "parse wit" $ do
       handle <- openFile "test/slight-samples/http-handler.wit" ReadMode
       contents <- hGetContents handle
       parse pWitFile "" `shouldSucceedOn` contents
+  context "definitions" $ do
+    it "function" $ do
+      parse pDefinition "" "handle-http: func(req: request) -> expected<response, error>"
+        `shouldParse` Function
+          "handle-http"
+          [("req", User "request")]
+          (ExpectedTy (User "response") (User "error"))
   context "type definitions" $ do
     -- type definition check
     it "type defintion: record" $ do

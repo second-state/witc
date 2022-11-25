@@ -1,6 +1,7 @@
 module Wit.Ast
   ( WitFile (..),
     Use (..),
+    Definition (..),
     TypeDefinition (..),
     Type (..),
   )
@@ -15,6 +16,11 @@ data WitFile = WitFile
   deriving (Show, Eq)
 
 data Use = Use SourcePos [String] String
+  deriving (Show, Eq)
+
+data Definition
+  = Function String [(String, Type)] Type
+  | Resource -- place holder for `resource`
   deriving (Show, Eq)
 
 data TypeDefinition
@@ -36,6 +42,7 @@ data Type
   | PrimI64
   | Optional Type
   | ListTy Type
+  | ExpectedTy Type Type
   | TupleTy [Type]
   | User String -- user defined types
   deriving (Show, Eq)

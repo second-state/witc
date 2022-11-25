@@ -3,6 +3,9 @@ module Wit.Parser
     pWitFile,
     -- use statement
     pUse,
+    -- definition
+    pDefinition,
+    pFunc,
     -- type definition
     pTypeDefinition,
     pRecord,
@@ -26,7 +29,7 @@ pWitFile :: Parser WitFile
 pWitFile = do
   use_list <- many pUse
   ty_def_list <- many $ withPos pTypeDefinition
-  return WitFile{ use_list = use_list, type_definition_list = ty_def_list}
+  return WitFile {use_list = use_list, type_definition_list = ty_def_list}
 
 pUse :: Parser Use
 pUse = do
@@ -35,6 +38,28 @@ pUse = do
   id_list <- braces $ sepEndBy identifier (symbol ",")
   keyword "from"
   Use pos id_list <$> identifier
+
+pDefinition :: Parser Definition
+pDefinition = choice [pFunc]
+
+-- Example code
+--
+-- ```
+-- handle-http: func(req: request) -> expected<response, error>
+-- ```
+pFunc :: Parser Definition
+pFunc = do
+  fn_name <- identifier
+  symbol ":"
+  keyword "func"
+  Function fn_name
+    <$> parens (sepEndBy pParam (symbol ","))
+    <*> pResultType
+  where
+    pParam :: Parser (String, Type)
+    pParam = (,) <$> (identifier <* symbol ":") <*> pType
+    pResultType :: Parser Type
+    pResultType = symbol "->" *> pType
 
 pTypeDefinition :: Parser TypeDefinition
 pTypeDefinition =
@@ -52,11 +77,7 @@ pRecord = do
   return $ Record record_name field_list
   where
     pRecordField :: Parser (String, Type)
-    pRecordField = do
-      field_name <- identifier
-      symbol ":"
-      ty <- pType
-      return (field_name, ty)
+    pRecordField = (,) <$> (identifier <* symbol ":") <*> pType
 pTypeAlias = do
   keyword "type"
   name <- identifier
@@ -78,13 +99,18 @@ pVariant = do
 pType :: Parser Type
 pType =
   choice
-    [ tupleTy,
+    [ expectedTy,
+      tupleTy,
       listTy,
       optionalTy,
       primitiveTy
     ]
   where
-    tupleTy, listTy, optionalTy, primitiveTy :: Parser Type
+    expectedTy, tupleTy, listTy, optionalTy, primitiveTy :: Parser Type
+    expectedTy = do
+      keyword "expected"
+      (a, b) <- angles $ (,) <$> pType <*> (symbol "," *> pType)
+      return $ ExpectedTy a b
     tupleTy = do
       keyword "tuple"
       TupleTy <$> angles (sepBy1 pType (symbol ","))
