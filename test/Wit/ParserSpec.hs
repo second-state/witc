@@ -9,6 +9,19 @@ import Wit.Parser
 spec :: Spec
 spec = describe "parse wit" $ do
   context "type definitions" $ do
+    -- type definition check
+    it "type defintion: record" $ do
+      parse pTypeDefinition "" `shouldSucceedOn` "record person { name: string, email: option<string> }"
+      parse pTypeDefinition "" `shouldSucceedOn` "record person { name: string, email: option<string>, }"
+    it "type defintion: variant" $ do
+      parse pTypeDefinition ""
+        `shouldSucceedOn` unlines
+          [ "variant error {",
+            "  error-with-description(string)",
+            "}"
+          ]
+    it "type defintion: type alias" $ do
+      parse pTypeDefinition "" `shouldSucceedOn` "type payload = list<u8>"
     -- record
     it "record: oneline" $ do
       let input = "record person { name: string, email: option<string> }"
