@@ -40,6 +40,9 @@ data Type
   | PrimI16
   | PrimI32
   | PrimI64
+  | PrimChar
+  | PrimF32
+  | PrimF64
   | Optional Type
   | ListTy Type
   | ExpectedTy Type Type

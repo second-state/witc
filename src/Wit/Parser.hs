@@ -132,6 +132,9 @@ pType =
         "s16" -> return PrimI16
         "s32" -> return PrimI32
         "s64" -> return PrimI64
+        "char" -> return PrimChar
+        "f32" -> return PrimF32
+        "f64" -> return PrimF64
         name' -> return $ User name'
 
 ------------
