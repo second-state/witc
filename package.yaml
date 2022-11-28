@@ -23,6 +23,8 @@ description: Please see the README on GitHub at <https://github.com/second-state
 
 dependencies:
   - base >= 4.7 && < 5
+  - mtl
+  - transformers
   - megaparsec
 
 ghc-options:

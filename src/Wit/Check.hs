@@ -1,4 +1,7 @@
-module Wit.Check (check0) where
+module Wit.Check
+  ( check0,
+  )
+where
 
 import Text.Megaparsec
 import Wit.Ast
@@ -22,7 +25,7 @@ check0 = check []
 
 check :: Context -> WitFile -> M ()
 check ctx wit_file = do
-  checkDefinitions ctx wit_file.definition_list
+  checkDefinitions ctx $ definition_list wit_file
 
 checkDefinitions :: Context -> [Definition] -> M ()
 checkDefinitions _ctx [] = return ()
@@ -39,12 +42,12 @@ checkDef :: Context -> Definition -> M Context
 checkDef ctx = \case
   SrcPos pos def -> addPos pos $ checkDef ctx def
   Function _name binders result_ty -> do
-    mapM_ (checkTy ctx . snd) binders
+    checkBinders ctx binders
     checkTy ctx result_ty
     return ctx
   Resource -> error "unimplemented"
   Record name fields -> do
-    mapM_ (checkTy ctx . snd) fields
+    checkBinders ctx fields
     return $ (name, User name) : ctx
   TypeAlias name ty -> do
     checkTy ctx ty
@@ -53,6 +56,8 @@ checkDef ctx = \case
     mapM_ (checkTyList ctx . snd) cases
     return $ (name, User name) : ctx
   where
+    checkBinders :: Context -> [(String, Type)] -> M ()
+    checkBinders ctx' bs = mapM_ (checkTy ctx . snd) bs
     checkTyList :: Context -> [Type] -> M ()
     checkTyList ctx' = mapM_ (checkTy ctx')
 

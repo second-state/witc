@@ -12,12 +12,10 @@ spec :: Spec
 spec = describe "parse wit" $ do
   context "parse file" $ do
     it "types.wit" $ do
-      handle <- openFile "test/slight-samples/types.wit" ReadMode
-      contents <- hGetContents handle
+      contents <- readFile "test/slight-samples/types.wit"
       parse pWitFile "" `shouldSucceedOn` contents
     it "http-handler.wit" $ do
-      handle <- openFile "test/slight-samples/http-handler.wit" ReadMode
-      contents <- hGetContents handle
+      contents <- readFile "test/slight-samples/http-handler.wit"
       parse pWitFile "" `shouldSucceedOn` contents
   context "definitions" $ do
     it "function" $ do
