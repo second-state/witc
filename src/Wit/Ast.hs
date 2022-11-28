@@ -24,6 +24,7 @@ data Definition
   | Record String [(String, Type)] -- record event { specversion: string, ty: string }
   | TypeAlias String Type -- type payload = list<u8>
   | Variant String [(String, [Type])]
+  | Enum String [String]
   deriving (Show, Eq)
 
 data Type

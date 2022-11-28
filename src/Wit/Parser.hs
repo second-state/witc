@@ -11,6 +11,7 @@ module Wit.Parser
     pRecord,
     pTypeAlias,
     pVariant,
+    pEnum,
   )
 where
 
@@ -45,6 +46,7 @@ pDefinition =
     [ pRecord,
       pTypeAlias,
       pVariant,
+      pEnum,
       pFunc
     ]
 
@@ -64,7 +66,7 @@ pFunc = do
     pResultType = symbol "->" *> pType
 
 -- type definition
-pRecord, pTypeAlias, pVariant :: Parser Definition
+pRecord, pTypeAlias, pVariant, pEnum :: Parser Definition
 pRecord = do
   keyword "record"
   record_name <- identifier
@@ -90,6 +92,11 @@ pVariant = do
       tag_name <- identifier
       type_list <- parens $ sepBy pType (symbol ",")
       return (tag_name, type_list)
+pEnum = do
+  keyword "enum"
+  name <- identifier
+  case_list <- braces $ sepEndBy identifier (symbol ",")
+  return $ Enum name case_list
 
 pType :: Parser Type
 pType =

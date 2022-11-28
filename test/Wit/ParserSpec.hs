@@ -17,6 +17,9 @@ spec = describe "parse wit" $ do
     it "http-handler.wit" $ do
       contents <- readFile "test/slight-samples/http-handler.wit"
       parse pWitFile "" `shouldSucceedOn` contents
+    it "http-types.wit" $ do
+      contents <- readFile "test/slight-samples/http-types.wit"
+      parse pWitFile "" `shouldSucceedOn` contents
   context "definitions" $ do
     it "function" $ do
       parse pDefinition "" "handle-http: func(req: request) -> expected<response, error>"
@@ -25,6 +28,19 @@ spec = describe "parse wit" $ do
           [("req", User "request")]
           (ExpectedTy (User "response") (User "error"))
   context "type definitions" $ do
+    it "type definition: enum" $ do
+      parse pDefinition ""
+        `shouldSucceedOn` unlines
+          [ "enum method {",
+            "  get,",
+            "  post,",
+            "  put,",
+            "  delete,",
+            "  patch,",
+            "  head,",
+            "  options,",
+            "}"
+          ]
     -- type definition check
     it "type defintion: record" $ do
       parse pDefinition "" `shouldSucceedOn` "record person { name: string, email: option<string> }"
@@ -71,3 +87,17 @@ spec = describe "parse wit" $ do
                 "}"
               ]
       parse pVariant "" input `shouldParse` Variant "error" [("error-with-description", [PrimString])]
+    it "enum: basic" $ do
+      let input =
+            unlines
+              [ "enum method {",
+                "  get,",
+                "  post,",
+                "  put,",
+                "  delete,",
+                "  patch,",
+                "  head,",
+                "  options,",
+                "}"
+              ]
+      parse pEnum "" input `shouldParse` Enum "method" ["get", "post", "put", "delete", "patch", "head", "options"]
