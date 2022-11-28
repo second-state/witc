@@ -20,6 +20,11 @@ spec = describe "parse wit" $ do
     it "http-types.wit" $ do
       contents <- readFile "test/slight-samples/http-types.wit"
       parse pWitFile "" `shouldSucceedOn` contents
+  context "use statement" $ do
+    it "use {a, b, c} from mod" $ do
+      parse pUse "" "use { a, b, c } from mod" `shouldParse` Use ["a", "b", "c"] "mod"
+    it "use * from mod" $ do
+      parse pUse "" "use * from mod" `shouldParse` UseAll "mod"
   context "definitions" $ do
     it "resource" $ do
       let input =

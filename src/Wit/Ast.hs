@@ -16,7 +16,12 @@ data WitFile = WitFile
   }
   deriving (Show, Eq)
 
-data Use = Use SourcePos [String] String
+data Use
+  = SrcPosUse SourcePos Use
+  | -- use { a, b, c } from mod
+    Use [String] String
+  | -- use * from mod
+    UseAll String
   deriving (Show, Eq)
 
 data Definition

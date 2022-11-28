@@ -29,17 +29,22 @@ type Parser = Parsec Void String
 
 pWitFile :: Parser WitFile
 pWitFile = do
-  use_list <- many pUse
-  def_list <- many $ withPos pDefinition
+  use_list <- many $ withPos SrcPosUse pUse
+  def_list <- many $ withPos SrcPos pDefinition
   return WitFile {use_list = use_list, definition_list = def_list}
 
 pUse :: Parser Use
 pUse = do
-  pos <- getSourcePos
   keyword "use"
-  id_list <- braces $ sepEndBy identifier (symbol ",")
-  keyword "from"
-  Use pos id_list <$> identifier
+  all_syntax <- optional $ symbol "*"
+  case all_syntax of
+    Just _ -> do
+      keyword "from"
+      UseAll <$> identifier
+    Nothing -> do
+      id_list <- braces $ sepEndBy identifier (symbol ",")
+      keyword "from"
+      Use id_list <$> identifier
 
 pDefinition :: Parser Definition
 pDefinition =
@@ -156,8 +161,8 @@ pType =
 ------------
 -- helper --
 ------------
-withPos :: Parser Definition -> Parser Definition
-withPos p = SrcPos <$> getSourcePos <*> p
+withPos :: (SourcePos -> a -> a) -> Parser a -> Parser a
+withPos c p = c <$> getSourcePos <*> p
 
 ------------
 -- tokens --
