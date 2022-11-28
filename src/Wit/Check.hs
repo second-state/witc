@@ -41,11 +41,12 @@ checkDefinitions ctx (x : xs) = do
 checkDef :: Context -> Definition -> M Context
 checkDef ctx = \case
   SrcPos pos def -> addPos pos $ checkDef ctx def
-  Function _name binders result_ty -> do
+  Func (Function _attr _name binders result_ty) -> do
     checkBinders ctx binders
     checkTy ctx result_ty
     return ctx
-  Resource -> error "unimplemented"
+  Resource _name _func_list -> error "unimplemented"
+  Enum name _ -> return $ (name, User name) : ctx
   Record name fields -> do
     checkBinders ctx fields
     return $ (name, User name) : ctx

@@ -2,6 +2,8 @@ module Wit.Ast
   ( WitFile (..),
     Use (..),
     Definition (..),
+    Function (..),
+    Attr (..),
     Type (..),
   )
 where
@@ -19,12 +21,18 @@ data Use = Use SourcePos [String] String
 
 data Definition
   = SrcPos SourcePos Definition
-  | Function String [(String, Type)] Type
-  | Resource -- place holder for `resource`
+  | Resource String [Function]
+  | Func Function
   | Record String [(String, Type)] -- record event { specversion: string, ty: string }
   | TypeAlias String Type -- type payload = list<u8>
   | Variant String [(String, [Type])]
   | Enum String [String]
+  deriving (Show, Eq)
+
+data Function = Function (Maybe Attr) String [(String, Type)] Type
+  deriving (Show, Eq)
+
+data Attr = Static
   deriving (Show, Eq)
 
 data Type

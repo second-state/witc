@@ -6,6 +6,7 @@ module Wit.Parser
     -- Definition
     pDefinition,
     -- define object
+    pResource,
     pFunc,
     -- define type
     pRecord,
@@ -47,16 +48,29 @@ pDefinition =
       pTypeAlias,
       pVariant,
       pEnum,
+      pResource,
       pFunc
     ]
 
 -- object definition
-pFunc :: Parser Definition
-pFunc = do
+pResource, pFunc :: Parser Definition
+pResource = do
+  keyword "resource"
+  Resource <$> identifier <*> braces (many pFunction)
+pFunc = Func <$> pFunction
+
+pFunction :: Parser Function
+pFunction = do
+  attr <- optional $ keyword "static"
   fn_name <- identifier
   symbol ":"
   keyword "func"
-  Function fn_name
+  Function
+    ( case attr of
+        Just _ -> Just Static
+        Nothing -> Nothing
+    )
+    fn_name
     <$> parens (sepEndBy pParam (symbol ","))
     <*> pResultType
   where

@@ -21,12 +21,28 @@ spec = describe "parse wit" $ do
       contents <- readFile "test/slight-samples/http-types.wit"
       parse pWitFile "" `shouldSucceedOn` contents
   context "definitions" $ do
+    it "resource" $ do
+      let input =
+            unlines
+              [ "resource configs {",
+                "  // Obtain an app config store, identifiable through a resource descriptor",
+                "  static open: func(name: string) -> expected<configs, error>",
+                "  // Get an app configuration given a config store, and an identifiable key",
+                "  get: func(key: string) -> expected<payload, error>",
+                "  // Set an app configuration given a config store, an identifiable key, and its' value",
+                "  set: func(key: string, value: payload) -> expected<unit, error>",
+                "}"
+              ]
+      parse pDefinition "" `shouldSucceedOn` input
     it "function" $ do
       parse pDefinition "" "handle-http: func(req: request) -> expected<response, error>"
-        `shouldParse` Function
-          "handle-http"
-          [("req", User "request")]
-          (ExpectedTy (User "response") (User "error"))
+        `shouldParse` Func
+          ( Function
+              Nothing
+              "handle-http"
+              [("req", User "request")]
+              (ExpectedTy (User "response") (User "error"))
+          )
   context "type definitions" $ do
     it "type definition: enum" $ do
       parse pDefinition ""
