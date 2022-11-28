@@ -1,13 +1,13 @@
 module Wit.Parser
   ( -- file level parser
     pWitFile,
-    -- use statement
+    -- Use statement
     pUse,
-    -- definition
+    -- Definition
     pDefinition,
+    -- define object
     pFunc,
-    -- type definition
-    pTypeDefinition,
+    -- define type
     pRecord,
     pTypeAlias,
     pVariant,
@@ -28,8 +28,8 @@ type Parser = Parsec Void String
 pWitFile :: Parser WitFile
 pWitFile = do
   use_list <- many pUse
-  ty_def_list <- many $ withPos pTypeDefinition
-  return WitFile {use_list = use_list, type_definition_list = ty_def_list}
+  def_list <- many $ withPos pDefinition
+  return WitFile {use_list = use_list, definition_list = def_list}
 
 pUse :: Parser Use
 pUse = do
@@ -40,13 +40,15 @@ pUse = do
   Use pos id_list <$> identifier
 
 pDefinition :: Parser Definition
-pDefinition = choice [pFunc]
+pDefinition =
+  choice
+    [ pRecord,
+      pTypeAlias,
+      pVariant,
+      pFunc
+    ]
 
--- Example code
---
--- ```
--- handle-http: func(req: request) -> expected<response, error>
--- ```
+-- object definition
 pFunc :: Parser Definition
 pFunc = do
   fn_name <- identifier
@@ -61,15 +63,8 @@ pFunc = do
     pResultType :: Parser Type
     pResultType = symbol "->" *> pType
 
-pTypeDefinition :: Parser TypeDefinition
-pTypeDefinition =
-  choice
-    [ pRecord,
-      pTypeAlias,
-      pVariant
-    ]
-
-pRecord, pTypeAlias, pVariant :: Parser TypeDefinition
+-- type definition
+pRecord, pTypeAlias, pVariant :: Parser Definition
 pRecord = do
   keyword "record"
   record_name <- identifier
@@ -140,7 +135,7 @@ pType =
 ------------
 -- helper --
 ------------
-withPos :: Parser TypeDefinition -> Parser TypeDefinition
+withPos :: Parser Definition -> Parser Definition
 withPos p = SrcPos <$> getSourcePos <*> p
 
 ------------

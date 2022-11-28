@@ -2,7 +2,6 @@ module Wit.Ast
   ( WitFile (..),
     Use (..),
     Definition (..),
-    TypeDefinition (..),
     Type (..),
   )
 where
@@ -11,7 +10,7 @@ import Text.Megaparsec
 
 data WitFile = WitFile
   { use_list :: [Use],
-    type_definition_list :: [TypeDefinition]
+    definition_list :: [Definition]
   }
   deriving (Show, Eq)
 
@@ -19,12 +18,9 @@ data Use = Use SourcePos [String] String
   deriving (Show, Eq)
 
 data Definition
-  = Function String [(String, Type)] Type
+  = SrcPos SourcePos Definition
+  | Function String [(String, Type)] Type
   | Resource -- place holder for `resource`
-  deriving (Show, Eq)
-
-data TypeDefinition
-  = SrcPos SourcePos TypeDefinition
   | Record String [(String, Type)] -- record event { specversion: string, ty: string }
   | TypeAlias String Type -- type payload = list<u8>
   | Variant String [(String, [Type])]

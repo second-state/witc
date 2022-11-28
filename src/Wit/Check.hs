@@ -22,22 +22,27 @@ check0 = check []
 
 check :: Context -> WitFile -> M ()
 check ctx wit_file = do
-  checkTypeDefList ctx wit_file.type_definition_list
+  checkDefinitions ctx wit_file.definition_list
 
-checkTypeDefList :: Context -> [TypeDefinition] -> M ()
-checkTypeDefList _ctx [] = return ()
-checkTypeDefList ctx (x : xs) = do
-  new_ctx <- checkTypeDef ctx x
-  checkTypeDefList new_ctx xs
+checkDefinitions :: Context -> [Definition] -> M ()
+checkDefinitions _ctx [] = return ()
+checkDefinitions ctx (x : xs) = do
+  new_ctx <- checkDef ctx x
+  checkDefinitions new_ctx xs
 
 -- insert type definition into Context
 -- e.g.
 --   Ctx |- check `record A { ... }`
 --   -------------------------------
 --          (A, User) : Ctx
-checkTypeDef :: Context -> TypeDefinition -> M Context
-checkTypeDef ctx = \case
-  SrcPos pos tydef -> addPos pos $ checkTypeDef ctx tydef
+checkDef :: Context -> Definition -> M Context
+checkDef ctx = \case
+  SrcPos pos def -> addPos pos $ checkDef ctx def
+  Function _name binders result_ty -> do
+    mapM_ (checkTy ctx . snd) binders
+    checkTy ctx result_ty
+    return ctx
+  Resource -> error "unimplemented"
   Record name fields -> do
     mapM_ (checkTy ctx . snd) fields
     return $ (name, User name) : ctx
