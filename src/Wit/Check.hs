@@ -74,7 +74,7 @@ checkDef ctx = \case
     return $ (name, User name) : ctx
   where
     checkBinders :: Context -> [(String, Type)] -> M ()
-    checkBinders ctx' bs = mapM_ (checkTy ctx . snd) bs
+    checkBinders ctx' = mapM_ (checkTy ctx' . snd)
     checkTyList :: Context -> [Type] -> M ()
     checkTyList ctx' = mapM_ (checkTy ctx')
 
