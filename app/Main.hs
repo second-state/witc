@@ -4,6 +4,7 @@ import Data.List
 import System.Directory
 import System.Environment
 import Text.Megaparsec
+import Wit.Ast
 import Wit.Check
 import Wit.Parser
 
@@ -24,20 +25,44 @@ handle ["check"] = do
   mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
   return ()
 handle ["instance", mode, file] = do
-  -- ast <- parse file
-  -- output <- gen mode ast
-  putStrLn "TODO"
-handle ["runtime", mode, file] = putStrLn "TODO"
+  case mode of
+    "import" -> do
+      ast <- parseFile file
+      let result = genInstanceImport ast
+      -- TODO: output to somewhere file
+      return ()
+    "export" -> return ()
+    bad -> putStrLn $ "unknown option: " ++ bad
+handle ["runtime", mode, file] =
+  case mode of
+    "import" -> return ()
+    "export" -> do
+      ast <- parseFile file
+      let result = genRuntimeExport ast
+      -- TODO: output to somewhere file
+      return ()
+    bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
+
+genRuntimeExport :: WitFile -> String
+genRuntimeExport _ = ""
+
+genInstanceImport :: WitFile -> String
+genInstanceImport _ = ""
+
+parseFile :: FilePath -> IO WitFile
+parseFile filepath = do
+  contents <- readFile filepath
+  case parse pWitFile filepath contents of
+    -- TODO: use better error raising way
+    Left bundle -> error (errorBundlePretty bundle)
+    Right wit_file -> return wit_file
 
 checkFile :: FilePath -> IO ()
 checkFile filepath = do
-  contents <- readFile filepath
-  case parse pWitFile filepath contents of
-    Left bundle -> putStr (errorBundlePretty bundle)
-    Right wit_file -> do
-      r <- check0 wit_file
-      case r of
-        -- TODO: hint source code via position
-        Left (msg, _pos) -> putStrLn msg
-        Right () -> return ()
+  wit_file <- parseFile filepath
+  r <- check0 wit_file
+  case r of
+    -- TODO: hint source code via position
+    Left (msg, _pos) -> putStrLn msg
+    Right () -> return ()
