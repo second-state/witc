@@ -27,3 +27,12 @@ Conceptual command
 witc instance import xxx.wit
 witc runtime export xxx.wit
 ```
+
+### Why witc?
+
+You might wonder why you need `witc` since `wit-bindgen` already exists.
+Although `wit-bindgen` is good, it is currently in active development.
+Additionally, the Component Model and Canonical ABI change frequently with large updates.
+We create `witc` to serve as a middle project to wait for `wit-bindgen` to become stable, and at that point, we will contribute to `wit-bindgen`.
+With `witc`, it increases the diversity in wit related toochain.
+For these reasons, we will only support a small number of features in `witc`, ensuring that the basic demos will work.
