@@ -1,5 +1,6 @@
 module Main (main) where
 
+import Data.List
 import System.Directory
 import System.Environment
 import Text.Megaparsec
@@ -20,7 +21,7 @@ handle :: [String] -> IO ()
 handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
-  mapM_ checkFile fileList
+  mapM_ checkFile $ filter (\s -> ".wit" `isSuffixOf` s) fileList
   return ()
 handle ["instance", mode, file] = do
   -- ast <- parse file
