@@ -1,5 +1,8 @@
 # witc
 
+> **Warning**
+> This is an early-stage project
+
 A compiler generates code for `*.wit` files.
 
 ### Overview
