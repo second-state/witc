@@ -21,7 +21,7 @@ handle :: [String] -> IO ()
 handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
-  mapM_ checkFile $ filter (\s -> ".wit" `isSuffixOf` s) fileList
+  mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
   return ()
 handle ["instance", mode, file] = do
   -- ast <- parse file
