@@ -3,7 +3,8 @@ module Wit.Check
   )
 where
 
-import Text.Megaparsec
+import System.Directory
+import Text.Megaparsec (SourcePos)
 import Wit.Ast
 
 type M = Either (String, Maybe SourcePos)
@@ -20,12 +21,27 @@ type Name = String
 
 type Context = [(Name, Type)]
 
-check0 :: WitFile -> M ()
+check0 :: WitFile -> IO (M ())
 check0 = check []
 
-check :: Context -> WitFile -> M ()
+check :: Context -> WitFile -> IO (M ())
 check ctx wit_file = do
-  checkDefinitions ctx $ definition_list wit_file
+  mapM_ checkUse $ use_list wit_file
+  return $ checkDefinitions ctx $ definition_list wit_file
+
+checkUse :: Use -> IO (M ())
+checkUse (SrcPosUse pos u) = do
+  a <- checkUse u
+  return $ addPos pos a
+-- TODO: check imports should exist in that module
+checkUse (Use _imports mod_name) = checkModFileExisted mod_name
+checkUse (UseAll mod_name) = checkModFileExisted mod_name
+
+checkModFileExisted :: String -> IO (M ())
+-- fileExist
+checkModFileExisted mod_name = do
+  existed <- doesFileExist $ mod_name ++ ".wit"
+  if existed then return (Right ()) else return $ report "no file xxx"
 
 checkDefinitions :: Context -> [Definition] -> M ()
 checkDefinitions _ctx [] = return ()

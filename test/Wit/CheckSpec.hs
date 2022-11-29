@@ -18,6 +18,8 @@ spec = describe "check wit" $ do
       contents <- readFile "test/slight-samples/bad-types.wit"
       case runParser pWitFile "" contents of
         Left err -> putStrLn "fail"
-        Right wit_file -> case check0 wit_file of
-          Left (_msg, _pos) -> return ()
-          Right _ -> expectationFailure "checker should find out undefined type!"
+        Right wit_file -> do
+          r <- check0 wit_file
+          case r of
+            Left (_msg, _pos) -> return ()
+            Right _ -> expectationFailure "checker should find out undefined type!"

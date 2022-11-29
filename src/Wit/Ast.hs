@@ -8,7 +8,7 @@ module Wit.Ast
   )
 where
 
-import Text.Megaparsec
+import Text.Megaparsec (SourcePos)
 
 data WitFile = WitFile
   { use_list :: [Use],
