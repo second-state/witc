@@ -3,46 +3,37 @@ module Wit.Gen.Import
   )
 where
 
-import Data.List (intercalate)
+import Data.List (intercalate, partition)
 import Wit.Ast
+import Wit.Gen.Type
 
 genInstanceImport :: WitFile -> String
 genInstanceImport WitFile {definition_list = def_list} =
-  concatMap genTypeDef def_list
+  let (ty_defs, defs) = partition isTypeDef def_list
+   in concatMap genTypeDef ty_defs
+        ++ unlines
+          [ "extern \"C\" {",
+            unlines (map genDef defs),
+            "}"
+          ]
 
-genTypeDef :: Definition -> String
-genTypeDef (SrcPos _ d) = genTypeDef d
-genTypeDef (Resource _name _) = "\n"
-genTypeDef (Func _f) = "\n"
-genTypeDef (Record name fields) =
-  "struct "
+genDef :: Definition -> String
+genDef (SrcPos _ d) = genDef d
+genDef (Resource _name _) = "test"
+-- TODO: normalize name
+genDef (Func (Function _attr name param_list result_ty)) =
+  "fn "
     ++ name
-    ++ " {"
-    ++ concatMap ((++) "\n  " . genField) fields
-    ++ "\n}"
-    ++ "\n"
-  where
-    genField :: (String, Type) -> String
-    genField (field_name, ty) = field_name ++ ": " ++ genType ty
-genTypeDef (TypeAlias _name _ty) = "\n"
-genTypeDef (Variant _name _cases) = "\n"
-genTypeDef (Enum _name _tags) = "\n"
+    ++ "("
+    ++ intercalate ", " (map genBinder param_list)
+    ++ ")"
+    ++ " -> "
+    ++ genType result_ty
+    ++ ";"
+genDef d = error "should not get type definition here: " $ show d
 
-genType :: Type -> String
-genType PrimString = "String"
-genType PrimU8 = "u8"
-genType PrimU16 = "u16"
-genType PrimU32 = "u32"
-genType PrimU64 = "u64"
-genType PrimI8 = "i8"
-genType PrimI16 = "i16"
-genType PrimI32 = "i32"
-genType PrimI64 = "i64"
-genType PrimChar = "char"
-genType PrimF32 = "f32"
-genType PrimF64 = "f64"
-genType (Optional ty) = "Option<" ++ genType ty ++ ">"
-genType (ListTy ty) = "Vec<" ++ genType ty ++ ">"
-genType (ExpectedTy ty ety) = "Result<" ++ genType ty ++ ", " ++ genType ety ++ ">"
-genType (TupleTy ty_list) = "(" ++ intercalate ", " (map genType ty_list) ++ ")"
-genType (User name) = name
+isTypeDef :: Definition -> Bool
+isTypeDef (SrcPos _ d) = isTypeDef d
+isTypeDef (Resource _ _) = False
+isTypeDef (Func _) = False
+isTypeDef _ = True
