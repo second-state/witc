@@ -6,6 +6,7 @@ cli design
 -}
 module Main (main) where
 
+import Control.Monad
 import Control.Monad.Primitive
 import Data.List (isSuffixOf)
 import System.Directory
@@ -54,13 +55,7 @@ parseFile :: FilePath -> IO (Either ParserError WitFile)
 parseFile filepath = parse pWitFile filepath <$> readFile filepath
 
 checkFile :: FilePath -> IO ()
-checkFile filepath = do
-  parseFile filepath
-    >>= displayErr
-      ( \wit_file ->
-          check0 wit_file >>= displayErr touch show
-      )
-      errorBundlePretty
+checkFile = parseFile >=> displayErr (check0 >=> displayErr touch show) errorBundlePretty
 
 displayErr :: (a -> IO ()) -> (e -> String) -> Either e a -> IO ()
 displayErr f showE = \case
