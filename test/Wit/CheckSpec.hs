@@ -11,9 +11,9 @@ spec = describe "check wit" $ do
     it "should report undefined type" $ do
       contents <- readFile "test/slight-samples/bad-types.wit"
       case runParser pWitFile "" contents of
-        Left bundle -> putStrLn $ "fail: " ++ errorBundlePretty bundle
+        Left _bundle -> return ()
         Right wit_file -> do
           r <- check0 wit_file
           case r of
-            Left (_msg, _pos) -> return ()
+            Left _ -> return ()
             Right _ -> expectationFailure "checker should find out undefined type!"
