@@ -33,7 +33,7 @@ handle ["instance", mode, file] = do
     "import" -> do
       parseFile file
         -- TODO: output to somewhere file
-        >>= displayErr (putStrLn . genInstanceImport) errorBundlePretty
+        >>= displayIOLeft errorBundlePretty (putStrLn . genInstanceImport)
       return ()
     "export" -> return ()
     bad -> putStrLn $ "unknown option: " ++ bad
@@ -43,7 +43,7 @@ handle ["runtime", mode, file] =
     "export" -> do
       parseFile file
         -- TODO: output to somewhere file
-        >>= displayErr (putStrLn . genRuntimeExport) errorBundlePretty
+        >>= displayIOLeft errorBundlePretty (putStrLn . genRuntimeExport)
       return ()
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
@@ -55,9 +55,9 @@ parseFile :: FilePath -> IO (Either ParserError WitFile)
 parseFile filepath = parse pWitFile filepath <$> readFile filepath
 
 checkFile :: FilePath -> IO ()
-checkFile = parseFile >=> displayErr (check0 >=> displayErr touch show) errorBundlePretty
+checkFile = parseFile >=> displayIOLeft errorBundlePretty (check0 >=> displayIOLeft show touch)
 
-displayErr :: (a -> IO ()) -> (e -> String) -> Either e a -> IO ()
-displayErr f showE = \case
+displayIOLeft :: (e -> String) -> (a -> IO ()) -> Either e a -> IO ()
+displayIOLeft showE f = \case
   Left e -> putStrLn $ showE e
   Right a -> f a
