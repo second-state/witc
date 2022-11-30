@@ -29,9 +29,9 @@ type Parser = Parsec Void String
 
 pWitFile :: Parser WitFile
 pWitFile = do
-  use_list <- many $ withPos SrcPosUse pUse
-  def_list <- many $ withPos SrcPos pDefinition
-  return WitFile {use_list = use_list, definition_list = def_list}
+  us <- many $ lexeme (withPos SrcPosUse pUse)
+  ds <- many $ lexeme (withPos SrcPos pDefinition)
+  return WitFile {use_list = us, definition_list = ds}
 
 pUse :: Parser Use
 pUse = do
@@ -183,9 +183,8 @@ symbol s = L.symbol whitespace s $> ()
 wrap :: String -> String -> (Parser a -> Parser a)
 wrap l r = between (symbol l) (symbol r)
 
-parens, brackets, braces, angles :: Parser a -> Parser a
+parens, braces, angles :: Parser a -> Parser a
 parens = wrap "(" ")"
-brackets = wrap "[" "]"
 braces = wrap "{" "}"
 angles = wrap "<" ">"
 
