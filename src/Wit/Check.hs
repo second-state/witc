@@ -1,20 +1,27 @@
 module Wit.Check
-  ( check0,
+  ( CheckError,
+    check0,
   )
 where
 
 import System.Directory
-import Text.Megaparsec (SourcePos)
+import Text.Megaparsec
 import Wit.Ast
 
-type M = Either (String, Maybe SourcePos)
+data CheckError = CheckError String (Maybe SourcePos)
+
+instance Show CheckError where
+  show (CheckError msg (Just pos)) = sourcePosPretty pos ++ ": " ++ msg
+  show (CheckError msg Nothing) = msg
+
+type M = Either CheckError
 
 report :: String -> M a
-report msg = Left (msg, Nothing)
+report msg = Left $ CheckError msg Nothing
 
 addPos :: SourcePos -> M a -> M a
 addPos pos ma = case ma of
-  Left (msg, Nothing) -> Left (msg, Just pos)
+  Left (CheckError msg Nothing) -> Left (CheckError msg (Just pos))
   ma' -> ma'
 
 type Name = String

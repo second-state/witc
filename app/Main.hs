@@ -6,6 +6,7 @@ cli design
 -}
 module Main (main) where
 
+import Control.Monad.Primitive
 import Data.List (isSuffixOf)
 import System.Directory
 import System.Environment
@@ -21,6 +22,7 @@ main = do
   handle args
 
 handle :: [String] -> IO ()
+handle ["check", file] = checkFile file
 handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
@@ -28,10 +30,9 @@ handle ["check"] = do
 handle ["instance", mode, file] = do
   case mode of
     "import" -> do
-      ast <- parseFile file
-      let result = genInstanceImport ast
-      putStrLn result
-      -- TODO: output to somewhere file
+      parseFile file
+        -- TODO: output to somewhere file
+        >>= displayErr (putStrLn . genInstanceImport) errorBundlePretty
       return ()
     "export" -> return ()
     bad -> putStrLn $ "unknown option: " ++ bad
@@ -39,9 +40,9 @@ handle ["runtime", mode, file] =
   case mode of
     "import" -> return ()
     "export" -> do
-      ast <- parseFile file
-      let _result = genRuntimeExport ast
-      -- TODO: output to somewhere file
+      parseFile file
+        -- TODO: output to somewhere file
+        >>= displayErr (putStrLn . genRuntimeExport) errorBundlePretty
       return ()
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
@@ -49,19 +50,19 @@ handle _ = putStrLn "bad usage"
 genRuntimeExport :: WitFile -> String
 genRuntimeExport _ = ""
 
-parseFile :: FilePath -> IO WitFile
-parseFile filepath = do
-  contents <- readFile filepath
-  case parse pWitFile filepath contents of
-    -- TODO: use better error raising way
-    Left bundle -> error (errorBundlePretty bundle)
-    Right wit_file -> return wit_file
+parseFile :: FilePath -> IO (Either ParserError WitFile)
+parseFile filepath = parse pWitFile filepath <$> readFile filepath
 
 checkFile :: FilePath -> IO ()
 checkFile filepath = do
-  wit_file <- parseFile filepath
-  r <- check0 wit_file
-  case r of
-    -- TODO: hint source code via position
-    Left (msg, _pos) -> putStrLn msg
-    Right () -> return ()
+  parseFile filepath
+    >>= displayErr
+      ( \wit_file ->
+          check0 wit_file >>= displayErr touch show
+      )
+      errorBundlePretty
+
+displayErr :: (a -> IO ()) -> (e -> String) -> Either e a -> IO ()
+displayErr f showE = \case
+  Left e -> putStrLn $ showE e
+  Right a -> f a
