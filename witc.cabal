@@ -29,6 +29,7 @@ library
       Wit
       Wit.Ast
       Wit.Check
+      Wit.Gen.Import
       Wit.Parser
   other-modules:
       Paths_witc
