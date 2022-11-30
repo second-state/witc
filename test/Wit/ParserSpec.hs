@@ -1,7 +1,5 @@
 module Wit.ParserSpec (spec) where
 
-import Control.Monad
-import System.IO
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
