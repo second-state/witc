@@ -47,6 +47,7 @@ library
     , directory
     , megaparsec
     , mtl
+    , primitive
     , transformers
   default-language: Haskell2010
 
@@ -67,6 +68,7 @@ executable witc-exe
     , directory
     , megaparsec
     , mtl
+    , primitive
     , transformers
     , witc
   default-language: Haskell2010
@@ -93,6 +95,7 @@ test-suite witc-test
     , hspec-megaparsec
     , megaparsec
     , mtl
+    , primitive
     , transformers
     , witc
   default-language: Haskell2010

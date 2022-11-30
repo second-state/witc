@@ -1,5 +1,7 @@
 module Wit.Parser
-  ( -- file level parser
+  ( -- parser error for this module
+    ParserError,
+    -- file level parser
     pWitFile,
     -- Use statement
     pUse,
@@ -26,6 +28,8 @@ import Text.Megaparsec.Char.Lexer qualified as L
 import Wit.Ast
 
 type Parser = Parsec Void String
+
+type ParserError = ParseErrorBundle String Void
 
 pWitFile :: Parser WitFile
 pWitFile = do
@@ -118,14 +122,7 @@ pEnum = do
   return $ Enum name case_list
 
 pType :: Parser Type
-pType =
-  choice
-    [ expectedTy,
-      tupleTy,
-      listTy,
-      optionalTy,
-      primitiveTy
-    ]
+pType = choice [expectedTy, tupleTy, listTy, optionalTy, primitiveTy] <?> "<type>"
   where
     expectedTy, tupleTy, listTy, optionalTy, primitiveTy :: Parser Type
     expectedTy = do
