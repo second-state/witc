@@ -1,11 +1,12 @@
 module Main (main) where
 
-import Data.List
+import Data.List (isSuffixOf)
 import System.Directory
 import System.Environment
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Check
+import Wit.Gen.Import
 import Wit.Parser
 
 -- cli design
@@ -23,12 +24,12 @@ handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
   mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
-  return ()
 handle ["instance", mode, file] = do
   case mode of
     "import" -> do
       ast <- parseFile file
       let result = genInstanceImport ast
+      putStrLn result
       -- TODO: output to somewhere file
       return ()
     "export" -> return ()
@@ -38,7 +39,7 @@ handle ["runtime", mode, file] =
     "import" -> return ()
     "export" -> do
       ast <- parseFile file
-      let result = genRuntimeExport ast
+      let _result = genRuntimeExport ast
       -- TODO: output to somewhere file
       return ()
     bad -> putStrLn $ "unknown option: " ++ bad
@@ -46,9 +47,6 @@ handle _ = putStrLn "bad usage"
 
 genRuntimeExport :: WitFile -> String
 genRuntimeExport _ = ""
-
-genInstanceImport :: WitFile -> String
-genInstanceImport _ = ""
 
 parseFile :: FilePath -> IO WitFile
 parseFile filepath = do
