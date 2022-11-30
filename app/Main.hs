@@ -1,3 +1,9 @@
+{-
+cli design
+
+    witc instance import xxx.wit
+    witc runtime export xxx.wit
+-}
 module Main (main) where
 
 import Data.List (isSuffixOf)
@@ -8,11 +14,6 @@ import Wit.Ast
 import Wit.Check
 import Wit.Gen.Import
 import Wit.Parser
-
--- cli design
---
---   witc instance import xxx.wit
---   witc runtime export xxx.wit
 
 main :: IO ()
 main = do
