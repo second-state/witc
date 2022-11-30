@@ -28,6 +28,14 @@ witc instance import xxx.wit
 witc runtime export xxx.wit
 ```
 
+### Development
+
+This project use GHC 9.2.5, since hls haven't supported this version offically, you can compile local hls for development.
+
+```shell
+ghcup --verbose compile hls --cabal-update --ghc 9.2.5 --git-describe-version --git-ref aeb57a8eb56964c8666d7cd05b6ba46d531de7c7 -- --ghc-options='+RTS -M2G -RTS'
+```
+
 ### Why witc?
 
 You might wonder why you need `witc` since `wit-bindgen` already exists.
