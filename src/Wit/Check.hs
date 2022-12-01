@@ -34,9 +34,23 @@ check0 = check []
 check :: Context -> WitFile -> IO (M WitFile)
 check ctx wit_file = do
   mapM_ checkUse $ use_list wit_file
-  case checkDefinitions ctx $ definition_list wit_file of
+  case introUse ctx $ use_list wit_file of
     Left e -> return $ Left e
-    Right () -> return $ Right wit_file
+    Right c -> do
+      case checkDefinitions c $ definition_list wit_file of
+        Left e -> return $ Left e
+        Right () -> return $ Right wit_file
+
+introUse :: Context -> [Use] -> M Context
+introUse ctx = \case
+  [] -> return ctx
+  (u : us) -> introUse (ctx `extend` u) us
+  where
+    extend :: Context -> Use -> Context
+    extend ctx' = \case
+      (SrcPosUse _pos u) -> ctx' `extend` u
+      (Use imports _) -> foldl (\c x -> (x, User x) : c) ctx' imports
+      (UseAll _) -> ctx'
 
 checkUse :: Use -> IO (M ())
 checkUse (SrcPosUse pos u) = do
