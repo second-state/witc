@@ -26,7 +26,6 @@ normalizeIdentifier = map f
 genDef :: Definition -> String
 genDef (SrcPos _ d) = genDef d
 genDef (Resource _name _) = "test"
--- TODO: normalize name
 genDef (Func (Function _attr name param_list result_ty)) =
   "fn "
     ++ normalizeIdentifier name
