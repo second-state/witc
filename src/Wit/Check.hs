@@ -28,13 +28,15 @@ type Name = String
 
 type Context = [(Name, Type)]
 
-check0 :: WitFile -> IO (M ())
+check0 :: WitFile -> IO (M WitFile)
 check0 = check []
 
-check :: Context -> WitFile -> IO (M ())
+check :: Context -> WitFile -> IO (M WitFile)
 check ctx wit_file = do
   mapM_ checkUse $ use_list wit_file
-  return $ checkDefinitions ctx $ definition_list wit_file
+  case checkDefinitions ctx $ definition_list wit_file of
+    Left e -> return $ Left e
+    Right () -> return $ Right wit_file
 
 checkUse :: Use -> IO (M ())
 checkUse (SrcPosUse pos u) = do
