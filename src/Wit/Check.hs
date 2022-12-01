@@ -33,18 +33,18 @@ check0 = check []
 
 check :: Context -> WitFile -> IO (M WitFile)
 check ctx wit_file = do
-  mapM_ checkUse $ use_list wit_file
-  case introUse ctx $ use_list wit_file of
+  mapM_ checkUseFileExisted $ use_list wit_file
+  case introUseIdentifiers ctx $ use_list wit_file of
     Left e -> return $ Left e
     Right c -> do
       case checkDefinitions c $ definition_list wit_file of
         Left e -> return $ Left e
         Right () -> return $ Right wit_file
 
-introUse :: Context -> [Use] -> M Context
-introUse ctx = \case
+introUseIdentifiers :: Context -> [Use] -> M Context
+introUseIdentifiers ctx = \case
   [] -> return ctx
-  (u : us) -> introUse (ctx `extend` u) us
+  (u : us) -> introUseIdentifiers (ctx `extend` u) us
   where
     extend :: Context -> Use -> Context
     extend ctx' = \case
@@ -52,13 +52,13 @@ introUse ctx = \case
       (Use imports _) -> foldl (\c x -> (x, User x) : c) ctx' imports
       (UseAll _) -> ctx'
 
-checkUse :: Use -> IO (M ())
-checkUse (SrcPosUse pos u) = do
-  a <- checkUse u
+checkUseFileExisted :: Use -> IO (M ())
+checkUseFileExisted (SrcPosUse pos u) = do
+  a <- checkUseFileExisted u
   return $ addPos pos a
 -- TODO: check imports should exist in that module
-checkUse (Use _imports mod_name) = checkModFileExisted mod_name
-checkUse (UseAll mod_name) = checkModFileExisted mod_name
+checkUseFileExisted (Use _imports mod_name) = checkModFileExisted mod_name
+checkUseFileExisted (UseAll mod_name) = checkModFileExisted mod_name
 
 checkModFileExisted :: String -> IO (M ())
 -- fileExist
