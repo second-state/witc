@@ -7,10 +7,11 @@ cli design
 module Main (main) where
 
 import Control.Monad
-import Control.Monad.Primitive
+import Data.Functor
 import Data.List (isSuffixOf)
 import System.Directory
 import System.Environment
+import System.Exit (exitSuccess)
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Check
@@ -23,7 +24,7 @@ main = do
   handle args
 
 handle :: [String] -> IO ()
-handle ["check", file] = checkFile file
+handle ["check", file] = checkFile file $> ()
 handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
@@ -32,8 +33,9 @@ handle ["instance", mode, file] = do
   case mode of
     "import" -> do
       parseFile file
+        >>= eitherIO check0
         -- TODO: output to somewhere file
-        >>= displayIOLeft errorBundlePretty (putStrLn . genInstanceImport)
+        >>= eitherIO (putStrLn . genInstanceImport)
       return ()
     "export" -> return ()
     bad -> putStrLn $ "unknown option: " ++ bad
@@ -42,8 +44,9 @@ handle ["runtime", mode, file] =
     "import" -> return ()
     "export" -> do
       parseFile file
+        >>= eitherIO check0
         -- TODO: output to somewhere file
-        >>= displayIOLeft errorBundlePretty (putStrLn . genRuntimeExport)
+        >>= eitherIO (putStrLn . genRuntimeExport)
       return ()
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
@@ -51,13 +54,27 @@ handle _ = putStrLn "bad usage"
 genRuntimeExport :: WitFile -> String
 genRuntimeExport _ = ""
 
-parseFile :: FilePath -> IO (Either ParserError WitFile)
-parseFile filepath = parse pWitFile filepath <$> readFile filepath
+parseFile :: FilePath -> IO (Either FuseError WitFile)
+parseFile filepath = do
+  content <- readFile filepath
+  case parse pWitFile filepath content of
+    Left e -> return $ Left (PErr e)
+    Right ast -> return $ Right ast
 
-checkFile :: FilePath -> IO ()
-checkFile = parseFile >=> displayIOLeft errorBundlePretty (check0 >=> displayIOLeft show touch)
+checkFile :: FilePath -> IO WitFile
+checkFile = parseFile >=> eitherIO (check0 >=> eitherIO return)
 
-displayIOLeft :: (e -> String) -> (a -> IO ()) -> Either e a -> IO ()
-displayIOLeft showE f = \case
-  Left e -> putStrLn $ showE e
+eitherIO :: Show e => (a -> IO b) -> Either e a -> IO b
+eitherIO f = \case
+  Left e -> do
+    print e
+    exitSuccess
   Right a -> f a
+
+data FuseError
+  = PErr ParserError
+  | CErr CheckError
+
+instance Show FuseError where
+  show (PErr bundle) = errorBundlePretty bundle
+  show (CErr ce) = show ce
