@@ -41,7 +41,8 @@ data Attr = Static
   deriving (Show, Eq)
 
 data Type
-  = PrimString
+  = SrcPosType SourcePos Type
+  | PrimString
   | PrimU8
   | PrimU16
   | PrimU32

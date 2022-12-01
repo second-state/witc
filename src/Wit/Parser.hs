@@ -122,7 +122,13 @@ pEnum = do
   return $ Enum name case_list
 
 pType :: Parser Type
-pType = choice [expectedTy, tupleTy, listTy, optionalTy, primitiveTy] <?> "<type>"
+pType =
+  withPos
+    SrcPosType
+    ( choice
+        [expectedTy, tupleTy, listTy, optionalTy, primitiveTy]
+        <?> "<type>"
+    )
   where
     expectedTy, tupleTy, listTy, optionalTy, primitiveTy :: Parser Type
     expectedTy = do

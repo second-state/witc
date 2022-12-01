@@ -87,6 +87,7 @@ checkDef ctx = \case
 
 -- check if type is valid
 checkTy :: Context -> Type -> M ()
+checkTy ctx (SrcPosType pos ty) = addPos pos $ checkTy ctx ty
 -- here, only user type existed is our target to check
 checkTy ctx (User name) = case lookup name ctx of
   Just _ -> return ()

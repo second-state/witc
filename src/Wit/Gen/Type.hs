@@ -27,6 +27,7 @@ genBinder :: (String, Type) -> String
 genBinder (field_name, ty) = field_name ++ ": " ++ genType ty
 
 genType :: Type -> String
+genType (SrcPosType _ ty) = genType ty
 genType PrimString = "String"
 genType PrimU8 = "u8"
 genType PrimU16 = "u16"
