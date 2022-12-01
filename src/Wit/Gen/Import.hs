@@ -17,13 +17,19 @@ genInstanceImport WitFile {definition_list = def_list} =
             "}"
           ]
 
+normalizeIdentifier :: String -> String
+normalizeIdentifier = map f
+  where
+    f '-' = '_'
+    f c = c
+
 genDef :: Definition -> String
 genDef (SrcPos _ d) = genDef d
 genDef (Resource _name _) = "test"
 -- TODO: normalize name
 genDef (Func (Function _attr name param_list result_ty)) =
   "fn "
-    ++ name
+    ++ normalizeIdentifier name
     ++ "("
     ++ intercalate ", " (map genBinder param_list)
     ++ ")"
