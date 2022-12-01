@@ -3,7 +3,6 @@ module Wit.ParserSpec (spec) where
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
-import Wit.Ast
 import Wit.Parser
 
 spec :: Spec
@@ -20,9 +19,9 @@ spec = describe "parse wit" $ do
       parse pWitFile "" `shouldSucceedOn` contents
   context "use statement" $ do
     it "use {a, b, c} from mod" $ do
-      parse pUse "" "use { a, b, c } from mod" `shouldParse` Use ["a", "b", "c"] "mod"
+      parse pUse "" `shouldSucceedOn` "use { a, b, c } from mod"
     it "use * from mod" $ do
-      parse pUse "" "use * from mod" `shouldParse` UseAll "mod"
+      parse pUse "" `shouldSucceedOn` "use * from mod"
   context "definitions" $ do
     it "resource" $ do
       let input =
@@ -38,14 +37,7 @@ spec = describe "parse wit" $ do
               ]
       parse pDefinition "" `shouldSucceedOn` input
     it "function" $ do
-      parse pDefinition "" "handle-http: func(req: request) -> expected<response, error>"
-        `shouldParse` Func
-          ( Function
-              Nothing
-              "handle-http"
-              [("req", User "request")]
-              (ExpectedTy (User "response") (User "error"))
-          )
+      parse pDefinition "" `shouldSucceedOn` "handle-http: func(req: request) -> expected<response, error>"
   context "type definitions" $ do
     it "type definition: enum" $ do
       parse pDefinition ""
@@ -76,7 +68,7 @@ spec = describe "parse wit" $ do
     -- record
     it "record: oneline" $ do
       let input = "record person { name: string, email: option<string> }"
-      parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString)]
+      parse pRecord "" `shouldSucceedOn` input
     it "record: cross-line" $ do
       let input =
             unlines
@@ -86,17 +78,17 @@ spec = describe "parse wit" $ do
                 "  data: option<payload>,",
                 "}"
               ]
-      parse pRecord "" input `shouldParse` Record "person" [("name", PrimString), ("email", Optional PrimString), ("data", Optional $ User "payload")]
+      parse pRecord "" `shouldSucceedOn` input
     it "record: no fields" $ do
       let input = "record person {}"
-      parse pRecord "" input `shouldParse` Record "person" []
+      parse pRecord "" `shouldSucceedOn` input
     -- type alias
     it "type alias: payload is list<u8>" $ do
       let input = "type payload = list<u8>"
-      parse pTypeAlias "" input `shouldParse` TypeAlias "payload" (ListTy PrimU8)
+      parse pTypeAlias "" `shouldSucceedOn` input
     it "type alias: map is a pair list" $ do
       let input = "type map = list<tuple<string, string>>"
-      parse pTypeAlias "" input `shouldParse` TypeAlias "map" (ListTy (TupleTy [PrimString, PrimString]))
+      parse pTypeAlias "" `shouldSucceedOn` input
     -- variant
     it "variant: error" $ do
       let input =
@@ -105,7 +97,7 @@ spec = describe "parse wit" $ do
                 "  error-with-description(string)",
                 "}"
               ]
-      parse pVariant "" input `shouldParse` Variant "error" [("error-with-description", [PrimString])]
+      parse pVariant "" `shouldSucceedOn` input
     it "enum: basic" $ do
       let input =
             unlines
@@ -119,4 +111,4 @@ spec = describe "parse wit" $ do
                 "  options,",
                 "}"
               ]
-      parse pEnum "" input `shouldParse` Enum "method" ["get", "post", "put", "delete", "patch", "head", "options"]
+      parse pEnum "" `shouldSucceedOn` input
