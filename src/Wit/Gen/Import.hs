@@ -5,6 +5,7 @@ where
 
 import Data.List (intercalate, partition)
 import Wit.Ast
+import Wit.Gen.Normalization
 import Wit.Gen.Type
 
 genInstanceImport :: WitFile -> String
@@ -17,12 +18,6 @@ genInstanceImport WitFile {definition_list = def_list} =
             unlines (map genDefExtern defs),
             "}"
           ]
-
-normalizeIdentifier :: String -> String
-normalizeIdentifier = map f
-  where
-    f '-' = '_'
-    f c = c
 
 genDefExtern :: Definition -> String
 genDefExtern (SrcPos _ d) = genDefExtern d

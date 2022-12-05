@@ -4,3 +4,6 @@ record person {
 }
 
 exchange: func(a : string, p : person) -> string
+
+enum color { red, green, blue }
+exchange-enum: func(c : color) -> color

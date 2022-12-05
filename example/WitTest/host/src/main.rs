@@ -38,6 +38,22 @@ fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, Hos
     ])
 }
 
+#[host_function]
+fn exchange_enum(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    // definition:
+    //
+    // enum color { red, green, blue }
+    //
+    // enum gets numberic encoding
+    match input[0].to_i32() {
+        0 => println!("wasmedge: color: red"),
+        1 => println!("wasmedge: color: green"),
+        2 => println!("wasmedge: color: blue"),
+        _ => Err(HostFuncError::User(0))?,
+    };
+    Ok(vec![input[0]])
+}
+
 fn main() -> Result<(), Error> {
     let config = ConfigBuilder::new(CommonConfigOptions::default())
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
@@ -45,6 +61,7 @@ fn main() -> Result<(), Error> {
 
     let import = ImportObjectBuilder::new()
         .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
+        .with_func::<i32, i32>("exchange_enum", exchange_enum)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?

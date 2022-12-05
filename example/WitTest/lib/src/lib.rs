@@ -11,5 +11,6 @@ pub unsafe extern "wasm" fn start() -> u32 {
         age: 30,
     };
     let _s = exchange(s, p);
+    let _i = exchange_enum(color::green);
     return 0;
 }

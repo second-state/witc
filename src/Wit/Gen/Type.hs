@@ -8,19 +8,24 @@ where
 
 import Data.List (intercalate)
 import Wit.Ast
+import Wit.Gen.Normalization
 
 genTypeDef :: Definition -> String
 genTypeDef (SrcPos _ d) = genTypeDef d
 genTypeDef (Record name fields) =
   "struct "
-    ++ name
+    ++ normalizeIdentifier name
     ++ " {"
     ++ intercalate "," (map genBinder fields)
-    ++ "\n}"
-    ++ "\n"
+    ++ "\n}\n"
 genTypeDef (TypeAlias _name _ty) = "\n"
 genTypeDef (Variant _name _cases) = "\n"
-genTypeDef (Enum _name _tags) = "\n"
+genTypeDef (Enum name tags) =
+  "enum "
+    ++ normalizeIdentifier name
+    ++ " {"
+    ++ intercalate "," tags
+    ++ "}\n"
 genTypeDef d = error "should not get type definition here: " $ show d
 
 genBinder :: (String, Type) -> String

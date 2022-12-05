@@ -30,6 +30,7 @@ library
       Wit.Ast
       Wit.Check
       Wit.Gen.Import
+      Wit.Gen.Normalization
       Wit.Gen.Type
       Wit.Parser
   other-modules:
