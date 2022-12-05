@@ -15,7 +15,7 @@ genTypeDef (Record name fields) =
   "struct "
     ++ name
     ++ " {"
-    ++ concatMap ((++) "\n  " . genBinder) fields
+    ++ intercalate "," (map genBinder fields)
     ++ "\n}"
     ++ "\n"
 genTypeDef (TypeAlias _name _ty) = "\n"

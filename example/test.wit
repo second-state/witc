@@ -1,1 +1,6 @@
-exchange: func(a: string) -> string
+record person {
+  name : string,
+  age : u32
+}
+
+exchange: func(a : string, p : person) -> string
