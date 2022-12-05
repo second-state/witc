@@ -7,3 +7,5 @@ exchange: func(a : string, p : person) -> string
 
 enum color { red, green, blue }
 exchange-enum: func(c : color) -> color
+
+handle-result: func(r : expected<s32, string>) -> expected<s32, string>
