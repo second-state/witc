@@ -5,19 +5,22 @@ use wasmedge_sdk::{
     host_function, Caller, ImportObjectBuilder, Vm, WasmValue,
 };
 
-fn load_string(caller: &Caller, addr: u32, size: u32) -> String {
+fn load_string(caller: &Caller, addr: i32, size: i32) -> String {
     let mem = caller.memory(0).unwrap();
-    let data = mem.read(addr, size).expect("fail to get string");
+    let data = mem
+        .read(addr as u32, size as u32)
+        .expect("fail to get string");
     String::from_utf8_lossy(&data).to_string()
 }
 
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let addr = input[0].to_i32() as u32;
-    let _cap = input[1].to_i32() as u32;
-    let size = input[2].to_i32() as u32;
-    let s = load_string(&caller, addr, size);
+    let s = load_string(&caller, input[0].to_i32(), input[2].to_i32());
     println!("Rust: Get: {}", s);
+
+    let s2 = load_string(&caller, input[3].to_i32(), input[5].to_i32());
+    println!("Rust: Get Name: {}", s2);
+    println!("Rust: Get Age: {}", input[6].to_i32());
 
     let mut mem = caller.memory(0).unwrap();
     // take last address+1
@@ -41,7 +44,7 @@ fn main() -> Result<(), Error> {
         .build()?;
 
     let import = ImportObjectBuilder::new()
-        .with_func::<(i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
+        .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
