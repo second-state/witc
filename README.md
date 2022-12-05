@@ -19,7 +19,25 @@ fn foo(s_addr: i32, s_size: i32, s2_addr: i32, s2_size: i32) -> (i32, i32)
 
 The thing is a bit out of control, not to say compound types like **structure**, **enum**, and **list**. In this sense, **wit** stands for one source code that is reusable for multi-target, and multi-direction and **witc** does code generation and manages ABI and memory operations. Thus, you can import/export types or functions from instance or runtime.
 
-### CLI
+### Usage
+
+#### Rust example
+
+```rust
+#![feature(wasm_abi)]
+
+wasmedge_witc::wit_instance_import!("../xxx.wit");
+
+#[no_mangle]
+pub unsafe extern "wasm" fn start() -> u32 {
+    let _s = exchange("Hello".to_string());
+    // `exchange` is defined in xxx.wit & host
+    // with wit type: `string -> string`
+    return 0;
+}
+```
+
+#### CLI
 
 Conceptual command
 
