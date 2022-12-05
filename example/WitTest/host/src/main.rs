@@ -14,7 +14,7 @@ fn load_string(caller: &Caller, addr: u32, size: u32) -> String {
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let addr = input[0].to_i32() as u32;
-    let cap = input[1].to_i32() as u32;
+    let _cap = input[1].to_i32() as u32;
     let size = input[2].to_i32() as u32;
     let s = load_string(&caller, addr, size);
     println!("Rust: Get: {}", s);
@@ -42,7 +42,7 @@ fn main() -> Result<(), Error> {
 
     let import = ImportObjectBuilder::new()
         .with_func::<(i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
-        .build("host")?;
+        .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
         .register_module_from_file("lib", "target/wasm32-wasi/release/lib.wasm")?;

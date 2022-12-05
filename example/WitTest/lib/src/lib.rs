@@ -1,9 +1,6 @@
 #![feature(wasm_abi)]
 
-#[link(wasm_import_module = "host")]
-extern "wasm" {
-    fn exchange(s: String) -> String;
-}
+pmacro::wit_instance_import!("../test.wit");
 
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {

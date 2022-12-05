@@ -10,3 +10,4 @@ default-target = "wasm32-wasi"
 crate-type = [ "cdylib" ]
 
 [dependencies]
+pmacro = { path = "../pmacro" }

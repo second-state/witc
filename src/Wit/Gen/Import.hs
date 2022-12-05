@@ -12,8 +12,9 @@ genInstanceImport WitFile {definition_list = def_list} =
   let (ty_defs, defs) = partition isTypeDef def_list
    in concatMap genTypeDef ty_defs
         ++ unlines
-          [ "extern \"C\" {",
-            unlines (map genDef defs),
+          [ "#[link(wasm_import_module = \"wasmedge\")]",
+            "extern \"wasm\" {",
+            unlines (map genDefExtern defs),
             "}"
           ]
 
@@ -23,10 +24,10 @@ normalizeIdentifier = map f
     f '-' = '_'
     f c = c
 
-genDef :: Definition -> String
-genDef (SrcPos _ d) = genDef d
-genDef (Resource _name _) = "test"
-genDef (Func (Function _attr name param_list result_ty)) =
+genDefExtern :: Definition -> String
+genDefExtern (SrcPos _ d) = genDefExtern d
+genDefExtern (Resource _name _) = ""
+genDefExtern (Func (Function _attr name param_list result_ty)) =
   "fn "
     ++ normalizeIdentifier name
     ++ "("
@@ -35,7 +36,7 @@ genDef (Func (Function _attr name param_list result_ty)) =
     ++ " -> "
     ++ genType result_ty
     ++ ";"
-genDef d = error "should not get type definition here: " $ show d
+genDefExtern d = error "should not get type definition here: " $ show d
 
 isTypeDef :: Definition -> Bool
 isTypeDef (SrcPos _ d) = isTypeDef d
