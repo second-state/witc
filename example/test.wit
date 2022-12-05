@@ -1,0 +1,1 @@
+exchange: func(a: string) -> string

@@ -1,0 +1,12 @@
+cargo-features = [ "per-package-target" ]
+
+[package]
+name = "lib"
+version = "0.1.0"
+edition = "2021"
+default-target = "wasm32-wasi"
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
