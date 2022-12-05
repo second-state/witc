@@ -66,9 +66,7 @@ checkFile = parseFile >=> eitherIO (check0 >=> eitherIO return)
 
 eitherIO :: Show e => (a -> IO b) -> Either e a -> IO b
 eitherIO f = \case
-  Left e -> do
-    print e
-    exitSuccess
+  Left e -> print e *> exitSuccess
   Right a -> f a
 
 data FuseError
