@@ -16,11 +16,11 @@ fn load_string(caller: &Caller, addr: i32, size: i32) -> String {
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let s = load_string(&caller, input[0].to_i32(), input[2].to_i32());
-    println!("Rust: Get: {}", s);
+    println!("wasmedge: Get: {}", s);
 
     let s2 = load_string(&caller, input[3].to_i32(), input[5].to_i32());
-    println!("Rust: Get Name: {}", s2);
-    println!("Rust: Get Age: {}", input[6].to_i32());
+    println!("wasmedge: Get Name: {}", s2);
+    println!("wasmedge: Get Age: {}", input[6].to_i32());
 
     let mut mem = caller.memory(0).unwrap();
     // take last address+1
@@ -54,6 +54,14 @@ fn exchange_enum(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue
     Ok(vec![input[0]])
 }
 
+#[host_function]
+fn handle_result(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    println!("wasmedge: ok?: {:?}", input[0]);
+    println!("wasmedge: value: {:?}", input[1]);
+    println!("wasmedge: err?: {:?}", input[2]);
+    Ok(vec![input[0], input[1], input[2]])
+}
+
 fn main() -> Result<(), Error> {
     let config = ConfigBuilder::new(CommonConfigOptions::default())
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
@@ -62,13 +70,14 @@ fn main() -> Result<(), Error> {
     let import = ImportObjectBuilder::new()
         .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
         .with_func::<i32, i32>("exchange_enum", exchange_enum)?
+        .with_func::<(i32, i32, i32), (i32, i32, i32)>("handle_result", handle_result)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
         .register_module_from_file("lib", "target/wasm32-wasi/release/lib.wasm")?;
 
     let result = vm.run_func(Some("lib"), "start", None)?;
-    println!("result: {}", result[0].to_i32());
+    assert!(result[0].to_i32() == 0);
 
     Ok(())
 }
