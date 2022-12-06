@@ -16,11 +16,9 @@ pub unsafe extern "wasm" fn start() -> u32 {
     );
     // enum (wit enum)
     let _i = exchange_enum(color::green);
-    // result (wit expected)
-    let r = Ok(321);
-    let _r = handle_result(r);
-    let r = Err("test".into());
-    let _r = handle_result(r);
+    // Option (wit option)
+    let _r = maybe_test(Some(5));
+    let _r = maybe_test(None);
 
     return 0;
 }

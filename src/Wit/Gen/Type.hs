@@ -45,8 +45,10 @@ genType PrimI64 = "i64"
 genType PrimChar = "char"
 genType PrimF32 = "f32"
 genType PrimF64 = "f64"
-genType (Optional ty) = "Option<" ++ genType ty ++ ">"
-genType (ListTy ty) = "Vec<" ++ genType ty ++ ">"
-genType (ExpectedTy ty ety) = "Result<" ++ genType ty ++ ", " ++ genType ety ++ ">"
-genType (TupleTy ty_list) = "(" ++ intercalate ", " (map genType ty_list) ++ ")"
+genType (Optional ty) = unwords ["Option<", genType ty, ">"]
+genType (ListTy ty) = unwords ["Vec<", genType ty, ">"]
+genType (ExpectedTy ty ety) =
+  unwords ["Result<", genType ty, ",", genType ety, ">"]
+genType (TupleTy ty_list) =
+  unwords ["(", intercalate ", " (map genType ty_list), ")"]
 genType (User name) = name
