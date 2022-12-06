@@ -64,6 +64,29 @@ fn maybe_test(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     Ok(vec![input[0], input[1]])
 }
 
+#[host_function]
+fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    match input[0].to_i32() {
+        0 => println!("Ok({})", input[1].to_i32()),
+        1 => println!("Err({:?}), {:?}", input[1], input[2]),
+        addr => {
+            let s = load_string(&caller, addr, input[2].to_i32());
+            println!("Err({:?})", s)
+        }
+    }
+    Ok(vec![WasmValue::from_i32(0)])
+}
+
+#[host_function]
+fn send_result2(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    match input[0].to_i32() {
+        0 => println!("Ok({:?})", input[1].to_i32()),
+        1 => println!("Err({:?})", input[1].to_i32()),
+        _ => unreachable!(),
+    }
+    Ok(vec![WasmValue::from_i32(0)])
+}
+
 fn main() -> Result<(), Error> {
     let config = ConfigBuilder::new(CommonConfigOptions::default())
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
@@ -73,6 +96,8 @@ fn main() -> Result<(), Error> {
         .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
         .with_func::<i32, i32>("exchange_enum", exchange_enum)?
         .with_func::<(i32, i32), (i32, i32)>("maybe_test", maybe_test)?
+        .with_func::<(i32, i32, i32), i32>("send_result", send_result)?
+        .with_func::<(i32, i32), i32>("send_result2", send_result2)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?

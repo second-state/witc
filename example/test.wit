@@ -9,3 +9,6 @@ enum color { red, green, blue }
 exchange-enum: func(c : color) -> color
 
 maybe-test: func(r : option<u8>) -> option<u8>
+
+send-result: func(r : expected<s32, string>) -> s32
+send-result2: func(r : expected<s8, u8>) -> s8
