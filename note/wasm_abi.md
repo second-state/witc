@@ -62,3 +62,22 @@ As expected, the tagging is `i32` when to wasm code, so the mapping as the follo
 - `Some` => `1`
 
 and then the second encoding is depending on `T`. Thus, `option<s32>` end up be `(i32, i32)`
+
+### Rust `Result`, wit `expected`
+
+First wit `expected<T, E>` turns to `Result<T, E>` in **Rust**, then following above idea by finding definition of `Result`
+
+```rust
+enum Result<T, E> {
+   Ok(T),
+   Err(E),
+}
+```
+
+As guess that simple type like `expected<s32, s32>`, the converted wasm type is `(i32, i32)`, and the first for tagging the second for value.
+
+However, when thing came to `Err` the encoding is much more confusing now, the result of `Err` first `i32` is not always `1` but can also be any non-zero value. What's going on here?
+
+Back to concrete example, the `expected<s32, string>` has conversion `(i32, i32, i32)`. First, the first `i32` still is `0` when it's `Ok`, but it would be an address when it's `Err`. In fact, for a construction `Err("abc")`, the tuple would be `(addr, 3, 3)`. Of course, the `String` encoding here.
+
+Thus, the current inspection shows that the `Result` type basically is just `0`, and is `1` when `E` is a single `i32` representable type. When `E` is not `i32` representable, it will in the heap of **Rust** instance.
