@@ -49,17 +49,19 @@ fn exchange_enum(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue
         0 => println!("wasmedge: color: red"),
         1 => println!("wasmedge: color: green"),
         2 => println!("wasmedge: color: blue"),
-        _ => Err(HostFuncError::User(0))?,
+        _ => unreachable!(),
     };
     Ok(vec![input[0]])
 }
 
 #[host_function]
-fn handle_result(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    println!("wasmedge: ok?: {:?}", input[0]);
-    println!("wasmedge: value: {:?}", input[1]);
-    println!("wasmedge: err?: {:?}", input[2]);
-    Ok(vec![input[0], input[1], input[2]])
+fn maybe_test(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    match input[0].to_i32() {
+        1 => println!("wasmedge: Some({})", input[1].to_i32()),
+        0 => println!("wasmedge: None"),
+        _ => unreachable!(),
+    };
+    Ok(vec![input[0], input[1]])
 }
 
 fn main() -> Result<(), Error> {
@@ -70,7 +72,7 @@ fn main() -> Result<(), Error> {
     let import = ImportObjectBuilder::new()
         .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
         .with_func::<i32, i32>("exchange_enum", exchange_enum)?
-        .with_func::<(i32, i32, i32), (i32, i32, i32)>("handle_result", handle_result)?
+        .with_func::<(i32, i32), (i32, i32)>("maybe_test", maybe_test)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
