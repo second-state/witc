@@ -39,8 +39,26 @@ enum color {
 }
 ```
 
-After compiled to **Rust**, there would have a mapping
+After witc compile it to **Rust** then wasm abi takes over, there would have a mapping
 
 - `color::red` => `0`
 - `color::green` => `1`
 - `color::blue` => `2`
+
+### Rust `Option`, wit `option`
+
+`option` is the first type function, it takes one type and returns one type, witc compiles it to **Rust** `Option` type. The definition in **Rust** should be:
+
+```rust
+enum Option<T> {
+    None,
+    Some(T),
+}
+```
+
+As expected, the tagging is `i32` when to wasm code, so the mapping as the following:
+
+- `None` => `0`
+- `Some` => `1`
+
+and then the second encoding is depending on `T`. Thus, `option<s32>` end up be `(i32, i32)`
