@@ -172,7 +172,7 @@ withPos c p = c <$> getSourcePos <*> p
 ------------
 lineComment, blockComment :: Parser ()
 lineComment = L.skipLineComment "//"
-blockComment = empty
+blockComment = L.skipBlockComment "/*" "*/"
 
 whitespace :: Parser ()
 whitespace = L.space space1 lineComment blockComment
