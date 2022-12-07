@@ -26,6 +26,12 @@ pub unsafe extern "wasm" fn start() -> u32 {
     let _r = send_result2(Err(1));
     let _r = send_result2(Err(2));
     let _r = send_result2(Err(3));
+    // Vec (wit list)
+    let mut v = Vec::with_capacity(3);
+    v.push(1);
+    v.push(2);
+    let _l = exchange_list(v);
+    let _l = exchange_list_string(vec!["test".into(), "abc".into()]);
 
     return 0;
 }
