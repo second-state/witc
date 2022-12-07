@@ -21,6 +21,7 @@ where
 import Control.Monad
 import Data.Char
 import Data.Functor
+import Data.Maybe
 import Data.Void
 import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
@@ -113,8 +114,8 @@ pVariant = do
     pVariantCase :: Parser (String, [Type])
     pVariantCase = do
       tag_name <- identifier
-      type_list <- parens $ sepBy pType (symbol ",")
-      return (tag_name, type_list)
+      type_list <- optional $ parens $ sepBy pType (symbol ",")
+      return (tag_name, fromMaybe [] type_list)
 pEnum = do
   keyword "enum"
   name <- identifier
