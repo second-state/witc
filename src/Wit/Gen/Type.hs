@@ -19,7 +19,29 @@ genTypeDef (Record name fields) =
     ++ intercalate "," (map genBinder fields)
     ++ "\n}\n"
 genTypeDef (TypeAlias _name _ty) = "\n"
-genTypeDef (Variant _name _cases) = "\n"
+genTypeDef (Variant name cases) =
+  "enum "
+    ++ normalizeIdentifier name
+    ++ " {"
+    ++ intercalate "," (map genCase cases)
+    ++ "}\n"
+  where
+    genCase :: (String, [Type]) -> String
+    genCase (case_name, []) = case_name
+    genCase (case_name, ts) =
+      unwords
+        [ case_name,
+          "(",
+          intercalate "," (map boxType ts),
+          ")"
+        ]
+    boxType :: Type -> String
+    boxType (SrcPosType _ ty) = boxType ty
+    boxType (User recur_name) =
+      if name == recur_name
+        then "Box<" ++ recur_name ++ ">"
+        else name
+    boxType ty = genType ty
 genTypeDef (Enum name tags) =
   "enum "
     ++ normalizeIdentifier name
