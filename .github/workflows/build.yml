@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "**.hs"
+      - "**.cabal"
+      - "**.yaml"
+      - "**.yml"
   pull_request:
     branches:
       - main
+    paths:
+      - "**.hs"
+      - "**.cabal"
+      - "**.yaml"
+      - "**.yml"
 
 jobs:
   build:
