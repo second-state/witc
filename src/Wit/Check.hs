@@ -93,8 +93,10 @@ checkDef ctx = \case
     checkTy ctx ty
     return $ (name, User name) : ctx
   Variant name cases -> do
-    mapM_ (checkTyList ctx . snd) cases
-    return $ (name, User name) : ctx
+    let ctx' = (name, User name) : ctx
+    -- as a sum of product, it's ok to be defined recursively
+    mapM_ (checkTyList ctx' . snd) cases
+    return ctx'
   where
     checkBinders :: Context -> [(String, Type)] -> M ()
     checkBinders ctx' = mapM_ (checkTy ctx' . snd)
