@@ -13,6 +13,9 @@ maybe-test: func(r : option<u8>) -> option<u8>
 send-result: func(r : expected<s32, string>) -> s32
 send-result2: func(r : expected<s8, u8>) -> s8
 
+exchange-list: func(l : list<u8>) -> list<u8>
+exchange-list-string: func(l : list<string>) -> list<string>
+
 variant nat {
   zero,
   suc(nat)

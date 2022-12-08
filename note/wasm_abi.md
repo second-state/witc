@@ -4,7 +4,11 @@ This development note records the conversion from **Rust** type to wasm represen
 
 ### Rust `String`, wit `string`
 
-`String` will become a 3-tuple `(i32, i32, i32)` that for `addr`, `capability`, and `length`.
+`String` will become a 3-tuple `(i32, i32, i32)` that for
+
+1. address
+2. capability
+3. length
 
 ### Rust `struct A`, wit `record A`
 
@@ -81,3 +85,30 @@ However, when thing came to `Err` the encoding is much more confusing now, the r
 Back to concrete example, the `expected<s32, string>` has conversion `(i32, i32, i32)`. First, the first `i32` still is `0` when it's `Ok`, but it would be an address when it's `Err`. In fact, for a construction `Err("abc")`, the tuple would be `(addr, 3, 3)`. Of course, the `String` encoding here.
 
 Thus, the current inspection shows that the `Result` type basically is just `0`, and is `1` when `E` is a single `i32` representable type. When `E` is not `i32` representable, it will in the heap of **Rust** instance.
+
+### Rust `Vec`, wit `list`
+
+First, a `Vec<T>` will be came a 3-tuple `(i32, i32, i32)`, for
+
+1. address
+2. capability
+3. length
+
+Just like `String`. Then you can get a linear memory chunk for `Vec<u8>` to get all data, now you need to decode it out to target type. For example, `vec!["test".to_string(), "abc".to_string()]` will have such chunk as
+
+```rust
+[48, 13, 16, 0, 4, 0, 0, 0, 4, 0, 0, 0, 64, 13, 16, 0, 3, 0, 0, 0, 3, 0, 0, 0]
+```
+
+It's easy to figure out what's that
+
+- `"test"`
+  1. addr: 48, 13, 16, 0
+  2. cap: 4, 0, 0, 0
+  3. len: 4, 0, 0, 0
+- `"abc"`
+  1. addr: 64, 13, 16, 0
+  2. cap: 3, 0, 0, 0
+  3. len: 3, 0, 0, 0
+
+That's all.
