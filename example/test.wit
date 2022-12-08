@@ -20,3 +20,4 @@ variant nat {
   zero,
   suc(nat)
 }
+pass-nat: func(n : nat) -> s32;
