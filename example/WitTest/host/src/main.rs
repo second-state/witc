@@ -143,6 +143,17 @@ fn exchange_list_string(
     Ok(input)
 }
 
+// pass-nat: func(n : nat) -> s32;
+#[host_function]
+fn pass_nat(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    println!("{:?}", input);
+    match input[0].to_i32() {
+        0 => println!("zero"),
+        x => println!("{}", x),
+    }
+    Ok(vec![WasmValue::from_i32(0)])
+}
+
 fn main() -> Result<(), Error> {
     let config = ConfigBuilder::new(CommonConfigOptions::default())
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
@@ -159,6 +170,7 @@ fn main() -> Result<(), Error> {
             "exchange_list_string",
             exchange_list_string,
         )?
+        .with_func::<i32, i32>("pass_nat", pass_nat)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?

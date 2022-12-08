@@ -14,7 +14,7 @@ pub unsafe extern "wasm" fn start() -> u32 {
             age: 30,
         },
     );
-    // enum (wit enum)
+    // enum 0-product (wit enum)
     let _i = exchange_enum(color::green);
     // Option (wit option)
     let _r = maybe_test(Some(5));
@@ -32,6 +32,9 @@ pub unsafe extern "wasm" fn start() -> u32 {
     v.push(2);
     let _l = exchange_list(v);
     let _l = exchange_list_string(vec!["test".into(), "abc".into()]);
+    // enum (wit variant)
+    let _ = pass_nat(nat::zero);
+    let _ = pass_nat(nat::suc(Box::new(nat::zero)));
 
     return 0;
 }
