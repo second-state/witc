@@ -2,7 +2,9 @@
 module Wit.Gen.Type
   ( genTypeDef,
     genType,
+    genABIType,
     genBinder,
+    genABIBinder,
   )
 where
 
@@ -13,14 +15,16 @@ import Wit.Gen.Normalization
 genTypeDef :: Definition -> String
 genTypeDef (SrcPos _ d) = genTypeDef d
 genTypeDef (Record name fields) =
-  "struct "
+  "#[repr(C)]"
+    ++ "struct "
     ++ normalizeIdentifier name
     ++ " {"
-    ++ intercalate "," (map genBinder fields)
+    ++ intercalate "," (map genABIBinder fields)
     ++ "\n}\n"
 genTypeDef (TypeAlias _name _ty) = "\n"
 genTypeDef (Variant name cases) =
-  "enum "
+  "#[repr(C, u8)]"
+    ++ "enum "
     ++ normalizeIdentifier name
     ++ " {"
     ++ intercalate "," (map genCase cases)
@@ -53,6 +57,9 @@ genTypeDef d = error "should not get type definition here: " $ show d
 genBinder :: (String, Type) -> String
 genBinder (field_name, ty) = field_name ++ ": " ++ genType ty
 
+genABIBinder :: (String, Type) -> String
+genABIBinder (field_name, ty) = field_name ++ ": " ++ genABIType ty
+
 genType :: Type -> String
 genType (SrcPosType _ ty) = genType ty
 genType PrimString = "String"
@@ -74,3 +81,14 @@ genType (ExpectedTy ty ety) =
 genType (TupleTy ty_list) =
   unwords ["(", intercalate ", " (map genType ty_list), ")"]
 genType (User name) = name
+
+genABIType :: Type -> String
+genABIType (SrcPosType _ ty) = genABIType ty
+genABIType PrimString = "WitString"
+genABIType (Optional ty) = unwords ["WitOption<", genABIType ty, ">"]
+genABIType (ListTy ty) = unwords ["WitVec<", genABIType ty, ">"]
+genABIType (ExpectedTy ty ety) =
+  unwords ["WitResult<", genABIType ty, ",", genABIType ety, ">"]
+genABIType (TupleTy ty_list) =
+  unwords ["(", intercalate ", " (map genABIType ty_list), ")"]
+genABIType ty = genType ty
