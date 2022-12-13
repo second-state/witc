@@ -18,13 +18,30 @@ genInstanceImport WitFile {definition_list = def_list} =
             unlines (map genDefExtern defs),
             "}"
           ]
+        ++ unlines (map genDefWrap defs)
+
+genDefWrap :: Definition -> String
+genDefWrap (SrcPos _ d) = genDefWrap d
+genDefWrap (Resource _ _) = ""
+genDefWrap (Func (Function _attr name param_list result_ty)) =
+  "fn "
+    ++ normalizeIdentifier name
+    ++ "("
+    ++ intercalate ", " (map genBinder param_list)
+    ++ ")"
+    ++ " -> "
+    ++ genType result_ty
+    ++ "{"
+    ++ ("unsafe { extern_" ++ normalizeIdentifier name ++ "(" ++ intercalate ", " (map fst param_list) ++ ") }")
+    ++ "}"
+genDefWrap d = error "should not get type definition here: " $ show d
 
 genDefExtern :: Definition -> String
 genDefExtern (SrcPos _ d) = genDefExtern d
 genDefExtern (Resource _name _) = ""
 genDefExtern (Func (Function _attr name param_list result_ty)) =
   "fn "
-    ++ normalizeIdentifier name
+    ++ ("extern_" ++ normalizeIdentifier name)
     ++ "("
     ++ intercalate ", " (map genBinder param_list)
     ++ ")"
