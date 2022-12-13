@@ -35,7 +35,9 @@ pub unsafe extern "wasm" fn start() -> u32 {
     let _l = exchange_list_string(vec!["test".into(), "abc".into()]);
     // enum (wit variant)
     let _ = pass_nat(nat::zero);
-    let _ = pass_nat(nat::suc(Box::new(nat::zero)));
+    let _ = pass_nat(nat::suc(Box::new(nat::suc(Box::new(nat::suc(Box::new(
+        nat::zero,
+    )))))));
 
     return 0;
 }

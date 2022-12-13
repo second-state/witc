@@ -58,24 +58,29 @@ impl<T> Into<Option<T>> for WitOption<T> {
 #[derive(Debug)]
 #[repr(C)]
 pub struct WitVec<T> {
-    ptr: *const T,
+    ptr: *mut T,
     cap: usize,
     len: usize,
 }
 
 impl From<Vec<String>> for WitVec<WitString> {
     fn from(r: Vec<String>) -> Self {
+        let mut v: Vec<WitString> = vec![];
+        for e in r {
+            v.push(e.into());
+        }
+
         WitVec {
-            ptr: 0 as *const WitString,
-            cap: r.capacity(),
-            len: r.len(),
+            ptr: v.as_ptr() as *mut WitString,
+            cap: v.capacity(),
+            len: v.len(),
         }
     }
 }
 impl<T> From<Vec<T>> for WitVec<T> {
     fn from(r: Vec<T>) -> Self {
         WitVec {
-            ptr: r.as_ptr(),
+            ptr: r.as_ptr() as *mut T,
             cap: r.capacity(),
             len: r.len(),
         }
@@ -83,12 +88,17 @@ impl<T> From<Vec<T>> for WitVec<T> {
 }
 impl Into<Vec<String>> for WitVec<WitString> {
     fn into(self: Self) -> Vec<String> {
-        vec![]
+        let v: Vec<WitString> = unsafe { Vec::from_raw_parts(self.ptr, self.cap, self.len) };
+        let mut r: Vec<String> = Vec::with_capacity(self.cap);
+        for e in v {
+            r.push(e.into());
+        }
+        r
     }
 }
 impl<T> Into<Vec<T>> for WitVec<T> {
     fn into(self: Self) -> Vec<T> {
-        vec![]
+        unsafe { Vec::from_raw_parts(self.ptr, self.cap, self.len) }
     }
 }
 
