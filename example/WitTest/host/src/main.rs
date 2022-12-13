@@ -2,7 +2,7 @@ use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     error::HostFuncError,
-    host_function, Caller, ImportObjectBuilder, Vm, WasmValue,
+    host_function, Caller, ImportObjectBuilder, Memory, Vm, WasmValue,
 };
 
 fn load_string(caller: &Caller, addr: i32, len: i32) -> String {
@@ -94,7 +94,7 @@ fn maybe_test(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
 }
 
 #[host_function]
-fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+fn send_result(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     match input[0].to_i32() {
         0 => println!("wasmedge: Result<i32, String>: Ok({})", input[4].to_i32()),
         1 => {
@@ -142,12 +142,34 @@ fn exchange_list_string(
 }
 
 // pass-nat: func(n : nat) -> s32;
+fn recur_print(mem: Memory, r: (u32, u32)) {
+    match r.0 {
+        0 => {
+            println!("zero");
+        }
+        x => {
+            let r = mem.read(x, 8).unwrap();
+            print!("suc ");
+            let l = u32::from_ne_bytes(r[0..4].try_into().unwrap());
+            let r = u32::from_ne_bytes(r[4..8].try_into().unwrap());
+            recur_print(mem, (l, r))
+        }
+    }
+}
 #[host_function]
-fn pass_nat(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    println!("{:?}", input);
+fn pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     match input[0].to_i32() {
-        0 => println!("zero"),
-        x => println!("{}", x),
+        0 => {
+            println!("zero");
+        }
+        _ => {
+            let mem = caller.memory(0).unwrap();
+            let r = mem.read(input[1].to_i32() as u32, 8).unwrap();
+            print!("suc ");
+            let l = u32::from_ne_bytes(r[0..4].try_into().unwrap());
+            let r = u32::from_ne_bytes(r[4..8].try_into().unwrap());
+            recur_print(mem, (l, r));
+        }
     }
     Ok(vec![WasmValue::from_i32(0)])
 }
