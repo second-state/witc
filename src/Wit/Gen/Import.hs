@@ -32,8 +32,17 @@ genDefWrap (Func (Function _attr name param_list result_ty)) =
     ++ " -> "
     ++ genType result_ty
     ++ "{"
-    ++ ("unsafe { extern_" ++ normalizeIdentifier name ++ "(" ++ intercalate ", " (map fst param_list) ++ ") }")
+    -- unsafe call extern function
+    ++ ( "unsafe { extern_"
+           ++ normalizeIdentifier name
+           ++ "("
+           ++ intercalate ", " (map (paramInto . fst) param_list)
+           ++ ") }.into()"
+       )
     ++ "}"
+  where
+    paramInto :: String -> String
+    paramInto s = s ++ ".into()"
 genDefWrap d = error "should not get type definition here: " $ show d
 
 genDefExtern :: Definition -> String
@@ -43,10 +52,10 @@ genDefExtern (Func (Function _attr name param_list result_ty)) =
   "fn "
     ++ ("extern_" ++ normalizeIdentifier name)
     ++ "("
-    ++ intercalate ", " (map genBinder param_list)
+    ++ intercalate ", " (map genABIBinder param_list)
     ++ ")"
     ++ " -> "
-    ++ genType result_ty
+    ++ genABIType result_ty
     ++ ";"
 genDefExtern d = error "should not get type definition here: " $ show d
 

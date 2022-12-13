@@ -96,15 +96,13 @@ fn maybe_test(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
 #[host_function]
 fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     match input[0].to_i32() {
-        0 => println!("wasmedge: Result<i32, String>: Ok({})", input[1].to_i32()),
-        1 => println!(
-            "wasmedge: Result<i32, String>: Err({:?}), {:?}",
-            input[1], input[2]
-        ),
-        addr => {
-            let s = load_string(&caller, addr, input[2].to_i32());
-            println!("wasmedge: Result<i32, String>: Err({:?})", s)
+        0 => println!("wasmedge: Result<i32, String>: Ok({})", input[4].to_i32()),
+        1 => {
+            println!("{:?}", input[1..].len());
+            println!("{:?}", input[1..].into_iter());
+            // println!("wasmedge: Result<i32, String>: Err({:?})", s)
         }
+        _ => unreachable!(),
     }
     Ok(vec![WasmValue::from_i32(0)])
 }
@@ -160,17 +158,37 @@ fn main() -> Result<(), Error> {
         .build()?;
 
     let import = ImportObjectBuilder::new()
-        .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>("exchange", exchange)?
-        .with_func::<i32, i32>("exchange_enum", exchange_enum)?
-        .with_func::<(i32, i32), (i32, i32)>("maybe_test", maybe_test)?
-        .with_func::<(i32, i32, i32), i32>("send_result", send_result)?
-        .with_func::<(i32, i32), i32>("send_result2", send_result2)?
-        .with_func::<(i32, i32, i32), (i32, i32, i32)>("exchange_list", exchange_list)?
+        .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>(
+            "extern_exchange",
+            exchange,
+        )?
+        .with_func::<i32, i32>("extern_exchange_enum", exchange_enum)?
+        .with_func::<(i32, i32), (i32, i32)>("extern_maybe_test", maybe_test)?
+        .with_func::<(
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+            i32,
+        ), i32>("extern_send_result", send_result)?
+        .with_func::<(i32, i32), i32>("extern_send_result2", send_result2)?
+        .with_func::<(i32, i32, i32), (i32, i32, i32)>("extern_exchange_list", exchange_list)?
         .with_func::<(i32, i32, i32), (i32, i32, i32)>(
-            "exchange_list_string",
+            "extern_exchange_list_string",
             exchange_list_string,
         )?
-        .with_func::<i32, i32>("pass_nat", pass_nat)?
+        .with_func::<(i32, i32), i32>("extern_pass_nat", pass_nat)?
         .build("wasmedge")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
