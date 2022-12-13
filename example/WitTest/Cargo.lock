@@ -3,6 +3,10 @@
 version = 3
 
 [[package]]
+name = "abi"
+version = "0.1.0"
+
+[[package]]
 name = "anyhow"
 version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -128,6 +132,7 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 name = "lib"
 version = "0.1.0"
 dependencies = [
+ "abi",
  "pmacro",
 ]
 

@@ -1,5 +1,7 @@
 #![feature(wasm_abi)]
 
+use abi::*;
+
 pmacro::wit_instance_import!("../test.wit");
 
 #[no_mangle]
