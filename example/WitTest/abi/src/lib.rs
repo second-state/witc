@@ -64,7 +64,7 @@ pub struct WitVec<T> {
 }
 
 impl From<Vec<String>> for WitVec<WitString> {
-    fn from(mut r: Vec<String>) -> Self {
+    fn from(r: Vec<String>) -> Self {
         let mut v: Vec<WitString> = vec![];
         for e in r {
             v.push(e.into());
