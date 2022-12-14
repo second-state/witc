@@ -94,13 +94,14 @@ fn maybe_test(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
 }
 
 #[host_function]
-fn send_result(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     match input[0].to_i32() {
-        0 => println!("wasmedge: Result<i32, String>: Ok({})", input[4].to_i32()),
+        0 => println!("wasmedge: Result<i32, String>: Ok({})", input[1].to_i32()),
         1 => {
-            println!("{:?}", input[1..].len());
-            println!("{:?}", input[1..].into_iter());
-            // println!("wasmedge: Result<i32, String>: Err({:?})", s)
+            // println!("{:?}", input[1..].len());
+            // println!("{:?}", input[1..].into_iter());
+            let s = load_string(&caller, input[1].to_i32(), input[3].to_i32());
+            println!("wasmedge: Result<i32, String>: Err({:?})", s)
         }
         _ => unreachable!(),
     }
@@ -186,24 +187,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_func::<i32, i32>("extern_exchange_enum", exchange_enum)?
         .with_func::<(i32, i32), (i32, i32)>("extern_maybe_test", maybe_test)?
-        .with_func::<(
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-            i32,
-        ), i32>("extern_send_result", send_result)?
+        .with_func::<(i32, i32, i32, i32), i32>("extern_send_result", send_result)?
         .with_func::<(i32, i32), i32>("extern_send_result2", send_result2)?
         .with_func::<(i32, i32, i32), (i32, i32, i32)>("extern_exchange_list", exchange_list)?
         .with_func::<(i32, i32, i32), (i32, i32, i32)>(

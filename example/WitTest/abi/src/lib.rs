@@ -32,7 +32,7 @@ impl Into<String> for WitString {
 }
 
 #[derive(Debug)]
-#[repr(C, u8)]
+#[repr(C, u32)]
 pub enum WitOption<T> {
     None,
     Some(T),
@@ -64,23 +64,23 @@ pub struct WitVec<T> {
 }
 
 impl From<Vec<String>> for WitVec<WitString> {
-    fn from(r: Vec<String>) -> Self {
+    fn from(mut r: Vec<String>) -> Self {
         let mut v: Vec<WitString> = vec![];
         for e in r {
             v.push(e.into());
         }
 
         WitVec {
-            ptr: v.as_ptr() as *mut WitString,
+            ptr: v.as_mut_ptr(),
             cap: v.capacity(),
             len: v.len(),
         }
     }
 }
 impl<T> From<Vec<T>> for WitVec<T> {
-    fn from(r: Vec<T>) -> Self {
+    fn from(mut r: Vec<T>) -> Self {
         WitVec {
-            ptr: r.as_ptr() as *mut T,
+            ptr: r.as_mut_ptr(),
             cap: r.capacity(),
             len: r.len(),
         }
@@ -103,12 +103,20 @@ impl<T> Into<Vec<T>> for WitVec<T> {
 }
 
 #[derive(Debug)]
-#[repr(C, u8)]
+#[repr(C, u32)]
 pub enum WitResult<T, E> {
     Ok(T),
     Err(E),
 }
 
+impl<T> From<Result<T, &str>> for WitResult<T, WitString> {
+    fn from(r: Result<T, &str>) -> Self {
+        match r {
+            Ok(ok) => WitResult::Ok(ok.into()),
+            Err(err) => WitResult::Err(err.into()),
+        }
+    }
+}
 impl<T> From<Result<T, String>> for WitResult<T, WitString> {
     fn from(r: Result<T, String>) -> Self {
         match r {
@@ -117,7 +125,14 @@ impl<T> From<Result<T, String>> for WitResult<T, WitString> {
         }
     }
 }
-
+impl<E> From<Result<&str, E>> for WitResult<WitString, E> {
+    fn from(r: Result<&str, E>) -> Self {
+        match r {
+            Ok(ok) => WitResult::Ok(ok.into()),
+            Err(err) => WitResult::Err(err.into()),
+        }
+    }
+}
 impl<E> From<Result<String, E>> for WitResult<WitString, E> {
     fn from(r: Result<String, E>) -> Self {
         match r {

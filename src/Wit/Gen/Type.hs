@@ -23,7 +23,7 @@ genTypeDef (Record name fields) =
     ++ "\n}\n"
 genTypeDef (TypeAlias _name _ty) = "\n"
 genTypeDef (Variant name cases) =
-  "#[repr(C, u8)]"
+  "#[repr(C, u32)]"
     ++ "enum "
     ++ normalizeIdentifier name
     ++ " {"
