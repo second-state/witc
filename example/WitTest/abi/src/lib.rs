@@ -1,3 +1,6 @@
+#![feature(vec_into_raw_parts)]
+use std::marker::PhantomData;
+
 #[derive(Debug)]
 #[repr(C)]
 pub struct WitString {
@@ -8,19 +11,21 @@ pub struct WitString {
 
 impl From<&str> for WitString {
     fn from(s: &str) -> Self {
+        let (ptr, len, cap) = s.to_string().into_raw_parts();
         Self {
-            addr: s.as_ptr() as *mut u8,
-            cap: s.len(),
-            len: s.len(),
+            addr: ptr,
+            cap,
+            len,
         }
     }
 }
 impl From<String> for WitString {
     fn from(s: String) -> Self {
+        let (ptr, len, cap) = s.into_raw_parts();
         Self {
-            addr: s.as_ptr() as *mut u8,
-            cap: s.capacity(),
-            len: s.len(),
+            addr: ptr,
+            cap,
+            len,
         }
     }
 }
@@ -58,9 +63,10 @@ impl<T> Into<Option<T>> for WitOption<T> {
 #[derive(Debug)]
 #[repr(C)]
 pub struct WitVec<T> {
-    ptr: *mut T,
+    ptr: usize,
     cap: usize,
     len: usize,
+    phantom: PhantomData<T>,
 }
 
 impl From<Vec<String>> for WitVec<WitString> {
@@ -71,24 +77,27 @@ impl From<Vec<String>> for WitVec<WitString> {
         }
 
         WitVec {
-            ptr: v.as_mut_ptr(),
             cap: v.capacity(),
             len: v.len(),
+            ptr: v.leak().as_ptr() as usize,
+            phantom: PhantomData,
         }
     }
 }
 impl<T> From<Vec<T>> for WitVec<T> {
-    fn from(mut r: Vec<T>) -> Self {
+    fn from(r: Vec<T>) -> Self {
         WitVec {
-            ptr: r.as_mut_ptr(),
             cap: r.capacity(),
             len: r.len(),
+            ptr: r.leak().as_ptr() as usize,
+            phantom: PhantomData,
         }
     }
 }
 impl Into<Vec<String>> for WitVec<WitString> {
     fn into(self: Self) -> Vec<String> {
-        let v: Vec<WitString> = unsafe { Vec::from_raw_parts(self.ptr, self.cap, self.len) };
+        let v: Vec<WitString> =
+            unsafe { Vec::from_raw_parts(self.ptr as *mut WitString, self.cap, self.len) };
         let mut r: Vec<String> = Vec::with_capacity(self.cap);
         for e in v {
             r.push(e.into());
@@ -98,7 +107,7 @@ impl Into<Vec<String>> for WitVec<WitString> {
 }
 impl<T> Into<Vec<T>> for WitVec<T> {
     fn into(self: Self) -> Vec<T> {
-        unsafe { Vec::from_raw_parts(self.ptr, self.cap, self.len) }
+        unsafe { Vec::from_raw_parts(self.ptr as *mut T, self.cap, self.len) }
     }
 }
 

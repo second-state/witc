@@ -33,9 +33,9 @@ fn load_vec_string(caller: &Caller, addr: i32, len: i32) -> Vec<String> {
     let mut r_v = vec![];
     for i in 0..(len as usize) {
         let i = i * 12;
-        let s_addr = i32::from_le_bytes(data[i..(i + 4)].try_into().unwrap());
-        let _s_cap = i32::from_le_bytes(data[(i + 4)..(i + 8)].try_into().unwrap());
-        let s_len = i32::from_le_bytes(data[(i + 8)..(i + 12)].try_into().unwrap());
+        let s_addr = i32::from_ne_bytes(data[i..(i + 4)].try_into().unwrap());
+        let _s_cap = i32::from_ne_bytes(data[(i + 4)..(i + 8)].try_into().unwrap());
+        let s_len = i32::from_ne_bytes(data[(i + 8)..(i + 12)].try_into().unwrap());
         let s = load_string(caller, s_addr, s_len);
         r_v.push(s);
     }
