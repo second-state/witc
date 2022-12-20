@@ -1,19 +1,11 @@
 use abi::runtime::Runtime;
-use abi::{WitOption, WitString, WitVec};
+use abi::{WitOption, WitResult, WitString, WitVec};
 use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     error::HostFuncError,
     host_function, Caller, ImportObjectBuilder, Memory, Vm, WasmValue,
 };
-
-fn load_string(caller: &Caller, addr: i32, len: i32) -> String {
-    let mem = caller.memory(0).unwrap();
-    let data = mem
-        .read(addr as u32, len as u32)
-        .expect("fail to get string");
-    String::from_utf8_lossy(&data).to_string()
-}
 
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
@@ -65,16 +57,8 @@ fn maybe_test(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, H
 
 #[host_function]
 fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    match input[0].to_i32() {
-        0 => println!("wasmedge: Result<i32, String>: Ok({})", input[1].to_i32()),
-        1 => {
-            // println!("{:?}", input[1..].len());
-            // println!("{:?}", input[1..].into_iter());
-            let s = load_string(&caller, input[1].to_i32(), input[3].to_i32());
-            println!("wasmedge: Result<i32, String>: Err({:?})", s)
-        }
-        _ => unreachable!(),
-    }
+    let (r, _) = WitResult::<WitString, WitString>::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: Result<String, String>: {:?}", r);
     Ok(vec![WasmValue::from_i32(0)])
 }
 
