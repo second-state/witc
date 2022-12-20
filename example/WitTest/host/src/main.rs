@@ -143,35 +143,27 @@ fn exchange_list_string(
 }
 
 // pass-nat: func(n : nat) -> s32;
-fn recur_print(mem: Memory, r: (u32, u32)) {
-    match r.0 {
+fn recur_print(mem: Memory, pair: (u32, u32)) {
+    match pair.0 {
         0 => {
             println!("zero");
         }
-        x => {
-            let r = mem.read(x, 8).unwrap();
+        1 => {
+            let res = mem.read(pair.1, 8).unwrap();
             print!("suc ");
-            let l = u32::from_ne_bytes(r[0..4].try_into().unwrap());
-            let r = u32::from_ne_bytes(r[4..8].try_into().unwrap());
+            let l = u32::from_ne_bytes(res[0..4].try_into().unwrap());
+            let r = u32::from_ne_bytes(res[4..8].try_into().unwrap());
             recur_print(mem, (l, r))
         }
+        _ => unreachable!(),
     }
 }
 #[host_function]
 fn pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    match input[0].to_i32() {
-        0 => {
-            println!("zero");
-        }
-        _ => {
-            let mem = caller.memory(0).unwrap();
-            let r = mem.read(input[1].to_i32() as u32, 8).unwrap();
-            print!("suc ");
-            let l = u32::from_ne_bytes(r[0..4].try_into().unwrap());
-            let r = u32::from_ne_bytes(r[4..8].try_into().unwrap());
-            recur_print(mem, (l, r));
-        }
-    }
+    recur_print(
+        caller.memory(0).unwrap(),
+        (input[0].to_i32() as u32, input[1].to_i32() as u32),
+    );
     Ok(vec![WasmValue::from_i32(0)])
 }
 
