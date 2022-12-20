@@ -1,5 +1,5 @@
 use abi::runtime::Runtime;
-use abi::{WitString, WitVec};
+use abi::{WitOption, WitString, WitVec};
 use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
@@ -57,13 +57,10 @@ fn exchange_enum(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue
 }
 
 #[host_function]
-fn maybe_test(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    match input[0].to_i32() {
-        1 => println!("wasmedge: Option<u8>: Some({})", input[1].to_i32()),
-        0 => println!("wasmedge: Option<u8>: None"),
-        _ => unreachable!(),
-    };
-    Ok(vec![input[0], input[1]])
+fn maybe_test(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let (o, _) = WitOption::<u8>::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: Option<u8>: {:?}", o);
+    Ok(input)
 }
 
 #[host_function]

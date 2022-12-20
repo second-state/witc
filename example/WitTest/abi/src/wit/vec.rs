@@ -30,10 +30,7 @@ mod implement {
             .collect()
     }
 
-    impl<A> Runtime for WitVec<A>
-    where
-        A: Runtime,
-    {
+    impl<A: Runtime> Runtime for WitVec<A> {
         type T = Vec<A::T>;
 
         fn size() -> usize {
