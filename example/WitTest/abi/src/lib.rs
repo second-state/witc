@@ -1,5 +1,8 @@
 #![feature(vec_into_raw_parts)]
 
+#[cfg(not(target_arch = "wasm32"))]
+pub mod runtime;
+
 mod wit;
 
 pub use wit::option::WitOption;

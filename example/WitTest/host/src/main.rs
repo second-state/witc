@@ -1,3 +1,5 @@
+use abi::runtime::Runtime;
+use abi::{WitString, WitVec};
 use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
@@ -13,43 +15,14 @@ fn load_string(caller: &Caller, addr: i32, len: i32) -> String {
     String::from_utf8_lossy(&data).to_string()
 }
 
-fn load_vec(caller: &Caller, addr: i32, len: i32) -> Vec<u8> {
-    let mem = caller.memory(0).unwrap();
-    let data = mem
-        .read(addr as u32, len as u32)
-        .expect("fail to get vector");
-    data
-}
-
-fn load_vec_string(caller: &Caller, addr: i32, len: i32) -> Vec<String> {
-    // since String is (i32, i32, i32)'s 3-tuple
-    // but the data is Vec<u8>
-    // 12 times
-    let mem = caller.memory(0).unwrap();
-    let data = mem
-        .read(addr as u32, (len * 12) as u32)
-        .expect("fail to get vector");
-
-    let mut r_v = vec![];
-    for i in 0..(len as usize) {
-        let i = i * 12;
-        let s_addr = i32::from_ne_bytes(data[i..(i + 4)].try_into().unwrap());
-        let _s_cap = i32::from_ne_bytes(data[(i + 4)..(i + 8)].try_into().unwrap());
-        let s_len = i32::from_ne_bytes(data[(i + 8)..(i + 12)].try_into().unwrap());
-        let s = load_string(caller, s_addr, s_len);
-        r_v.push(s);
-    }
-    r_v
-}
-
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let s = load_string(&caller, input[0].to_i32(), input[2].to_i32());
+    let (s, input) = WitString::new_by_runtime(&caller, input);
     println!("wasmedge: Get: {}", s);
 
-    let s2 = load_string(&caller, input[3].to_i32(), input[5].to_i32());
+    let (s2, input) = WitString::new_by_runtime(&caller, input);
     println!("wasmedge: Get Name: {}", s2);
-    println!("wasmedge: Get Age: {}", input[6].to_i32());
+    println!("wasmedge: Get Age: {}", input[0].to_i32());
 
     let mut mem = caller.memory(0).unwrap();
     // take last address+1
@@ -120,10 +93,8 @@ fn send_result2(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>
 
 #[host_function]
 fn exchange_list(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let addr = input[0].to_i32();
-    let _cap = input[1].to_i32();
-    let len = input[2].to_i32();
-    println!("wasmedge: Vec<u8>: {:?}", load_vec(&caller, addr, len));
+    let (v, _) = WitVec::<u8>::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: Vec<u8>: {:?}", v);
     Ok(input)
 }
 
@@ -132,13 +103,8 @@ fn exchange_list_string(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
-    let addr = input[0].to_i32();
-    let _cap = input[1].to_i32();
-    let len = input[2].to_i32();
-    println!(
-        "wasmedge: Vec<String>: {:?}",
-        load_vec_string(&caller, addr, len)
-    );
+    let (v, _) = WitVec::<WitString>::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: Vec<String>: {:?}", v);
     Ok(input)
 }
 
