@@ -20,15 +20,15 @@ genTypeDef (Record name fields) =
     ++ normalizeIdentifier name
     ++ " {"
     ++ intercalate "," (map genABIBinder fields)
-    ++ "\n}\n"
-genTypeDef (TypeAlias _name _ty) = "\n"
+    ++ "\n}"
+genTypeDef (TypeAlias name ty) = "type " ++ name ++ " = " ++ genType ty ++ ";"
 genTypeDef (Variant name cases) =
   "#[repr(C, u32)]"
     ++ "enum "
     ++ normalizeIdentifier name
     ++ " {"
     ++ intercalate "," (map genCase cases)
-    ++ "}\n"
+    ++ "}"
   where
     genCase :: (String, [Type]) -> String
     genCase (case_name, []) = case_name
@@ -51,7 +51,7 @@ genTypeDef (Enum name tags) =
     ++ normalizeIdentifier name
     ++ " {"
     ++ intercalate "," tags
-    ++ "}\n"
+    ++ "}"
 genTypeDef d = error "should not get type definition here: " $ show d
 
 genBinder :: (String, Type) -> String
