@@ -11,7 +11,7 @@ import Wit.Gen.Type
 genInstanceImport :: WitFile -> String
 genInstanceImport WitFile {definition_list = def_list} =
   let (ty_defs, defs) = partition isTypeDef def_list
-   in concatMap genTypeDef ty_defs
+   in unlines (map genTypeDef ty_defs)
         ++ unlines
           [ "#[link(wasm_import_module = \"wasmedge\")]",
             "extern \"wasm\" {",
@@ -22,7 +22,7 @@ genInstanceImport WitFile {definition_list = def_list} =
 
 genDefWrap :: Definition -> String
 genDefWrap (SrcPos _ d) = genDefWrap d
-genDefWrap (Resource _ _) = ""
+genDefWrap (Resource _ _) = undefined
 genDefWrap (Func (Function _attr name param_list result_ty)) =
   "fn "
     ++ normalizeIdentifier name
@@ -47,7 +47,7 @@ genDefWrap d = error "should not get type definition here: " $ show d
 
 genDefExtern :: Definition -> String
 genDefExtern (SrcPos _ d) = genDefExtern d
-genDefExtern (Resource _name _) = ""
+genDefExtern (Resource _name _) = undefined
 genDefExtern (Func (Function _attr name param_list result_ty)) =
   "fn "
     ++ ("extern_" ++ normalizeIdentifier name)
