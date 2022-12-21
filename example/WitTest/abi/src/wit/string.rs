@@ -1,3 +1,11 @@
+#[derive(Debug)]
+#[repr(C)]
+pub struct WitString {
+    addr: *mut u8,
+    cap: usize,
+    len: usize,
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 mod implement {
     use super::*;
@@ -23,16 +31,6 @@ mod implement {
         }
     }
 }
-
-#[derive(Debug)]
-#[repr(C)]
-pub struct WitString {
-    addr: *mut u8,
-    cap: usize,
-    len: usize,
-}
-
-// impl Runtime for WitString {}
 
 impl From<&str> for WitString {
     fn from(s: &str) -> Self {
