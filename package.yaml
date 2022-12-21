@@ -28,6 +28,8 @@ dependencies:
   - primitive
   - directory
   - megaparsec
+  - text
+  - prettyprinter
 
 ghc-options:
   - -Wall
