@@ -31,6 +31,7 @@ library
       Wit.Check
       Wit.Gen.Import
       Wit.Gen.Normalization
+      Wit.Gen.Test
       Wit.Gen.Type
       Wit.Parser
   other-modules:
@@ -48,7 +49,9 @@ library
     , directory
     , megaparsec
     , mtl
+    , prettyprinter
     , primitive
+    , text
     , transformers
   default-language: Haskell2010
 
@@ -69,7 +72,9 @@ executable witc-exe
     , directory
     , megaparsec
     , mtl
+    , prettyprinter
     , primitive
+    , text
     , transformers
     , witc
   default-language: Haskell2010
@@ -96,7 +101,9 @@ test-suite witc-test
     , hspec-megaparsec
     , megaparsec
     , mtl
+    , prettyprinter
     , primitive
+    , text
     , transformers
     , witc
   default-language: Haskell2010
