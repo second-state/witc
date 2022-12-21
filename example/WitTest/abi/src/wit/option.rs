@@ -1,3 +1,10 @@
+#[derive(Debug)]
+#[repr(C, u32)]
+pub enum WitOption<T> {
+    None,
+    Some(T),
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 mod implement {
     use super::*;
@@ -23,7 +30,10 @@ mod implement {
         }
     }
 
-    impl<A: Runtime> Runtime for WitOption<A> {
+    impl<A> Runtime for WitOption<A>
+    where
+        A: Runtime,
+    {
         type T = Option<A::T>;
 
         fn size() -> usize {
@@ -46,14 +56,10 @@ mod implement {
     }
 }
 
-#[derive(Debug)]
-#[repr(C, u32)]
-pub enum WitOption<T> {
-    None,
-    Some(T),
-}
-
-impl<T> From<Option<T>> for WitOption<T> {
+impl<WT, T> From<Option<T>> for WitOption<WT>
+where
+    T: Into<WT>,
+{
     fn from(r: Option<T>) -> Self {
         match r {
             None => WitOption::None,
