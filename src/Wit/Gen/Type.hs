@@ -30,7 +30,7 @@ prettyTypeDef (Record name fields) =
     prettyField (n, ty) = hsep [pretty n, pretty ":", prettyType ty]
 prettyTypeDef (TypeAlias name ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
 prettyTypeDef (Variant name cases) =
-  pretty "#[repr(C, u32)]"
+  pretty "#[repr(C)]"
     <+> line
     <+> pretty "enum"
     <+> pretty name
@@ -44,7 +44,7 @@ prettyTypeDef (Variant name cases) =
     boxType (User n) | n == name = pretty $ "Box<" ++ n ++ ">"
     boxType t = prettyType t
 prettyTypeDef (Enum name cases) =
-  pretty "#[repr(C, u32)]"
+  pretty "#[repr(C)]"
     <+> line
     <+> pretty "enum"
     <+> pretty name
