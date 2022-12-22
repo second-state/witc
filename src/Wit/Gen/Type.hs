@@ -1,94 +1,94 @@
 {- Type & its definition should be the same for any direction, hence, it should be independent -}
 module Wit.Gen.Type
-  ( genTypeDef,
-    genType,
-    genABIType,
-    genBinder,
-    genABIBinder,
+  ( prettyTypeDef,
+    prettyType,
+    prettyABIType,
+    prettyBinder,
+    prettyABIBinder,
   )
 where
 
-import Data.List (intercalate)
+import Prettyprinter
 import Wit.Ast
-import Wit.Gen.Normalization
 
-genTypeDef :: Definition -> String
-genTypeDef (SrcPos _ d) = genTypeDef d
-genTypeDef (Record name fields) =
-  "#[repr(C)]"
-    ++ "struct "
-    ++ normalizeIdentifier name
-    ++ " {"
-    ++ intercalate "," (map genABIBinder fields)
-    ++ "\n}"
-genTypeDef (TypeAlias name ty) = "type " ++ name ++ " = " ++ genType ty ++ ";"
-genTypeDef (Variant name cases) =
-  "#[repr(C, u32)]"
-    ++ "enum "
-    ++ normalizeIdentifier name
-    ++ " {"
-    ++ intercalate "," (map genCase cases)
-    ++ "}"
+prettyTypeDef :: Definition -> Doc a
+prettyTypeDef (SrcPos _ d) = prettyTypeDef d
+prettyTypeDef (Func _) = undefined
+prettyTypeDef (Resource _ _) = undefined
+prettyTypeDef (Record name fields) =
+  pretty "#[repr(C)]"
+    <+> line
+    <+> pretty "struct"
+    <+> pretty name
+    <+> braces
+      ( line
+          <+> indent 4 (vsep $ punctuate comma (map prettyField fields))
+          <+> line
+      )
   where
-    genCase :: (String, [Type]) -> String
-    genCase (case_name, []) = case_name
-    genCase (case_name, ts) =
-      unwords
-        [ case_name,
-          "(",
-          intercalate "," (map boxType ts),
-          ")"
-        ]
-    boxType :: Type -> String
-    boxType (SrcPosType _ ty) = boxType ty
-    boxType (User recur_name) =
-      if name == recur_name
-        then "Box<" ++ recur_name ++ ">"
-        else name
-    boxType ty = genType ty
-genTypeDef (Enum name tags) =
-  "enum "
-    ++ normalizeIdentifier name
-    ++ " {"
-    ++ intercalate "," tags
-    ++ "}"
-genTypeDef d = error "should not get type definition here: " $ show d
+    prettyField :: (String, Type) -> Doc a
+    prettyField (n, ty) = hsep [pretty n, pretty ":", prettyType ty]
+prettyTypeDef (TypeAlias name ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
+prettyTypeDef (Variant name cases) =
+  pretty "#[repr(C, u32)]"
+    <+> line
+    <+> pretty "enum"
+    <+> pretty name
+    <+> braces (line <+> indent 4 (vsep $ punctuate comma (map prettyCase cases)) <+> line)
+  where
+    prettyCase :: (String, [Type]) -> Doc a
+    prettyCase (n, []) = pretty n
+    prettyCase (n, tys) = pretty n <+> parens (hsep (punctuate comma (map boxType tys)))
+    boxType :: Type -> Doc a
+    boxType (SrcPosType _ t) = boxType t
+    boxType (User n) =
+      if n == name
+        then pretty $ "Box<" ++ n ++ ">"
+        else pretty n
+    boxType t = prettyType t
+prettyTypeDef (Enum name cases) =
+  pretty "#[repr(C, u32)]"
+    <+> line
+    <+> pretty "enum"
+    <+> pretty name
+    <+> braces
+      ( line
+          <+> indent 4 (vsep $ punctuate comma (map pretty cases))
+          <+> line
+      )
 
-genBinder :: (String, Type) -> String
-genBinder (field_name, ty) = field_name ++ ": " ++ genType ty
+prettyBinder :: (String, Type) -> Doc a
+prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
 
-genABIBinder :: (String, Type) -> String
-genABIBinder (field_name, ty) = field_name ++ ": " ++ genABIType ty
+prettyABIBinder :: (String, Type) -> Doc a
+prettyABIBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyABIType ty]
 
-genType :: Type -> String
-genType (SrcPosType _ ty) = genType ty
-genType PrimString = "String"
-genType PrimU8 = "u8"
-genType PrimU16 = "u16"
-genType PrimU32 = "u32"
-genType PrimU64 = "u64"
-genType PrimI8 = "i8"
-genType PrimI16 = "i16"
-genType PrimI32 = "i32"
-genType PrimI64 = "i64"
-genType PrimChar = "char"
-genType PrimF32 = "f32"
-genType PrimF64 = "f64"
-genType (Optional ty) = unwords ["Option<", genType ty, ">"]
-genType (ListTy ty) = unwords ["Vec<", genType ty, ">"]
-genType (ExpectedTy ty ety) =
-  unwords ["Result<", genType ty, ",", genType ety, ">"]
-genType (TupleTy ty_list) =
-  unwords ["(", intercalate ", " (map genType ty_list), ")"]
-genType (User name) = name
+prettyType :: Type -> Doc a
+prettyType (SrcPosType _ ty) = prettyType ty
+prettyType PrimString = pretty "String"
+prettyType PrimU8 = pretty "u8"
+prettyType PrimU16 = pretty "u16"
+prettyType PrimU32 = pretty "u32"
+prettyType PrimU64 = pretty "u64"
+prettyType PrimI8 = pretty "i8"
+prettyType PrimI16 = pretty "i16"
+prettyType PrimI32 = pretty "i32"
+prettyType PrimI64 = pretty "i64"
+prettyType PrimChar = pretty "char"
+prettyType PrimF32 = pretty "f32"
+prettyType PrimF64 = pretty "f64"
+prettyType (Optional ty) = hsep [pretty "Option<", prettyType ty, pretty ">"]
+prettyType (ListTy ty) = hsep [pretty "Vec<", prettyType ty, pretty ">"]
+prettyType (ExpectedTy ty ety) =
+  hsep [pretty "Result<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
+prettyType (TupleTy ty_list) = parens (hsep $ punctuate comma (map prettyType ty_list))
+prettyType (User name) = pretty name
 
-genABIType :: Type -> String
-genABIType (SrcPosType _ ty) = genABIType ty
-genABIType PrimString = "WitString"
-genABIType (Optional ty) = unwords ["WitOption<", genABIType ty, ">"]
-genABIType (ListTy ty) = unwords ["WitVec<", genABIType ty, ">"]
-genABIType (ExpectedTy ty ety) =
-  unwords ["WitResult<", genABIType ty, ",", genABIType ety, ">"]
-genABIType (TupleTy ty_list) =
-  unwords ["(", intercalate ", " (map genABIType ty_list), ")"]
-genABIType ty = genType ty
+prettyABIType :: Type -> Doc a
+prettyABIType (SrcPosType _ ty) = prettyABIType ty
+prettyABIType PrimString = pretty "WitString"
+prettyABIType (Optional ty) = hsep [pretty "WitOption<", prettyABIType ty, pretty ">"]
+prettyABIType (ListTy ty) = hsep [pretty "WitVec<", prettyABIType ty, pretty ">"]
+prettyABIType (ExpectedTy ty ety) =
+  hsep [pretty "WitResult<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
+prettyABIType ty = prettyType ty

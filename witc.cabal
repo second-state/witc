@@ -31,7 +31,6 @@ library
       Wit.Check
       Wit.Gen.Import
       Wit.Gen.Normalization
-      Wit.Gen.Test
       Wit.Gen.Type
       Wit.Parser
   other-modules:
