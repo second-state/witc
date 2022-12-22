@@ -14,22 +14,16 @@ renderInstanceImport :: WitFile -> IO ()
 renderInstanceImport f = putDoc $ prettyFile f
 
 prettyFile :: WitFile -> Doc a
-prettyFile
-  ( WitFile
-      { definition_list = def_list
-      }
-    ) =
-    let (ty_defs, defs) = partition isTypeDef def_list
-     in vsep (map prettyTypeDef ty_defs)
-          <+> line
-          <+> vsep
-            [ pretty "#[link(wasm_import_module = \"wasmedge\")]",
-              pretty "extern \"wasm\" {",
-              vsep (map prettyDefExtern defs),
-              pretty "}"
-            ]
-          <+> line
-          <+> vsep (map prettyDefWrap defs)
+prettyFile WitFile {definition_list = def_list} =
+  let (ty_defs, defs) = partition isTypeDef def_list
+   in vsep (map prettyTypeDef ty_defs)
+        <+> line
+        <+> pretty "#[link(wasm_import_module = \"wasmedge\")]"
+        <+> line
+        <+> pretty "extern \"wasm\""
+        <+> braces (line <+> indent 4 (vsep (map prettyDefExtern defs)) <+> line)
+        <+> line
+        <+> vsep (map prettyDefWrap defs)
 
 prettyDefWrap :: Definition -> Doc a
 prettyDefWrap (SrcPos _ d) = prettyDefWrap d
