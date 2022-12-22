@@ -16,7 +16,6 @@ import Text.Megaparsec
 import Wit.Ast
 import Wit.Check
 import Wit.Gen.Import
-import Wit.Gen.Test
 import Wit.Parser
 
 main :: IO ()
@@ -36,7 +35,7 @@ handle ["instance", mode, file] = do
       parseFile file
         >>= eitherIO check0
         -- TODO: output to somewhere file
-        >>= eitherIO renderFile -- (putStrLn . genInstanceImport)
+        >>= eitherIO renderInstanceImport
       return ()
     "export" -> return ()
     bad -> putStrLn $ "unknown option: " ++ bad
