@@ -41,10 +41,7 @@ prettyTypeDef (Variant name cases) =
     prettyCase (n, tys) = pretty n <+> parens (hsep (punctuate comma (map boxType tys)))
     boxType :: Type -> Doc a
     boxType (SrcPosType _ t) = boxType t
-    boxType (User n) =
-      if n == name
-        then pretty $ "Box<" ++ n ++ ">"
-        else pretty n
+    boxType (User n) | n == name = pretty $ "Box<" ++ n ++ ">"
     boxType t = prettyType t
 prettyTypeDef (Enum name cases) =
   pretty "#[repr(C, u32)]"
