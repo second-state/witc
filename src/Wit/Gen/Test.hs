@@ -24,7 +24,7 @@ prettyDef (SrcPos _ d) = prettyDef d
 prettyDef (Func _) = undefined
 prettyDef (Resource _ _) = undefined
 prettyDef (Record name fields) =
-  pretty "record"
+  pretty "struct"
     <+> pretty name
     <+> braces
       ( line
