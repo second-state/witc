@@ -31,8 +31,7 @@ wasmedge_witc::wit_instance_import!("../xxx.wit");
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {
     let _s = exchange("Hello".to_string());
-    // `exchange` is defined in xxx.wit & host
-    // with wit type: `string -> string`
+    // assume `exchange : string -> string` in xxx.wit & host
     return 0;
 }
 ```
