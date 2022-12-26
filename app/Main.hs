@@ -31,28 +31,21 @@ handle ["check"] = do
   mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
 handle ["instance", mode, file] = do
   case mode of
-    "import" -> do
+    "import" ->
       parseFile file
         >>= eitherIO check0
-        -- TODO: output to somewhere file
         >>= eitherIO renderInstanceImport
-      return ()
-    "export" -> return ()
+    "export" -> error "unsupported instance export yet"
     bad -> putStrLn $ "unknown option: " ++ bad
 handle ["runtime", mode, file] =
   case mode of
-    "import" -> return ()
-    "export" -> do
+    "import" -> error "unsupported runtime import yet"
+    "export" ->
       parseFile file
         >>= eitherIO check0
-        -- TODO: output to somewhere file
-        >>= eitherIO (putStrLn . genRuntimeExport)
-      return ()
+        >>= eitherIO renderRuntimeExport
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
-
-genRuntimeExport :: WitFile -> String
-genRuntimeExport _ = ""
 
 parseFile :: FilePath -> IO (Either FuseError WitFile)
 parseFile filepath = do
