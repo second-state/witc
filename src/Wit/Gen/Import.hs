@@ -1,5 +1,6 @@
 module Wit.Gen.Import
   ( renderInstanceImport,
+    renderRuntimeExport,
   )
 where
 
@@ -11,19 +12,44 @@ import Wit.Gen.Normalization
 import Wit.Gen.Type
 
 renderInstanceImport :: WitFile -> IO ()
-renderInstanceImport f = putDoc $ prettyFile f
+renderInstanceImport f = putDoc $ prettyFile Config {language = Rust, direction = Import, side = Instance} f
 
-prettyFile :: WitFile -> Doc a
-prettyFile WitFile {definition_list = def_list} =
+renderRuntimeExport :: WitFile -> IO ()
+renderRuntimeExport f = putDoc $ prettyFile Config {language = Rust, direction = Export, side = Runtime} f
+
+data SupportedLanguage
+  = Rust
+
+data Direction
+  = Import
+  | Export
+
+data Side
+  = Instance
+  | Runtime
+
+data Config = Config
+  { language :: SupportedLanguage,
+    direction :: Direction,
+    side :: Side
+  }
+
+prettyFile :: Config -> WitFile -> Doc a
+prettyFile config WitFile {definition_list = def_list} =
   let (ty_defs, defs) = partition isTypeDef def_list
-   in vsep (map prettyTypeDef ty_defs)
-        <+> line
-        <+> pretty "#[link(wasm_import_module = \"wasmedge\")]"
-        <+> line
-        <+> pretty "extern \"wasm\""
-        <+> braces (line <+> indent 4 (vsep (map prettyDefExtern defs)) <+> line)
-        <+> line
-        <+> vsep (map prettyDefWrap defs)
+   in case (config.side, config.direction) of
+        (Instance, Import) ->
+          vsep (map prettyTypeDef ty_defs)
+            <+> line
+            <+> pretty "#[link(wasm_import_module = \"wasmedge\")]"
+            <+> line
+            <+> pretty "extern \"wasm\""
+            <+> braces (line <+> indent 4 (vsep (map prettyDefExtern defs)) <+> line)
+            <+> line
+            <+> vsep (map prettyDefWrap defs)
+        (Runtime, Export) ->
+          vsep (map prettyTypeDef ty_defs)
+        (_, _) -> error "unsupported side, direction combination"
 
 prettyDefWrap :: Definition -> Doc a
 prettyDefWrap (SrcPos _ d) = prettyDefWrap d
