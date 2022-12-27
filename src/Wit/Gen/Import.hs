@@ -35,7 +35,7 @@ prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
 prettyDefExtern (Resource _name _) = undefined
 prettyDefExtern (Func (Function _attr name param_list result_ty)) =
-  hsep (map pretty ["fn", "extern_" ++ normalizeIdentifier name])
+  hsep (map pretty ["fn", externalConvention name])
     <+> parens (hsep $ punctuate comma (map prettyABIBinder param_list))
     <+> pretty "->"
     <+> prettyABIType result_ty
