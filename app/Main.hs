@@ -15,8 +15,8 @@ import System.Exit (exitSuccess)
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Check
-import Wit.Gen.Import
-import Wit.Parser
+import Wit.Gen
+import Wit.Parser (ParserError, pWitFile)
 
 main :: IO ()
 main = do

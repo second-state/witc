@@ -29,6 +29,8 @@ library
       Wit
       Wit.Ast
       Wit.Check
+      Wit.Gen
+      Wit.Gen.Export
       Wit.Gen.Import
       Wit.Gen.Normalization
       Wit.Gen.Type
