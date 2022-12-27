@@ -4,9 +4,10 @@ use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     error::HostFuncError,
-    host_function, Caller, ImportObjectBuilder, Memory, Vm, WasmValue,
+    host_function, Caller, Memory, Vm, WasmValue,
 };
-use wasmedge_sdk::{ImportObject, WasmEdgeResult};
+
+pmacro::wit_runtime_export!("../test.wit");
 
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
@@ -115,33 +116,13 @@ fn pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, Hos
     Ok(vec![WasmValue::from_i32(0)])
 }
 
-fn wit_import_object() -> WasmEdgeResult<ImportObject> {
-    Ok(ImportObjectBuilder::new()
-        .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>(
-            "extern_exchange",
-            exchange,
-        )?
-        .with_func::<i32, i32>("extern_exchange_enum", exchange_enum)?
-        .with_func::<(i32, i32), (i32, i32)>("extern_maybe_test", maybe_test)?
-        .with_func::<(i32, i32, i32, i32), i32>("extern_send_result", send_result)?
-        .with_func::<(i32, i32), i32>("extern_send_result2", send_result2)?
-        .with_func::<(i32, i32, i32), (i32, i32, i32)>("extern_exchange_list", exchange_list)?
-        .with_func::<(i32, i32, i32), (i32, i32, i32)>(
-            "extern_exchange_list_string",
-            exchange_list_string,
-        )?
-        .with_func::<(i32, i32), i32>("extern_pass_nat", pass_nat)?
-        .build("wasmedge")?)
-}
-
 fn main() -> Result<(), Error> {
     let config = ConfigBuilder::new(CommonConfigOptions::default())
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
         .build()?;
 
-    let import = wit_import_object()?;
     let vm = Vm::new(Some(config))?
-        .register_import_module(import)?
+        .register_import_module(wit_import_object()?)?
         .register_module_from_file("lib", "target/wasm32-wasi/release/lib.wasm")?;
 
     let result = vm.run_func(Some("lib"), "start", None)?;

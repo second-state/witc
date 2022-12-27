@@ -80,6 +80,7 @@ prettyType (ExpectedTy ty ety) =
   hsep [pretty "Result<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
 prettyType (TupleTy ty_list) = parens (hsep $ punctuate comma (map prettyType ty_list))
 prettyType (User name) = pretty name
+prettyType _ = error "impossible"
 
 prettyABIType :: Type -> Doc a
 prettyABIType (SrcPosType _ ty) = prettyABIType ty
