@@ -6,6 +6,7 @@ use wasmedge_sdk::{
     error::HostFuncError,
     host_function, Caller, ImportObjectBuilder, Memory, Vm, WasmValue,
 };
+use wasmedge_sdk::{ImportObject, WasmEdgeResult};
 
 #[host_function]
 fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
@@ -114,12 +115,8 @@ fn pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, Hos
     Ok(vec![WasmValue::from_i32(0)])
 }
 
-fn main() -> Result<(), Error> {
-    let config = ConfigBuilder::new(CommonConfigOptions::default())
-        .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
-        .build()?;
-
-    let import = ImportObjectBuilder::new()
+fn wit_import_object() -> WasmEdgeResult<ImportObject> {
+    Ok(ImportObjectBuilder::new()
         .with_func::<(i32, i32, i32, i32, i32, i32, i32), (i32, i32, i32)>(
             "extern_exchange",
             exchange,
@@ -134,7 +131,15 @@ fn main() -> Result<(), Error> {
             exchange_list_string,
         )?
         .with_func::<(i32, i32), i32>("extern_pass_nat", pass_nat)?
-        .build("wasmedge")?;
+        .build("wasmedge")?)
+}
+
+fn main() -> Result<(), Error> {
+    let config = ConfigBuilder::new(CommonConfigOptions::default())
+        .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
+        .build()?;
+
+    let import = wit_import_object()?;
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
         .register_module_from_file("lib", "target/wasm32-wasi/release/lib.wasm")?;
