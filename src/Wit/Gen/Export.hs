@@ -55,16 +55,15 @@ witObject env defs =
     withFunc :: Definition -> Doc a
     withFunc (SrcPos _ d) = withFunc d
     withFunc (Func (Function _attr name params result_ty)) =
-      let nname = normalizeIdentifier name
-       in pretty ".with_func::"
-            <+> angles
-              ( prettyEnc (sum $ map (i32Encoding Nothing . snd) params)
-                  <+> comma
-                  <+> prettyEnc (i32Encoding Nothing result_ty)
-              )
-            <+> tupled
-              [ dquotes $ hcat [pretty "extern_", pretty nname],
-                pretty nname
-              ]
-            <+> pretty "?"
+      pretty ".with_func::"
+        <+> angles
+          ( prettyEnc (sum $ map (i32Encoding Nothing . snd) params)
+              <+> comma
+              <+> prettyEnc (i32Encoding Nothing result_ty)
+          )
+        <+> tupled
+          [ dquotes $ pretty $ externalConvention name,
+            pretty $ normalizeIdentifier name
+          ]
+        <+> pretty "?"
     withFunc d = error $ "bad definition" ++ show d
