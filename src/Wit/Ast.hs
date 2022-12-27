@@ -85,4 +85,6 @@ data Type
   | ExpectedTy Type Type
   | TupleTy [Type]
   | User String -- user defined types
+  -- in execution only
+  | VSum String [Type]
   deriving (Show)

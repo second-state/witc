@@ -9,3 +9,4 @@ edition = "2021"
 wasmedge-sdk = "0.7.1"
 abi = { path = "../abi" }
 anyhow = "*"
+pmacro = { path = "../pmacro" }

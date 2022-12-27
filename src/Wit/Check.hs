@@ -1,9 +1,12 @@
 module Wit.Check
   ( CheckError,
     check0,
+    Env,
+    lookupEnv,
   )
 where
 
+import Control.Monad
 import System.Directory
 import Text.Megaparsec
 import Wit.Ast
@@ -26,31 +29,38 @@ addPos pos ma = case ma of
 
 type Name = String
 
-type Context = [(Name, Type)]
+type Env = [(Name, Type)]
 
-check0 :: WitFile -> IO (M WitFile)
+lookupEnv :: Name -> Env -> Maybe Type
+lookupEnv = lookup
+
+check0 :: WitFile -> IO (M (WitFile, Env))
 check0 = check []
 
-check :: Context -> WitFile -> IO (M WitFile)
+check :: Env -> WitFile -> IO (M (WitFile, Env))
 check ctx wit_file = do
   mapM_ checkUseFileExisted $ use_list wit_file
   case introUseIdentifiers ctx $ use_list wit_file of
     Left e -> return $ Left e
-    Right c -> do
-      case checkDefinitions c $ definition_list wit_file of
+    Right env -> do
+      case foldM checkDef env $ definition_list wit_file of
         Left e -> return $ Left e
-        Right () -> return $ Right wit_file
+        Right env' -> return $ Right (wit_file, env')
 
-introUseIdentifiers :: Context -> [Use] -> M Context
+introUseIdentifiers :: Env -> [Use] -> M Env
 introUseIdentifiers ctx = \case
   [] -> return ctx
   (u : us) -> introUseIdentifiers (ctx `extend` u) us
   where
-    extend :: Context -> Use -> Context
-    extend ctx' = \case
-      (SrcPosUse _pos u) -> ctx' `extend` u
-      (Use imports _) -> foldl (\c x -> (x, User x) : c) ctx' imports
-      (UseAll _) -> ctx'
+    extend :: Env -> Use -> Env
+    extend env' = \case
+      (SrcPosUse _pos u) -> env' `extend` u
+      (Use imports _) ->
+        foldl
+          (\env'' name -> (name, User name) : env'')
+          env'
+          imports
+      (UseAll _) -> env'
 
 checkUseFileExisted :: Use -> IO (M ())
 checkUseFileExisted (SrcPosUse pos u) = do
@@ -66,48 +76,42 @@ checkModFileExisted mod_name = do
   existed <- doesFileExist $ mod_name ++ ".wit"
   if existed then return (Right ()) else return $ report "no file xxx"
 
-checkDefinitions :: Context -> [Definition] -> M ()
-checkDefinitions _ctx [] = return ()
-checkDefinitions ctx (x : xs) = do
-  new_ctx <- checkDef ctx x
-  checkDefinitions new_ctx xs
-
--- insert type definition into Context
+-- insert type definition into Env
 -- e.g.
 --   Ctx |- check `record A { ... }`
 --   -------------------------------
 --          (A, User) : Ctx
-checkDef :: Context -> Definition -> M Context
-checkDef ctx = \case
-  SrcPos pos def -> addPos pos $ checkDef ctx def
+checkDef :: Env -> Definition -> M Env
+checkDef env = \case
+  SrcPos pos def -> addPos pos $ checkDef env def
   Func (Function _attr _name binders result_ty) -> do
-    checkBinders ctx binders
-    checkTy ctx result_ty
-    return ctx
+    checkBinders env binders
+    checkTy env result_ty
+    return env
   Resource _name _func_list -> error "unimplemented"
-  Enum name _ -> return $ (name, User name) : ctx
+  Enum name _ -> return $ (name, PrimU32) : env
   Record name fields -> do
-    checkBinders ctx fields
-    return $ (name, User name) : ctx
+    checkBinders env fields
+    return $ (name, TupleTy $ map snd fields) : env
   TypeAlias name ty -> do
-    checkTy ctx ty
-    return $ (name, User name) : ctx
+    checkTy env ty
+    return $ (name, ty) : env
   Variant name cases -> do
-    let ctx' = (name, User name) : ctx
+    let env' = (name, VSum name $ map (TupleTy . snd) cases) : env
     -- as a sum of product, it's ok to be defined recursively
-    mapM_ (checkTyList ctx' . snd) cases
-    return ctx'
+    mapM_ (checkTyList env' . snd) cases
+    return env'
   where
-    checkBinders :: Context -> [(String, Type)] -> M ()
+    checkBinders :: Env -> [(String, Type)] -> M ()
     checkBinders ctx' = mapM_ (checkTy ctx' . snd)
-    checkTyList :: Context -> [Type] -> M ()
+    checkTyList :: Env -> [Type] -> M ()
     checkTyList ctx' = mapM_ (checkTy ctx')
 
 -- check if type is valid
-checkTy :: Context -> Type -> M ()
-checkTy ctx (SrcPosType pos ty) = addPos pos $ checkTy ctx ty
+checkTy :: Env -> Type -> M ()
+checkTy env (SrcPosType pos ty) = addPos pos $ checkTy env ty
 -- here, only user type existed is our target to check
-checkTy ctx (User name) = case lookup name ctx of
+checkTy env (User name) = case lookupEnv name env of
   Just _ -> return ()
   Nothing -> report $ "Type `" ++ name ++ "` not found"
 checkTy _ _ = return ()
