@@ -57,14 +57,9 @@ instance Eq Type where
   Optional a == Optional b = a == b
   ListTy a == ListTy b = a == b
   ExpectedTy a1 b1 == ExpectedTy a2 b2 = a1 == a2 && b1 == b2
-  TupleTy as == TupleTy bs = eqTyList as bs
+  TupleTy as == TupleTy bs = as == bs
   User a == User b = a == b
   _ == _ = False
-
-eqTyList :: [Type] -> [Type] -> Bool
-eqTyList [] [] = True
-eqTyList (a : as) (b : bs) = a == b && eqTyList as bs
-eqTyList _ _ = False
 
 data Type
   = SrcPosType SourcePos Type

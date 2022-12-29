@@ -3,6 +3,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 pub mod runtime;
 
+mod common;
 mod wit;
 
 pub use wit::option::WitOption;

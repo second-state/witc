@@ -1,8 +1,8 @@
-type usize = u32
+type musize = u32
 
 record person {
   name : string,
-  age : usize
+  age : musize
 }
 
 exchange: func(a : string, p : person) -> string

@@ -8,27 +8,32 @@ pub enum WitOption<T> {
 #[cfg(not(target_arch = "wasm32"))]
 mod implement {
     use super::*;
+    use crate::gen_all;
     use crate::runtime::Runtime;
     use wasmedge_sdk::{Caller, WasmValue};
 
-    impl Runtime for WitOption<u8> {
-        type T = Option<u8>;
-
-        fn size() -> usize {
-            4 + 4
-        }
-
-        fn new_by_runtime(_caller: &Caller, input: Vec<WasmValue>) -> (Self::T, Vec<WasmValue>) {
-            match input[0].to_i32() {
-                0 => (None, input[2..].into()),
-                1 => {
-                    let e = input[1].to_i32() as u8;
-                    (Some(e), input[2..].into())
+    macro_rules! impl_option {
+        ($t1:ty) => {
+            impl Runtime for WitOption<$t1> {
+                type T = Option<$t1>;
+                fn size() -> usize {
+                    4 + 4
                 }
-                _ => unreachable!(),
+                fn new_by_runtime(
+                    _caller: &Caller,
+                    input: Vec<WasmValue>,
+                ) -> (Self::T, Vec<WasmValue>) {
+                    match input[0].to_i32() {
+                        0 => (None, input[2..].into()),
+                        1 => (Some(input[1].to_i32() as $t1), input[2..].into()),
+                        _ => unreachable!(),
+                    }
+                }
             }
-        }
+        };
     }
+
+    gen_all!(impl_option: u8 u16 u32);
 
     impl<A> Runtime for WitOption<A>
     where

@@ -10,7 +10,7 @@ use wasmedge_sdk::{
 pmacro::wit_runtime_export!("../test.wit");
 
 #[host_function]
-fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let (s, input) = WitString::new_by_runtime(&caller, input);
     println!("wasmedge: Get: {}", s);
 
@@ -35,54 +35,65 @@ fn exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, Hos
 }
 
 #[host_function]
-fn exchange_enum(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    // definition:
-    //
-    // enum color { red, green, blue }
-    //
-    // enum gets numberic encoding
-    match input[0].to_i32() {
-        0 => println!("wasmedge: color: red"),
-        1 => println!("wasmedge: color: green"),
-        2 => println!("wasmedge: color: blue"),
-        _ => unreachable!(),
-    };
-    Ok(vec![input[0]])
+fn extern_exchange_enum(
+    caller: Caller,
+    input: Vec<WasmValue>,
+) -> Result<Vec<WasmValue>, HostFuncError> {
+    let (c, _input) = color::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: color: {:?}", c);
+    Ok(input)
+}
+
+fn maybe_test(v: Option<u8>) -> Option<u8> {
+    println!("wasmedge: Option<u8>: {:?}", v);
+    v
 }
 
 #[host_function]
-fn maybe_test(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (o, _) = WitOption::<u8>::new_by_runtime(&caller, input.clone());
-    println!("wasmedge: Option<u8>: {:?}", o);
+fn extern_maybe_test(
+    caller: Caller,
+    input: Vec<WasmValue>,
+) -> Result<Vec<WasmValue>, HostFuncError> {
+    let (o, _input) = WitOption::<u8>::new_by_runtime(&caller, input.clone());
+    let r: WitOption<u8> = maybe_test(o).into();
+    // let mem = caller.memory(0).unwrap();
+    // r.allocate(mem);
+    // let input = r.to_input();
     Ok(input)
 }
 
 #[host_function]
-fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+fn extern_send_result(
+    caller: Caller,
+    input: Vec<WasmValue>,
+) -> Result<Vec<WasmValue>, HostFuncError> {
     let (r, _) = WitResult::<WitString, WitString>::new_by_runtime(&caller, input.clone());
     println!("wasmedge: Result<String, String>: {:?}", r);
     Ok(vec![WasmValue::from_i32(0)])
 }
 
 #[host_function]
-fn send_result2(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    match input[0].to_i32() {
-        0 => println!("wasmedge: Result<i8, u8>: Ok({:?})", input[1].to_i32()),
-        1 => println!("wasmedge: Result<i8, u8>: Err({:?})", input[1].to_i32()),
-        _ => unreachable!(),
-    }
+fn extern_send_result2(
+    caller: Caller,
+    input: Vec<WasmValue>,
+) -> Result<Vec<WasmValue>, HostFuncError> {
+    let (r, _) = WitResult::<i8, u8>::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: Result<i8, u8>: {:?}", r);
     Ok(vec![WasmValue::from_i32(0)])
 }
 
 #[host_function]
-fn exchange_list(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+fn extern_exchange_list(
+    caller: Caller,
+    input: Vec<WasmValue>,
+) -> Result<Vec<WasmValue>, HostFuncError> {
     let (v, _) = WitVec::<u8>::new_by_runtime(&caller, input.clone());
     println!("wasmedge: Vec<u8>: {:?}", v);
     Ok(input)
 }
 
 #[host_function]
-fn exchange_list_string(
+fn extern_exchange_list_string(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
@@ -108,7 +119,7 @@ fn recur_print(mem: Memory, pair: (u32, u32)) {
     }
 }
 #[host_function]
-fn pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+fn extern_pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     recur_print(
         caller.memory(0).unwrap(),
         (input[0].to_i32() as u32, input[1].to_i32() as u32),

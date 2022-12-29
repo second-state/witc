@@ -1,5 +1,6 @@
 module Wit.Gen.Export
   ( witObject,
+    implRuntime,
   )
 where
 
@@ -8,6 +9,51 @@ import Prettyprinter
 import Wit.Ast
 import Wit.Check
 import Wit.Gen.Normalization
+
+implRuntime :: Definition -> Doc a
+implRuntime (SrcPos _ d) = implRuntime d
+implRuntime (Record _ _) = emptyDoc
+implRuntime (Variant _ _) = emptyDoc
+implRuntime (Enum name cases) =
+  hsep (map pretty ["impl", "Runtime", "for", name])
+    <+> braces
+      ( line
+          <+> indent
+            4
+            ( pretty "type T = Self;"
+                <+> line
+                <+> hsep (map pretty ["fn", "size()", "->", "usize"])
+                <+> braces (pretty "4")
+                <+> line
+                <+> hsep
+                  ( map
+                      pretty
+                      [ "fn",
+                        "new_by_runtime",
+                        "(",
+                        "caller: &wasmedge_sdk::Caller, input: Vec<wasmedge_sdk::WasmValue>",
+                        ")",
+                        "->",
+                        "(Self::T, Vec<wasmedge_sdk::WasmValue>)"
+                      ]
+                  )
+                <+> braces
+                  ( pretty "let r = match input[0].to_i32()"
+                      <+> encloseSep lbrace rbrace comma (c 0 cases)
+                      <+> pretty ";"
+                      <+> line
+                      <+> pretty "(r, input[1..].into())"
+                  )
+            )
+          <+> line
+      )
+  where
+    c :: Int -> [String] -> [Doc a]
+    c n (c' : cs) = hsep [pretty n, pretty "=>", toRustName c'] : c (n + 1) cs
+    c _ [] = [pretty "_ => unreachable!()"]
+    toRustName :: String -> Doc a
+    toRustName tag_name = hcat $ map pretty [name, "::", tag_name]
+implRuntime _ = emptyDoc
 
 witObject :: Env -> [Definition] -> Doc a
 witObject env defs =
@@ -54,16 +100,13 @@ witObject env defs =
 
     withFunc :: Definition -> Doc a
     withFunc (SrcPos _ d) = withFunc d
-    withFunc (Func (Function _attr name params result_ty)) =
+    withFunc (Func (Function _attr (pretty . externalConvention -> name) params result_ty)) =
       pretty ".with_func::"
         <+> angles
           ( prettyEnc (sum $ map (i32Encoding Nothing . snd) params)
               <+> comma
               <+> prettyEnc (i32Encoding Nothing result_ty)
           )
-        <+> tupled
-          [ dquotes $ pretty $ externalConvention name,
-            pretty $ normalizeIdentifier name
-          ]
+        <+> tupled [dquotes name, name]
         <+> pretty "?"
     withFunc d = error $ "bad definition" ++ show d
