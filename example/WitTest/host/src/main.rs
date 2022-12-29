@@ -36,21 +36,12 @@ fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValu
 
 #[host_function]
 fn extern_exchange_enum(
-    _caller: Caller,
+    caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
-    // definition:
-    //
-    // enum color { red, green, blue }
-    //
-    // enum gets numberic encoding
-    match input[0].to_i32() {
-        0 => println!("wasmedge: color: red"),
-        1 => println!("wasmedge: color: green"),
-        2 => println!("wasmedge: color: blue"),
-        _ => unreachable!(),
-    };
-    Ok(vec![input[0]])
+    let (c, _input) = color::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: color: {:?}", c);
+    Ok(input)
 }
 
 fn maybe_test(v: Option<u8>) -> Option<u8> {

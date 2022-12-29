@@ -16,8 +16,8 @@ prettyTypeDef (SrcPos _ d) = prettyTypeDef d
 prettyTypeDef (Func _) = undefined
 prettyTypeDef (Resource _ _) = undefined
 prettyTypeDef (Record name fields) =
-  pretty "#[repr(C)]"
-    <+> line
+  (pretty "#[derive(Debug)]" <+> line)
+    <+> (pretty "#[repr(C)]" <+> line)
     <+> pretty "struct"
     <+> pretty name
     <+> braces
@@ -30,8 +30,8 @@ prettyTypeDef (Record name fields) =
     prettyField (n, ty) = hsep [pretty n, pretty ":", prettyType ty]
 prettyTypeDef (TypeAlias name ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
 prettyTypeDef (Variant name cases) =
-  pretty "#[repr(C)]"
-    <+> line
+  (pretty "#[derive(Debug)]" <+> line)
+    <+> (pretty "#[repr(C)]" <+> line)
     <+> pretty "enum"
     <+> pretty name
     <+> braces (line <+> indent 4 (vsep $ punctuate comma (map prettyCase cases)) <+> line)
@@ -44,8 +44,8 @@ prettyTypeDef (Variant name cases) =
     boxType (User n) | n == name = pretty $ "Box<" ++ n ++ ">"
     boxType t = prettyType t
 prettyTypeDef (Enum name cases) =
-  pretty "#[repr(C)]"
-    <+> line
+  (pretty "#[derive(Debug)]" <+> line)
+    <+> (pretty "#[repr(C)]" <+> line)
     <+> pretty "enum"
     <+> pretty name
     <+> braces
