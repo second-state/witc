@@ -47,6 +47,7 @@ default-extensions:
   - DuplicateRecordFields
   - OverloadedRecordDot
   - LambdaCase
+  - ViewPatterns
 
 library:
   source-dirs: src
