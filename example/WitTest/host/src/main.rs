@@ -65,12 +65,9 @@ fn send_result(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
 }
 
 #[host_function]
-fn send_result2(_caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    match input[0].to_i32() {
-        0 => println!("wasmedge: Result<i8, u8>: Ok({:?})", input[1].to_i32()),
-        1 => println!("wasmedge: Result<i8, u8>: Err({:?})", input[1].to_i32()),
-        _ => unreachable!(),
-    }
+fn send_result2(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let (r, _) = WitResult::<i8, u8>::new_by_runtime(&caller, input.clone());
+    println!("wasmedge: Result<i8, u8>: {:?}", r);
     Ok(vec![WasmValue::from_i32(0)])
 }
 
