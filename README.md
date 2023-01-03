@@ -47,10 +47,11 @@ witc runtime export xxx.wit
 
 ### Development
 
-This project use GHC 9.2.5, since hls haven't supported this version offically, you can compile local hls for development.
+To get the proper Haskell configuration, we recommend you install the following combination.
 
 ```shell
-ghcup --verbose compile hls --cabal-update --ghc 9.2.5 --git-describe-version --git-ref aeb57a8eb56964c8666d7cd05b6ba46d531de7c7 -- --ghc-options='+RTS -M2G -RTS'
+ghcup install ghc 9.2.5
+ghcup install hls 1.9.0.0
 ```
 
 ### Why witc?
