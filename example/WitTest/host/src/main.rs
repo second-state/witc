@@ -66,45 +66,59 @@ fn extern_maybe_test(
     Ok(input)
 }
 
+fn send_result(r: Result<String, String>) -> Result<String, String> {
+    println!("wasmedge: Result<String, String>: {:?}", r);
+    r
+}
 #[host_function]
 fn extern_send_result(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
     let (r, _) = WitResult::<WitString, WitString>::new_by_runtime(&caller, input.clone());
-    println!("wasmedge: Result<String, String>: {:?}", r);
+    let _ = send_result(r.into());
     Ok(vec![WasmValue::from_i32(0)])
 }
 
+fn send_result2(r: Result<i8, u8>) -> Result<i8, u8> {
+    println!("wasmedge: Result<i8, u8>: {:?}", r);
+    r
+}
 #[host_function]
 fn extern_send_result2(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
     let (r, _) = WitResult::<i8, u8>::new_by_runtime(&caller, input.clone());
-    println!("wasmedge: Result<i8, u8>: {:?}", r);
+    let _ = send_result2(r.into());
     Ok(vec![WasmValue::from_i32(0)])
 }
 
+fn exchange_list(v: Vec<u8>) -> Vec<u8> {
+    println!("wasmedge: Vec<u8>: {:?}", v);
+    v
+}
 #[host_function]
 fn extern_exchange_list(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (wv, _) = WitVec::<u8>::new_by_runtime(&caller, input.clone());
-    let v: Vec<u8> = wv.into();
-    println!("wasmedge: Vec<u8>: {:?}", v);
+    let (v, _) = WitVec::<u8>::new_by_runtime(&caller, input.clone());
+    let _ = exchange_list(v.into());
     Ok(input)
 }
 
+fn exchange_list_string(v: Vec<String>) -> Vec<String> {
+    println!("wasmedge: Vec<String>: {:?}", v);
+    v
+}
 #[host_function]
 fn extern_exchange_list_string(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (wv, _) = WitVec::<WitString>::new_by_runtime(&caller, input.clone());
-    let v: Vec<String> = wv.into();
-    println!("wasmedge: Vec<String>: {:?}", v);
+    let (v, _) = WitVec::<WitString>::new_by_runtime(&caller, input.clone());
+    let _ = exchange_list_string(v.into());
     Ok(input)
 }
 

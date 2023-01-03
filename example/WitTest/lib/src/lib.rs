@@ -7,7 +7,11 @@ pmacro::wit_instance_import!("../test.wit");
 pub unsafe extern "wasm" fn start() -> u32 {
     // string & struct (wit record)
     let mut s = String::with_capacity(10);
-    s.push('a');
+    s.push('h');
+    s.push('e');
+    s.push('l');
+    s.push('l');
+    s.push('o');
     let _s = exchange(
         s,
         person {

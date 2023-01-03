@@ -80,6 +80,19 @@ where
     }
 }
 
+impl<WT, WE, T, E> Into<Result<T, E>> for WitResult<WT, WE>
+where
+    WT: Into<T>,
+    WE: Into<E>,
+{
+    fn into(self: Self) -> Result<T, E> {
+        match self {
+            WitResult::Ok(ok) => Ok(ok.into()),
+            WitResult::Err(err) => Err(err.into()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
