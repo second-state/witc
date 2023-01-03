@@ -11,11 +11,13 @@ pmacro::wit_runtime_export!("../test.wit");
 
 #[host_function]
 fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (s, input) = WitString::new_by_runtime(&caller, input);
+    let (s1, input) = WitString::new_by_runtime(&caller, input);
+    let s: String = s1.into();
     println!("wasmedge: Get: {}", s);
 
     let (s2, input) = WitString::new_by_runtime(&caller, input);
-    println!("wasmedge: Get Name: {}", s2);
+    let ss: String = s2.into();
+    println!("wasmedge: Get Name: {}", ss);
     println!("wasmedge: Get Age: {}", input[0].to_i32());
 
     let mut mem = caller.memory(0).unwrap();
@@ -34,13 +36,16 @@ fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValu
     ])
 }
 
+fn exchange_enum(c: color) {
+    println!("wasmedge: color: {:?}", c);
+}
 #[host_function]
 fn extern_exchange_enum(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
     let (c, _input) = color::new_by_runtime(&caller, input.clone());
-    println!("wasmedge: color: {:?}", c);
+    exchange_enum(c.into());
     Ok(input)
 }
 
@@ -48,14 +53,13 @@ fn maybe_test(v: Option<u8>) -> Option<u8> {
     println!("wasmedge: Option<u8>: {:?}", v);
     v
 }
-
 #[host_function]
 fn extern_maybe_test(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
     let (o, _input) = WitOption::<u8>::new_by_runtime(&caller, input.clone());
-    let r: WitOption<u8> = maybe_test(o).into();
+    let _r: WitOption<u8> = maybe_test(o.into()).into();
     // let mem = caller.memory(0).unwrap();
     // r.allocate(mem);
     // let input = r.to_input();
@@ -87,7 +91,8 @@ fn extern_exchange_list(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (v, _) = WitVec::<u8>::new_by_runtime(&caller, input.clone());
+    let (wv, _) = WitVec::<u8>::new_by_runtime(&caller, input.clone());
+    let v: Vec<u8> = wv.into();
     println!("wasmedge: Vec<u8>: {:?}", v);
     Ok(input)
 }
@@ -97,7 +102,8 @@ fn extern_exchange_list_string(
     caller: Caller,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (v, _) = WitVec::<WitString>::new_by_runtime(&caller, input.clone());
+    let (wv, _) = WitVec::<WitString>::new_by_runtime(&caller, input.clone());
+    let v: Vec<String> = wv.into();
     println!("wasmedge: Vec<String>: {:?}", v);
     Ok(input)
 }

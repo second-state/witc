@@ -20,9 +20,7 @@ implRuntime (Enum name cases) =
       ( line
           <+> indent
             4
-            ( pretty "type T = Self;"
-                <+> line
-                <+> hsep (map pretty ["fn", "size()", "->", "usize"])
+            ( hsep (map pretty ["fn", "size()", "->", "usize"])
                 <+> braces (pretty "4")
                 <+> line
                 <+> hsep
@@ -34,7 +32,7 @@ implRuntime (Enum name cases) =
                         "caller: &wasmedge_sdk::Caller, input: Vec<wasmedge_sdk::WasmValue>",
                         ")",
                         "->",
-                        "(Self::T, Vec<wasmedge_sdk::WasmValue>)"
+                        "(Self, Vec<wasmedge_sdk::WasmValue>)"
                       ]
                   )
                 <+> braces

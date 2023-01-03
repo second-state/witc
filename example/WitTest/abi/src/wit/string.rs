@@ -13,19 +13,23 @@ mod implement {
     use wasmedge_sdk::{Caller, WasmValue};
 
     impl Runtime for WitString {
-        type T = String;
-
         fn size() -> usize {
             12
         }
 
-        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self::T, Vec<WasmValue>) {
+        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
+            let cap = input[1].to_i32() as usize;
+            let len = input[2].to_i32() as u32;
             let mem = caller.memory(0).unwrap();
             let data = mem
-                .read(input[0].to_i32() as u32, input[2].to_i32() as u32)
+                .read(input[0].to_i32() as u32, len)
                 .expect("fail to get string");
             (
-                String::from_utf8_lossy(&data).to_string(),
+                WitString {
+                    addr: data.leak().as_mut_ptr(),
+                    cap,
+                    len: len as usize,
+                },
                 input[3..].into(),
             )
         }
