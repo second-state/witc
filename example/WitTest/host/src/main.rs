@@ -4,21 +4,40 @@ use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     error::HostFuncError,
-    host_function, Caller, Memory, Vm, WasmValue,
+    host_function, Caller, Vm, WasmValue,
 };
 
 pmacro::wit_runtime_export!("../test.wit");
 
+impl Runtime for person {
+    fn size() -> usize {
+        WitString::size() + 4
+    }
+
+    fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
+        let (field1, input) = WitString::new_by_runtime(&caller, input);
+        let field2 = input[0].to_i32() as u32;
+        (
+            person {
+                name: field1.into(),
+                age: field2.into(),
+            },
+            input[1..].into(),
+        )
+    }
+}
+
+fn exchange(s: String, p: person) -> String {
+    println!("wasmedge: Get: {}", s);
+    println!("wasmedge: Get Name: {}", p.name);
+    println!("wasmedge: Get Age: {}", p.age);
+    s
+}
 #[host_function]
 fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (s1, input) = WitString::new_by_runtime(&caller, input);
-    let s: String = s1.into();
-    println!("wasmedge: Get: {}", s);
-
-    let (s2, input) = WitString::new_by_runtime(&caller, input);
-    let ss: String = s2.into();
-    println!("wasmedge: Get Name: {}", ss);
-    println!("wasmedge: Get Age: {}", input[0].to_i32());
+    let (s, input) = WitString::new_by_runtime(&caller, input);
+    let (person, _input) = person::new_by_runtime(&caller, input);
+    let s1 = exchange(s.into(), person.into());
 
     let mut mem = caller.memory(0).unwrap();
     // take last address+1
@@ -26,13 +45,13 @@ fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValu
     // grow a page size
     mem.grow(1).expect("fail to grow memory");
     // put the returned string into new address
-    mem.write(s.as_bytes(), final_addr)
+    mem.write(s1.as_bytes(), final_addr)
         .expect("fail to write returned string");
 
     Ok(vec![
         WasmValue::from_i32(final_addr as i32),
-        WasmValue::from_i32(s.capacity() as i32),
-        WasmValue::from_i32(s.len() as i32),
+        WasmValue::from_i32(s1.capacity() as i32),
+        WasmValue::from_i32(s1.len() as i32),
     ])
 }
 
@@ -122,28 +141,37 @@ fn extern_exchange_list_string(
     Ok(input)
 }
 
-// pass-nat: func(n : nat) -> s32;
-fn recur_print(mem: Memory, pair: (u32, u32)) {
-    match pair.0 {
-        0 => {
-            println!("zero");
+impl Runtime for nat {
+    fn size() -> usize {
+        8
+    }
+
+    fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
+        let mem = caller.memory(0).unwrap();
+        match input[0].to_i32() {
+            0 => (nat::zero, input[2..].into()),
+            1 => {
+                let data = mem
+                    .read(input[1].to_i32() as u32, Self::size() as u32)
+                    .unwrap();
+                let (res, input) = Self::new_by_runtime(
+                    caller,
+                    vec![
+                        WasmValue::from_i32(i32::from_ne_bytes(data[0..4].try_into().unwrap())),
+                        WasmValue::from_i32(i32::from_ne_bytes(data[4..8].try_into().unwrap())),
+                    ],
+                );
+                (nat::suc(Box::new(res)), input)
+            }
+            _ => unreachable!(),
         }
-        1 => {
-            let res = mem.read(pair.1, 8).unwrap();
-            print!("suc ");
-            let l = u32::from_ne_bytes(res[0..4].try_into().unwrap());
-            let r = u32::from_ne_bytes(res[4..8].try_into().unwrap());
-            recur_print(mem, (l, r))
-        }
-        _ => unreachable!(),
     }
 }
+
 #[host_function]
 fn extern_pass_nat(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    recur_print(
-        caller.memory(0).unwrap(),
-        (input[0].to_i32() as u32, input[1].to_i32() as u32),
-    );
+    let (n, _) = nat::new_by_runtime(&caller, input);
+    println!("{:?}", n);
     Ok(vec![WasmValue::from_i32(0)])
 }
 
