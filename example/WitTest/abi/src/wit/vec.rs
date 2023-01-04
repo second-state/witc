@@ -15,46 +15,51 @@ mod implement {
     use crate::runtime::Runtime;
     use wasmedge_sdk::{Caller, WasmValue};
 
+    impl Runtime for WitVec<u8> {
+        fn size() -> usize {
+            12
+        }
+
+        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
+            let cap = input[1].to_i32() as usize;
+            let len = input[2].to_i32() as usize;
+            let mem = caller.memory(0).unwrap();
+            let data = mem
+                .read(input[0].to_i32() as u32, len as u32)
+                .expect("fail to get vector");
+            (
+                WitVec {
+                    ptr: data.leak().as_mut_ptr() as usize,
+                    cap,
+                    len,
+                    phantom: PhantomData,
+                },
+                input[3..].into(),
+            )
+        }
+    }
+
     fn build_inputs(data: Vec<u8>) -> Vec<WasmValue> {
         data.chunks(4)
             .map(|bytes| WasmValue::from_i32(i32::from_ne_bytes(bytes.try_into().unwrap())))
             .collect()
     }
-
-    impl Runtime for WitVec<u8> {
-        type T = Vec<u8>;
-
-        fn size() -> usize {
-            12
-        }
-
-        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self::T, Vec<WasmValue>) {
-            let mem = caller.memory(0).unwrap();
-            let data = mem
-                .read(input[0].to_i32() as u32, input[2].to_i32() as u32)
-                .expect("fail to get vector");
-            (data, input[3..].into())
-        }
-    }
-
     impl<A> Runtime for WitVec<A>
     where
         A: Runtime,
     {
-        type T = Vec<A::T>;
-
         fn size() -> usize {
             12
         }
 
-        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self::T, Vec<WasmValue>) {
-            let len = input[2].to_i32() as u32 * A::size() as u32;
+        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
+            let len = input[2].to_i32() as usize;
             let mem = caller.memory(0).unwrap();
             let data = mem
-                .read(input[0].to_i32() as u32, len)
+                .read(input[0].to_i32() as u32, (len as u32) * A::size() as u32)
                 .expect("fail to get vector");
 
-            let mut r: Self::T = vec![];
+            let mut r: Vec<A> = vec![];
 
             let mut input_a = build_inputs(data);
             while input_a.len() != 0 {
@@ -63,7 +68,17 @@ mod implement {
                 r.push(e);
             }
 
-            (r, input[3..].into())
+            let cap = r.capacity();
+            let len = r.len();
+            (
+                WitVec {
+                    ptr: r.leak().as_mut_ptr() as usize,
+                    cap,
+                    len,
+                    phantom: PhantomData,
+                },
+                input[3..].into(),
+            )
         }
     }
 }
@@ -92,7 +107,7 @@ where
     WT: Into<T>,
 {
     fn into(self: Self) -> Vec<T> {
-        let v: Vec<WT> = unsafe { Vec::from_raw_parts(self.ptr as *mut WT, self.cap, self.len) };
+        let v: Vec<WT> = unsafe { Vec::from_raw_parts(self.ptr as *mut WT, self.len, self.cap) };
         let mut r: Vec<T> = Vec::with_capacity(self.cap);
         for e in v {
             r.push(e.into());

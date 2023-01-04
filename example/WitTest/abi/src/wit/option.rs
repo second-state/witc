@@ -15,17 +15,16 @@ mod implement {
     macro_rules! impl_option {
         ($t1:ty) => {
             impl Runtime for WitOption<$t1> {
-                type T = Option<$t1>;
                 fn size() -> usize {
                     4 + 4
                 }
                 fn new_by_runtime(
                     _caller: &Caller,
                     input: Vec<WasmValue>,
-                ) -> (Self::T, Vec<WasmValue>) {
+                ) -> (Self, Vec<WasmValue>) {
                     match input[0].to_i32() {
-                        0 => (None, input[2..].into()),
-                        1 => (Some(input[1].to_i32() as $t1), input[2..].into()),
+                        0 => (WitOption::None, input[2..].into()),
+                        1 => (WitOption::Some(input[1].to_i32() as $t1), input[2..].into()),
                         _ => unreachable!(),
                     }
                 }
@@ -39,21 +38,19 @@ mod implement {
     where
         A: Runtime,
     {
-        type T = Option<A::T>;
-
         fn size() -> usize {
             4 + A::size()
         }
 
-        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self::T, Vec<WasmValue>) {
+        fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
             match input[0].to_i32() {
                 0 => {
                     let size = A::size();
-                    (None, input[1 + (size / 4)..].into())
+                    (WitOption::None, input[1 + (size / 4)..].into())
                 }
                 1 => {
                     let (e, input) = A::new_by_runtime(caller, input[1..].into());
-                    (Some(e), input)
+                    (WitOption::Some(e), input)
                 }
                 _ => unreachable!(),
             }
