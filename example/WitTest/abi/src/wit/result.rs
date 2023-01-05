@@ -78,12 +78,12 @@ mod implement {
 
             match s {
                 Ok(a) => {
-                    let v = vec![WasmValue::from_i32(0)];
+                    let mut v = vec![WasmValue::from_i32(0)];
                     v.append(&mut a.allocate(mem));
                     v
                 }
                 Err(e) => {
-                    let v = vec![WasmValue::from_i32(1)];
+                    let mut v = vec![WasmValue::from_i32(1)];
                     v.append(&mut e.allocate(mem));
                     v
                 }

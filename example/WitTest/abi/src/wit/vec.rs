@@ -41,6 +41,9 @@ mod implement {
         fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
             let s: Vec<u8> = self.into();
 
+            let cap = s.capacity();
+            let len = s.len();
+
             let final_addr = mem.size() + 1;
             mem.grow(1).expect("fail to grow memory");
             // put the returned string into new address
@@ -49,8 +52,8 @@ mod implement {
 
             vec![
                 WasmValue::from_i32(final_addr as i32),
-                WasmValue::from_i32(s.capacity() as i32),
-                WasmValue::from_i32(s.len() as i32),
+                WasmValue::from_i32(cap as i32),
+                WasmValue::from_i32(len as i32),
             ]
         }
     }

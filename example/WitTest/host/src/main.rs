@@ -4,7 +4,7 @@ use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     error::HostFuncError,
-    host_function, Caller, Vm, WasmValue,
+    host_function, Caller, Memory, Vm, WasmValue,
 };
 
 pmacro::wit_runtime_export!("../test.wit");
@@ -24,6 +24,10 @@ impl Runtime for person {
             },
             input[1..].into(),
         )
+    }
+
+    fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+        todo!()
     }
 }
 
@@ -165,6 +169,10 @@ impl Runtime for nat {
             }
             _ => unreachable!(),
         }
+    }
+
+    fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+        todo!()
     }
 }
 

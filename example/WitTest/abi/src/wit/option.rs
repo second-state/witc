@@ -68,12 +68,9 @@ mod implement {
             let s: Option<A> = self.into();
 
             match s {
-                None => {
-                    let v = vec![WasmValue::from_i32(0)];
-                    v
-                }
+                None => vec![WasmValue::from_i32(0)],
                 Some(a) => {
-                    let v = vec![WasmValue::from_i32(1)];
+                    let mut v = vec![WasmValue::from_i32(1)];
                     v.append(&mut a.allocate(mem));
                     v
                 }

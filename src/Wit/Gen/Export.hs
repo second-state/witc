@@ -42,6 +42,8 @@ implRuntime (Enum name cases) =
                       <+> line
                       <+> pretty "(r, input[1..].into())"
                   )
+                <+> pretty "fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue>"
+                <+> braces (indent 4 $ pretty "todo!()")
             )
           <+> line
       )
