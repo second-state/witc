@@ -44,19 +44,8 @@ fn extern_exchange(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValu
     let s1 = exchange(s.into(), person.into());
 
     let mut mem = caller.memory(0).unwrap();
-    // take last address+1
-    let final_addr = mem.size() + 1;
-    // grow a page size
-    mem.grow(1).expect("fail to grow memory");
-    // put the returned string into new address
-    mem.write(s1.as_bytes(), final_addr)
-        .expect("fail to write returned string");
 
-    Ok(vec![
-        WasmValue::from_i32(final_addr as i32),
-        WasmValue::from_i32(s1.capacity() as i32),
-        WasmValue::from_i32(s1.len() as i32),
-    ])
+    Ok(Into::<WitString>::into(s1).allocate(&mut mem))
 }
 
 fn exchange_enum(c: color) {
