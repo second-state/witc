@@ -10,7 +10,7 @@ mod implement {
     use super::*;
     use crate::gen_all;
     use crate::runtime::Runtime;
-    use wasmedge_sdk::{Caller, WasmValue};
+    use wasmedge_sdk::{Caller, Memory, WasmValue};
 
     macro_rules! impl_option {
         ($t1:ty) => {
@@ -26,6 +26,14 @@ mod implement {
                         0 => (WitOption::None, input[2..].into()),
                         1 => (WitOption::Some(input[1].to_i32() as $t1), input[2..].into()),
                         _ => unreachable!(),
+                    }
+                }
+                fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+                    let s: Option<$t1> = self.into();
+
+                    match s {
+                        None => vec![WasmValue::from_i32(0)],
+                        Some(a) => vec![WasmValue::from_i32(1), WasmValue::from_i32(a as i32)],
                     }
                 }
             }
@@ -53,6 +61,22 @@ mod implement {
                     (WitOption::Some(e), input)
                 }
                 _ => unreachable!(),
+            }
+        }
+
+        fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+            let s: Option<A> = self.into();
+
+            match s {
+                None => {
+                    let v = vec![WasmValue::from_i32(0)];
+                    v
+                }
+                Some(a) => {
+                    let v = vec![WasmValue::from_i32(1)];
+                    v.append(&mut a.allocate(mem));
+                    v
+                }
             }
         }
     }

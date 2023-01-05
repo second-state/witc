@@ -10,7 +10,7 @@ pub struct WitString {
 mod implement {
     use super::*;
     use crate::runtime::Runtime;
-    use wasmedge_sdk::{Caller, WasmValue};
+    use wasmedge_sdk::{Caller, Memory, WasmValue};
 
     impl Runtime for WitString {
         fn size() -> usize {
@@ -32,6 +32,22 @@ mod implement {
                 },
                 input[3..].into(),
             )
+        }
+
+        fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+            let s: String = self.into();
+
+            let final_addr = mem.size() + 1;
+            mem.grow(1).expect("fail to grow memory");
+            // put the returned string into new address
+            mem.write(s.as_bytes(), final_addr)
+                .expect("fail to write returned string");
+
+            vec![
+                WasmValue::from_i32(final_addr as i32),
+                WasmValue::from_i32(s.capacity() as i32),
+                WasmValue::from_i32(s.len() as i32),
+            ]
         }
     }
 }

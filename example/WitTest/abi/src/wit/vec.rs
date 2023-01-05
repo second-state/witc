@@ -13,7 +13,7 @@ pub struct WitVec<T> {
 mod implement {
     use super::*;
     use crate::runtime::Runtime;
-    use wasmedge_sdk::{Caller, WasmValue};
+    use wasmedge_sdk::{Caller, Memory, WasmValue};
 
     impl Runtime for WitVec<u8> {
         fn size() -> usize {
@@ -36,6 +36,22 @@ mod implement {
                 },
                 input[3..].into(),
             )
+        }
+
+        fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+            let s: Vec<u8> = self.into();
+
+            let final_addr = mem.size() + 1;
+            mem.grow(1).expect("fail to grow memory");
+            // put the returned string into new address
+            mem.write(s, final_addr)
+                .expect("fail to write returned string");
+
+            vec![
+                WasmValue::from_i32(final_addr as i32),
+                WasmValue::from_i32(s.capacity() as i32),
+                WasmValue::from_i32(s.len() as i32),
+            ]
         }
     }
 
@@ -79,6 +95,26 @@ mod implement {
                 },
                 input[3..].into(),
             )
+        }
+
+        fn allocate(self: Self, mem: &mut Memory) -> Vec<WasmValue> {
+            let s: Vec<A> = self.into();
+
+            let final_addr = mem.size() + 1;
+            mem.grow(1).expect("fail to grow memory");
+
+            let (p, cap, len) = s.into_raw_parts();
+
+            // convert p to bytes
+            let pp = unsafe { std::slice::from_raw_parts(p as *const u8, cap * A::size()) };
+            mem.write(pp, final_addr)
+                .expect("fail to write returned string");
+
+            vec![
+                WasmValue::from_i32(final_addr as i32),
+                WasmValue::from_i32(cap as i32),
+                WasmValue::from_i32(len as i32),
+            ]
         }
     }
 }
