@@ -3,6 +3,7 @@ module Wit.Gen.Type
   ( prettyTypeDef,
     prettyType,
     prettyABIType,
+    prettyCallABIType,
     prettyBinder,
     prettyABIBinder,
   )
@@ -90,3 +91,11 @@ prettyABIType (ListTy ty) = hsep [pretty "WitVec<", prettyABIType ty, pretty ">"
 prettyABIType (ExpectedTy ty ety) =
   hsep [pretty "WitResult<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
 prettyABIType ty = prettyType ty
+
+prettyCallABIType :: Type -> Doc a
+prettyCallABIType (SrcPosType _ ty) = prettyCallABIType ty
+prettyCallABIType (Optional ty) = hsep [pretty "WitOption::<", prettyCallABIType ty, pretty ">"]
+prettyCallABIType (ListTy ty) = hsep [pretty "WitVec::<", prettyCallABIType ty, pretty ">"]
+prettyCallABIType (ExpectedTy ty ety) =
+  hsep [pretty "WitResult::<", prettyCallABIType ty, pretty ",", prettyCallABIType ety, pretty ">"]
+prettyCallABIType ty = prettyABIType ty

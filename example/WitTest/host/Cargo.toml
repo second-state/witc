@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 wasmedge-sdk = "0.7.1"
-abi = { path = "../abi" }
 anyhow = "*"
-pmacro = { path = "../pmacro" }
+invoke-witc = { path = "../../../bindings/rust/invoke-witc" }
+witc-abi = { path = "../../../bindings/rust/witc-abi" }
