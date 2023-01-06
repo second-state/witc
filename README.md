@@ -21,24 +21,47 @@ The thing is a bit out of control, not to say compound types like **structure**,
 
 ### Usage
 
+> **Warning**
+> We are preparing a huge changes about exchanging data encoding, the following examples may go wrong in this sense
+
 #### Rust example
+
+With a `xxx.wit` as the following
+
+```wit
+send_string: func(a : string) -> u32
+```
+
+Instance side (use site)
 
 ```rust
 #![feature(wasm_abi)]
 
-wasmedge_witc::wit_instance_import!("../xxx.wit");
+use witc_abi::*;
+invoke_witc::wit_instance_import!("../xxx.wit");
 
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {
-    let _s = exchange("Hello".to_string());
-    // assume `exchange : string -> string` in xxx.wit & host
-    return 0;
+    let _ = send_string("Hello".to_string());
+    0
+}
+```
+
+Runtime side (implementation)
+
+```rust
+use witc_abi::*;
+invoke_witc::wit_runtime_export!("../xxx.wit");
+
+fn send_string(s: String) -> u32 {
+    println!("wasmedge: Get: {}", s);
+    0
 }
 ```
 
 #### CLI
 
-Conceptual command
+You can also use following commands, let compiler output to stdout
 
 ```sh
 witc instance import xxx.wit
@@ -47,7 +70,7 @@ witc runtime export xxx.wit
 
 ### Development
 
-To get the proper Haskell configuration, we recommend you install the following combination.
+To get the proper Haskell configuration, we recommend you install the following combination with [`ghcup`](https://www.haskell.org/ghcup/).
 
 ```shell
 ghcup install ghc 9.2.5
@@ -56,9 +79,4 @@ ghcup install hls 1.9.0.0
 
 ### Why witc?
 
-You might wonder why you need `witc` since `wit-bindgen` already exists.
-Although `wit-bindgen` is good, it is currently in active development.
-Additionally, the Component Model and Canonical ABI change frequently with large updates.
-We create `witc` to serve as a middle project to wait for `wit-bindgen` to become stable, and at that point, we will contribute to `wit-bindgen`.
-With `witc`, it increases the diversity in wit related toochain.
-For these reasons, we will only support a small number of features in `witc`, ensuring that the basic demos will work.
+You might wonder why you need `witc` since `wit-bindgen` already exists. Although `wit-bindgen` is good, it is currently in active development, and `witc` will explore different approach that increases the diversity of wit related toolchain. Additionally, the Component Model and Canonical ABI change frequently with large updates, in this sense `witc` will serve as a middle project to wait for `wit-bindgen` to become stable. We will contribute to `wit-bindgen` at that point, for these reasons, we will support a small number of features in `witc` that only ensuring that the basic demo works.
