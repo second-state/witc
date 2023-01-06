@@ -1,7 +1,7 @@
 #![feature(wasm_abi)]
 
-use abi::*;
-pmacro::wit_instance_import!("../test.wit");
+use witc_abi::*;
+invoke_witc::wit_instance_import!("../test.wit");
 
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {

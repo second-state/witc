@@ -10,5 +10,5 @@ default-target = "wasm32-wasi"
 crate-type = [ "cdylib" ]
 
 [dependencies]
-pmacro = { path = "../pmacro" }
-abi = { path = "../abi" }
+invoke-witc = { path = "../../../bindings/rust/invoke-witc" }
+witc-abi = { path = "../../../bindings/rust/witc-abi" }

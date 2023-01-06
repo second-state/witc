@@ -3,13 +3,6 @@
 version = 3
 
 [[package]]
-name = "abi"
-version = "0.1.0"
-dependencies = [
- "wasmedge-sdk",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -109,10 +102,17 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 name = "host"
 version = "0.1.0"
 dependencies = [
- "abi",
  "anyhow",
- "pmacro",
+ "invoke-witc",
  "wasmedge-sdk",
+ "witc-abi",
+]
+
+[[package]]
+name = "invoke-witc"
+version = "0.1.0"
+dependencies = [
+ "syn",
 ]
 
 [[package]]
@@ -137,8 +137,8 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 name = "lib"
 version = "0.1.0"
 dependencies = [
- "abi",
- "pmacro",
+ "invoke-witc",
+ "witc-abi",
 ]
 
 [[package]]
@@ -243,13 +243,6 @@ name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
-
-[[package]]
-name = "pmacro"
-version = "0.1.0"
-dependencies = [
- "syn",
-]
 
 [[package]]
 name = "ppv-lite86"
@@ -566,3 +559,10 @@ name = "windows_x86_64_msvc"
 version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
+
+[[package]]
+name = "witc-abi"
+version = "0.1.0"
+dependencies = [
+ "wasmedge-sdk",
+]

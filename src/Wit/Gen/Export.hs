@@ -29,7 +29,7 @@ toHostFunction (Func (Function _attr name param_list _result_ty)) =
               <+> line
               <+> pretty "let r ="
               <+> pretty (normalizeIdentifier name)
-              <+> parens (hsep (map (pretty . fst) param_list))
+              <+> tupled (map (\x -> pretty (fst x) <+> pretty ".into()") param_list)
               <+> pretty ";"
               <+> line
               <+> pretty "Ok(vec![WasmValue::from_i32(r as i32)])"
@@ -43,7 +43,7 @@ toHostFunction (Func (Function _attr name param_list _result_ty)) =
           tupled [pretty x, pretty "input"],
           pretty "=",
           hcat
-            [prettyType ty, pretty "::", pretty "new_by_runtime(&caller, input);"]
+            [prettyCallABIType ty, pretty "::", pretty "new_by_runtime(&caller, input);"]
         ]
 toHostFunction d = error "should not get type definition here: " $ show d
 
@@ -95,7 +95,7 @@ implRuntime (Record name fields) =
         PrimU8 -> pretty "4"
         PrimU16 -> pretty "4"
         PrimU32 -> pretty "4"
-        _ -> hcat [prettyABIType ty, pretty "::", pretty "size()"]
+        _ -> hcat [prettyCallABIType ty, pretty "::", pretty "size()"]
 
     recordCtor = pretty name <+> encloseSep lbrace rbrace comma (map (fieldInto . fst) fields)
     fieldInto x = pretty x <+> pretty ":" <+> hcat [pretty x, pretty ".into()"]
@@ -117,7 +117,7 @@ implRuntime (Record name fields) =
       PrimU8 -> pretty "(input[0].to_i32() as u8, input[1..].into());"
       PrimU16 -> pretty "(input[0].to_i32() as u16, input[1..].into());"
       PrimU32 -> pretty "(input[0].to_i32() as u32, input[1..].into());"
-      _ -> hcat [prettyABIType ty, pretty "::", pretty "new_by_runtime(&caller, input);"]
+      _ -> hcat [prettyCallABIType ty, pretty "::", pretty "new_by_runtime(&caller, input);"]
 implRuntime (Variant _ _) = emptyDoc
 implRuntime (Enum name cases) =
   hsep (map pretty ["impl", "Runtime", "for", name])
