@@ -41,8 +41,8 @@ jobs:
       - name: Install witc
         run: |
           stack install
-      - name: Run example/WitTest
+      - name: Run example/logging-demo
         run: |
           source $HOME/.wasmedge/env
-          cd example/WitTest
+          cd example/logging-demo
           cargo run --release
