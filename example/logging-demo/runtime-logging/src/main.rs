@@ -8,24 +8,6 @@ use witc_abi::WitString;
 
 invoke_witc::wit_runtime_export!("./logging.wit");
 
-impl Runtime for pack {
-    fn size() -> usize {
-        WitString::size() + 4
-    }
-
-    fn new_by_runtime(caller: &Caller, input: Vec<WasmValue>) -> (Self, Vec<WasmValue>) {
-        let (field1, input) = WitString::new_by_runtime(&caller, input);
-        let field2 = input[0].to_i32() as u32;
-        (
-            pack {
-                message: field1.into(),
-                level: field2.into(),
-            },
-            input[1..].into(),
-        )
-    }
-}
-
 fn log(p: pack) -> u32 {
     println!("[{}]: {}", p.level, p.message);
     0

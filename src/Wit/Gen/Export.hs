@@ -49,7 +49,75 @@ toHostFunction d = error "should not get type definition here: " $ show d
 
 implRuntime :: Definition -> Doc a
 implRuntime (SrcPos _ d) = implRuntime d
-implRuntime (Record _ _) = emptyDoc
+implRuntime (Record name fields) =
+  hsep (map pretty ["impl", "Runtime", "for", name])
+    <+> braces
+      ( line
+          <+> indent
+            4
+            ( vsep
+                [ hsep (map pretty ["fn", "size()", "->", "usize"])
+                    <+> encloseSep
+                      lbrace
+                      rbrace
+                      (pretty "+")
+                      (map (fieldTypeSize . snd) fields),
+                  hsep
+                    ( map
+                        pretty
+                        [ "fn",
+                          "new_by_runtime",
+                          "(",
+                          "caller: &wasmedge_sdk::Caller, input: Vec<wasmedge_sdk::WasmValue>",
+                          ")",
+                          "->",
+                          "(Self, Vec<wasmedge_sdk::WasmValue>)"
+                        ]
+                    )
+                    <+> braces
+                      ( line
+                          <+> indent
+                            4
+                            ( vsep (map letField fields)
+                                <+> tupled [recordCtor, pretty "input"]
+                            )
+                      )
+                ]
+            )
+      )
+  where
+    fieldTypeSize ty =
+      case ty of
+        SrcPosType _ t -> fieldTypeSize t
+        PrimI8 -> pretty "4"
+        PrimI16 -> pretty "4"
+        PrimI32 -> pretty "4"
+        PrimU8 -> pretty "4"
+        PrimU16 -> pretty "4"
+        PrimU32 -> pretty "4"
+        _ -> hcat [prettyABIType ty, pretty "::", pretty "size()"]
+
+    recordCtor = pretty name <+> encloseSep lbrace rbrace comma (map (fieldInto . fst) fields)
+    fieldInto x = pretty x <+> pretty ":" <+> hcat [pretty x, pretty ".into()"]
+
+    letField :: (String, Type) -> Doc a
+    letField (x, ty) =
+      hsep
+        [ pretty "let",
+          tupled [pretty x, pretty "input"],
+          pretty "=",
+          newByRuntime ty
+        ]
+    newByRuntime :: Type -> Doc a
+    newByRuntime ty = case ty of
+      SrcPosType _ t -> newByRuntime t
+      PrimI8 -> pretty "(input[0].to_i32() as i8, input[1..].into());"
+      PrimI16 -> pretty "(input[0].to_i32() as i16, input[1..].into());"
+      PrimI32 -> pretty "(input[0].to_i32() as i32, input[1..].into());"
+      PrimU8 -> pretty "(input[0].to_i32() as u8, input[1..].into());"
+      PrimU16 -> pretty "(input[0].to_i32() as u16, input[1..].into());"
+      PrimU32 -> pretty "(input[0].to_i32() as u32, input[1..].into());"
+      _ -> hcat [prettyABIType ty, pretty "::", pretty "new_by_runtime(&caller, input);"]
 implRuntime (Variant _ _) = emptyDoc
 implRuntime (Enum name cases) =
   hsep (map pretty ["impl", "Runtime", "for", name])

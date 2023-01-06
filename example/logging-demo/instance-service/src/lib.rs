@@ -1,6 +1,5 @@
 #![feature(wasm_abi)]
 
-use witc_abi::*;
 invoke_witc::wit_instance_import!("./logging.wit");
 
 #[no_mangle]
