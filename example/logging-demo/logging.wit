@@ -1,0 +1,6 @@
+record pack {
+  message : string,
+  level: u32
+}
+
+log: func(p : pack) -> u32
