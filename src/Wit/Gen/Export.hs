@@ -1,6 +1,7 @@
 module Wit.Gen.Export
   ( witObject,
     implRuntime,
+    toHostFunction,
   )
 where
 
@@ -9,6 +10,42 @@ import Prettyprinter
 import Wit.Ast
 import Wit.Check
 import Wit.Gen.Normalization
+import Wit.Gen.Type
+
+toHostFunction :: Definition -> Doc a
+toHostFunction (SrcPos _ d) = toHostFunction d
+toHostFunction (Resource _ _) = undefined
+toHostFunction (Func (Function _attr name param_list _result_ty)) =
+  pretty "#[host_function]"
+    <+> line
+    <+> hsep (map pretty ["fn", externalConvention name])
+    <+> parens (pretty "caller: wasmedge_sdk::Caller, input: Vec<wasmedge_sdk::WasmValue>")
+    <+> pretty "->"
+    <+> pretty "Result<Vec<wasmedge_sdk::WasmValue>, wasmedge_sdk::error::HostFuncError>"
+    <+> braces
+      ( indent
+          4
+          ( vsep (map letParam param_list)
+              <+> line
+              <+> pretty "let r ="
+              <+> pretty (normalizeIdentifier name)
+              <+> parens (hsep (map (pretty . fst) param_list))
+              <+> pretty ";"
+              <+> line
+              <+> pretty "Ok(vec![WasmValue::from_i32(r as i32)])"
+          )
+      )
+  where
+    letParam :: (String, Type) -> Doc a
+    letParam (x, ty) =
+      hsep
+        [ pretty "let",
+          tupled [pretty x, pretty "input"],
+          pretty "=",
+          hcat
+            [prettyType ty, pretty "::", pretty "new_by_runtime(&caller, input);"]
+        ]
+toHostFunction d = error "should not get type definition here: " $ show d
 
 implRuntime :: Definition -> Doc a
 implRuntime (SrcPos _ d) = implRuntime d

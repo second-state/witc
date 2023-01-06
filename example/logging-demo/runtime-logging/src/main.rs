@@ -1,11 +1,10 @@
 use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
-    error::HostFuncError,
     host_function, Caller, Vm, WasmValue,
 };
 use witc_abi::runtime::Runtime;
-use witc_abi::{WitOption, WitResult, WitString, WitVec};
+use witc_abi::WitString;
 
 invoke_witc::wit_runtime_export!("./logging.wit");
 
@@ -30,13 +29,6 @@ impl Runtime for pack {
 fn log(p: pack) -> u32 {
     println!("[{}]: {}", p.level, p.message);
     0
-}
-
-#[host_function]
-fn extern_log(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let (p, _) = pack::new_by_runtime(&caller, input);
-    let r = log(p);
-    Ok(vec![WasmValue::from_i32(r as i32)])
 }
 
 fn main() -> Result<(), Error> {
