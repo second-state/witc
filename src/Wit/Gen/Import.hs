@@ -29,17 +29,24 @@ prettyDefWrap (Func (Function _attr name param_list result_ty)) =
   where
     paramInto :: String -> Doc a
     paramInto s = pretty $ s ++ ".into()"
+
+    prettyBinder :: (String, Type) -> Doc a
+    prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
 prettyDefWrap d = error "should not get type definition here: " $ show d
 
+-- TODO: should be all string pair
 prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
 prettyDefExtern (Resource _name _) = undefined
-prettyDefExtern (Func (Function _attr name param_list result_ty)) =
+prettyDefExtern (Func (Function _attr name param_list _)) =
   hsep (map pretty ["fn", externalConvention name])
-    <+> parens (hsep $ punctuate comma (map prettyABIBinder param_list))
+    <+> parens (hsep $ punctuate comma (map (prettyBinder . fst) param_list))
     <+> pretty "->"
-    <+> prettyABIType result_ty
+    <+> pretty "(usize, usize)"
     <+> pretty ";"
+  where
+    prettyBinder :: String -> Doc a
+    prettyBinder field_name = hsep [pretty field_name, pretty ": (usize, usize)"]
 prettyDefExtern d = error "should not get type definition here: " $ show d
 
 isTypeDef :: Definition -> Bool

@@ -52,8 +52,6 @@ prettyFile config WitFile {definition_list = def_list} env =
         (Runtime, Export) ->
           vsep (map prettyTypeDef ty_defs)
             <+> line
-            <+> vsep (map implRuntime ty_defs)
-            <+> line
             <+> vsep (map toHostFunction defs)
-            <+> witObject env defs
+            <+> witObject defs
         (_, _) -> error "unsupported side, direction combination"
