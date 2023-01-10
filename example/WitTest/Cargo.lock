@@ -104,6 +104,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "invoke-witc",
+ "libc",
  "serde",
  "serde_json",
  "wasmedge-sdk",

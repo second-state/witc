@@ -11,10 +11,9 @@ where
     let s = serde_json::to_string(&a).unwrap();
 
     let remote_addr = unsafe { allocate(s.len() as usize) };
-
     unsafe {
         for (i, c) in s.bytes().enumerate() {
-            write(remote_addr, i as usize, c);
+            write(remote_addr, i, c);
         }
     }
 
