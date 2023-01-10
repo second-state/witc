@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 invoke_witc::wit_instance_import!("../test.wit");
 
+// TODO: extract to witc_abi
 fn as_remote_string<A>(a: A) -> (usize, usize)
 where
     A: Serialize,
@@ -20,6 +21,7 @@ where
     (remote_addr, s.len())
 }
 
+// TODO: extract to witc_abi
 fn from_remote_string(pair: (usize, usize)) -> String {
     let (remote_addr, len) = pair;
 
