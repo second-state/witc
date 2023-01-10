@@ -1,12 +1,42 @@
 use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
+    error::HostFuncError,
     host_function, Caller, Vm, WasmValue,
 };
 use witc_abi::runtime::Runtime;
 use witc_abi::{WitOption, WitResult, WitString, WitVec};
 
 invoke_witc::wit_runtime_export!("../test.wit");
+
+// allocate : (size : usize) -> (addr : i32)
+#[host_function]
+fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let s = String::with_capacity(values[0].to_i32() as usize);
+    let addr = s.as_ptr() as i32;
+    Box::leak(s.into_boxed_str());
+    Ok(vec![WasmValue::from_i32(addr)])
+}
+
+#[host_function]
+fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let offset = values[1].to_i32() as usize;
+    let addr = (values[0].to_i32() as usize + offset) as *mut u8;
+    let byte = values[2].to_i32() as u8;
+
+    unsafe {
+        *addr = byte;
+    }
+
+    Ok(vec![])
+}
+
+#[host_function]
+fn read(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let offset = values[1].to_i32() as usize;
+    let addr = (values[0].to_i32() as usize + offset) as *mut u8;
+    Ok(vec![WasmValue::from_i32(unsafe { *addr } as i32)])
+}
 
 fn exchange(s: String, p: person) -> u32 {
     println!("wasmedge: Get: {}", s);
