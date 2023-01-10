@@ -1,7 +1,38 @@
 #![feature(wasm_abi)]
+use serde::{Deserialize, Serialize};
 
-use witc_abi::*;
 invoke_witc::wit_instance_import!("../test.wit");
+
+fn as_remote_string<A>(a: A) -> (usize, usize)
+where
+    A: Serialize,
+{
+    let s = serde_json::to_string(&a).unwrap();
+
+    let remote_addr = unsafe { allocate(s.len() as usize) };
+
+    unsafe {
+        for (i, c) in s.bytes().enumerate() {
+            write(remote_addr, i as usize, c);
+        }
+    }
+
+    (remote_addr, s.len())
+}
+
+fn from_remote_string(pair: (usize, usize)) -> String {
+    let (remote_addr, len) = pair;
+
+    let mut s = String::with_capacity(len);
+
+    unsafe {
+        for i in 0..len {
+            s.push(read(remote_addr, i) as char);
+        }
+    }
+
+    s
+}
 
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {

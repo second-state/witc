@@ -46,7 +46,15 @@ prettyFile config WitFile {definition_list = def_list} env =
             <+> pretty "#[link(wasm_import_module = \"wasmedge\")]"
             <+> line
             <+> pretty "extern \"wasm\""
-            <+> braces (line <+> indent 4 (vsep (map prettyDefExtern defs)) <+> line)
+            <+> braces
+              ( line
+                  <+> pretty "fn allocate(size: usize) -> usize;"
+                  <+> pretty "fn write(addr: usize, offset: usize, byte: u8);"
+                  <+> pretty "fn read(addr: usize, offset: usize) -> u8;"
+                  <+> line
+                  <+> indent 4 (vsep (map prettyDefExtern defs))
+                  <+> line
+              )
             <+> line
             <+> vsep (map prettyDefWrap defs)
         (Runtime, Export) ->

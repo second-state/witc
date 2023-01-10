@@ -19,16 +19,19 @@ prettyDefWrap (Func (Function _attr name param_list result_ty)) =
     <+> hsep [pretty "->", prettyType result_ty]
     <+> braces
       ( -- unsafe call extern function
-        hsep
-          [ pretty $ "unsafe { extern_" ++ normalizeIdentifier name,
-            pretty "(",
-            hsep $ punctuate comma (map (paramInto . fst) param_list),
-            pretty ") }.into()"
-          ]
+        pretty "let s = "
+          <+> hsep
+            [ pretty $ "from_remote_string (unsafe { extern_" ++ normalizeIdentifier name,
+              parens $
+                hsep $
+                  punctuate comma (map (paramInto . fst) param_list),
+              pretty "});"
+            ]
+          <+> pretty "serde_json::from_str(s.as_str()).unwrap()"
       )
   where
     paramInto :: String -> Doc a
-    paramInto s = pretty $ s ++ ".into()"
+    paramInto s = pretty "as_remote_string" <+> parens (pretty s)
 
     prettyBinder :: (String, Type) -> Doc a
     prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]

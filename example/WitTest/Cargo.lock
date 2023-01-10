@@ -146,6 +146,8 @@ name = "lib"
 version = "0.1.0"
 dependencies = [
  "invoke-witc",
+ "serde",
+ "serde_json",
  "witc-abi",
 ]
 
