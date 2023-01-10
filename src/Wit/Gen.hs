@@ -48,11 +48,17 @@ prettyFile config WitFile {definition_list = def_list} env =
             <+> pretty "extern \"wasm\""
             <+> braces
               ( line
-                  <+> pretty "fn allocate(size: usize) -> usize;"
-                  <+> pretty "fn write(addr: usize, offset: usize, byte: u8);"
-                  <+> pretty "fn read(addr: usize, offset: usize) -> u8;"
-                  <+> line
-                  <+> indent 4 (vsep (map prettyDefExtern defs))
+                  <+> indent
+                    4
+                    ( vsep $
+                        map
+                          pretty
+                          [ "fn allocate(size: usize) -> usize;",
+                            "fn write(addr: usize, offset: usize, byte: u8);",
+                            "fn read(addr: usize, offset: usize) -> u8;"
+                          ]
+                          ++ map prettyDefExtern defs
+                    )
                   <+> line
               )
             <+> line

@@ -11,9 +11,11 @@ invoke_witc::wit_runtime_export!("../test.wit");
 // allocate : (size : usize) -> (addr : i32)
 #[host_function]
 fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let s = String::with_capacity(values[0].to_i32() as usize);
+    let size = values[0].to_i32() as usize;
+    let s = String::with_capacity(size);
     let addr = s.as_ptr() as i32;
     Box::leak(s.into_boxed_str());
+    println!("allocate {}, addr {}", size, addr);
     Ok(vec![WasmValue::from_i32(addr)])
 }
 
@@ -24,7 +26,9 @@ fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, Host
     let byte = values[2].to_i32() as u8;
 
     unsafe {
+        println!("write {} to addr {}", byte, addr as usize);
         *addr = byte;
+        println!("write down");
     }
 
     Ok(vec![])
