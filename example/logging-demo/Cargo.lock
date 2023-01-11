@@ -105,7 +105,6 @@ dependencies = [
  "invoke-witc",
  "serde",
  "serde_json",
- "witc-abi",
 ]
 
 [[package]]
@@ -611,5 +610,7 @@ checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
 name = "witc-abi"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
  "wasmedge-sdk",
 ]

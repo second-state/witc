@@ -13,4 +13,3 @@ crate-type = [ "cdylib" ]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "*"
 invoke-witc = { path = "../../../bindings/rust/invoke-witc" }
-witc-abi = { path = "../../../bindings/rust/witc-abi" }

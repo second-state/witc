@@ -43,6 +43,8 @@ prettyFile config WitFile {definition_list = def_list} env =
         (Instance, Import) ->
           vsep (map prettyTypeDef ty_defs)
             <+> line
+            <+> pretty "fn as_remote_string<A>(a: A) -> (usize, usize) where A: Serialize, { let s = serde_json::to_string(&a).unwrap(); let remote_addr = unsafe { allocate(s.len() as usize) }; unsafe { for (i, c) in s.bytes().enumerate() { write(remote_addr, i, c); } } (remote_addr, s.len()) } fn from_remote_string(pair: (usize, usize)) -> String { let (remote_addr, len) = pair; let mut s = String::with_capacity(len); unsafe { for i in 0..len { s.push(read(remote_addr, i) as char); } } s }"
+            <+> line
             <+> pretty "#[link(wasm_import_module = \"wasmedge\")]"
             <+> line
             <+> pretty "extern \"wasm\""
