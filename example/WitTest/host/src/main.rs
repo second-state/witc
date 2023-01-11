@@ -7,7 +7,8 @@ use wasmedge_sdk::{
 };
 invoke_witc::wit_runtime_export!("../test.wit");
 
-static mut BUCKET: [*mut u8; 100] = [0 as *mut u8; 100];
+const EMPTY_STRING: String = String::new();
+static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
 static mut COUNT: usize = 0;
 
 // allocate : (size : usize) -> (addr : i32)
@@ -15,15 +16,13 @@ static mut COUNT: usize = 0;
 fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let size = values[0].to_i32() as usize;
 
-    let mut s = String::with_capacity(size);
+    let s = String::with_capacity(size);
 
     unsafe {
-        let addr = s.as_mut_ptr();
-        BUCKET[COUNT] = addr;
+        BUCKET[COUNT] = s;
         let count = COUNT;
         COUNT += 1;
 
-        println!("allocate to addr {}", addr as usize);
         Ok(vec![WasmValue::from_i32(count as i32)])
     }
 }
@@ -33,13 +32,10 @@ fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, H
 fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let count = values[0].to_i32() as usize;
     unsafe {
-        let addr = BUCKET[count];
-
-        println!("write to addr {}", addr as usize);
-
+        let string = &mut BUCKET[count];
         let offset = values[1].to_i32() as usize;
         let byte = values[2].to_i32() as u8;
-        *((addr as usize + offset) as *mut u8) = byte;
+        string.insert(offset, byte as char);
     }
 
     Ok(vec![])
@@ -48,9 +44,9 @@ fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, Host
 // read : (addr : i32) -> (offset : i32) -> (byte : u8)
 #[host_function]
 fn read(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let s = unsafe { &BUCKET[values[0].to_i32() as usize] };
     let offset = values[1].to_i32() as usize;
-    let addr = (values[0].to_i32() as usize + offset) as *mut u8;
-    Ok(vec![WasmValue::from_i32(unsafe { *addr } as i32)])
+    Ok(vec![WasmValue::from_i32(s.as_bytes()[offset] as i32)])
 }
 
 fn exchange(s: String, p: person) -> u32 {

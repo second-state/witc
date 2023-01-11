@@ -22,16 +22,17 @@ toHostFunction (Func (Function _attr name param_list _result_ty)) =
     <+> braces
       ( indent
           4
-          ( vsep (map letParam param_list)
-              <+> line
-              <+> pretty "let r ="
-              <+> pretty (normalizeIdentifier name)
-              <+> tupled (map (\(x, _) -> pretty x) param_list)
-              <+> pretty ";"
-              <+> line
-              <+> pretty "let result_str = serde_json::to_string(&r).unwrap();"
-              <+> line
-              <+> pretty "Ok(vec![WasmValue::from_i32(result_str.as_ptr() as i32), WasmValue::from_i32(result_str.len() as i32)])"
+          ( vsep $
+              map letParam param_list
+                ++ [ pretty "let r ="
+                       <+> pretty (normalizeIdentifier name)
+                       <+> tupled (map (\(x, _) -> pretty x) param_list)
+                       <+> pretty ";",
+                     pretty "let mut result_str = serde_json::to_string(&r).unwrap();",
+                     pretty "let len = result_str.len() as i32;",
+                     pretty "unsafe { COUNT = 0; BUCKET[COUNT] = result_str; }",
+                     pretty "Ok(vec![WasmValue::from_i32(0), WasmValue::from_i32(len)])"
+                   ]
           )
       )
   where
@@ -44,7 +45,7 @@ toHostFunction (Func (Function _attr name param_list _result_ty)) =
           prettyType ty,
           pretty "=",
           hcat
-            [pretty "serde_json::from_str(unsafe { String::from_raw_parts(input[0].to_i32() as *mut u8, input[1].to_i32() as usize, input[1].to_i32() as usize) }.as_str()).unwrap();"]
+            [pretty "serde_json::from_str(unsafe { BUCKET[input[0].to_i32() as usize].as_str() }).unwrap();"]
         ]
         <+> pretty "let input: Vec<WasmValue> = input[2..].into();"
 toHostFunction d = error "should not get type definition here: " $ show d
