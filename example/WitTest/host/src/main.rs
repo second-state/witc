@@ -1,5 +1,4 @@
 use anyhow::Error;
-use libc;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
@@ -8,27 +7,39 @@ use wasmedge_sdk::{
 };
 invoke_witc::wit_runtime_export!("../test.wit");
 
+static mut BUCKET: [*mut u8; 100] = [0 as *mut u8; 100];
+static mut COUNT: usize = 0;
+
 // allocate : (size : usize) -> (addr : i32)
 #[host_function]
 fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let size = values[0].to_i32() as usize;
 
-    let addr = unsafe { libc::malloc(std::mem::size_of::<u8>() * size as libc::size_t) as *mut u8 };
+    let mut s = String::with_capacity(size);
 
-    println!("allocate to addr {}", addr as usize);
-    Ok(vec![WasmValue::from_i32(addr as i32)])
+    unsafe {
+        let addr = s.as_mut_ptr();
+        BUCKET[COUNT] = addr;
+        let count = COUNT;
+        COUNT += 1;
+
+        println!("allocate to addr {}", addr as usize);
+        Ok(vec![WasmValue::from_i32(count as i32)])
+    }
 }
 
 // write : (addr : i32) -> (offset : i32) -> (byte : u8) -> ()
 #[host_function]
 fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let offset = values[1].to_i32() as usize;
-    let addr = (values[0].to_i32() as usize + offset) as *mut u8;
-    println!("write to addr {}", values[0].to_i32() as usize);
-
+    let count = values[0].to_i32() as usize;
     unsafe {
+        let addr = BUCKET[count];
+
+        println!("write to addr {}", addr as usize);
+
+        let offset = values[1].to_i32() as usize;
         let byte = values[2].to_i32() as u8;
-        *addr = byte;
+        *((addr as usize + offset) as *mut u8) = byte;
     }
 
     Ok(vec![])
