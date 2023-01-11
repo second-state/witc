@@ -38,19 +38,12 @@ fn from_remote_string(pair: (usize, usize)) -> String {
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {
     // string & struct (wit record)
-    let mut s = String::with_capacity(10);
-    s.push('h');
-    s.push('e');
-    s.push('l');
-    s.push('l');
-    s.push('o');
-    let _s = exchange(
-        s,
-        person {
-            name: "Carlo".into(),
-            age: 30,
-        },
-    );
+    let p1 = person {
+        name: "Carlo".into(),
+        age: 30,
+    };
+    let p2 = set_name(p1, "Phillips".into());
+    let p3 = set_name(p2, "August".into());
     // enum 0-product (wit enum)
     let _i = exchange_enum(color::green);
     // Option (wit option)

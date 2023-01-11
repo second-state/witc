@@ -44,16 +44,20 @@ fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, Host
 // read : (addr : i32) -> (offset : i32) -> (byte : u8)
 #[host_function]
 fn read(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let s = unsafe { &BUCKET[values[0].to_i32() as usize] };
+    let s = unsafe {
+        COUNT = 0;
+        &BUCKET[values[COUNT].to_i32() as usize]
+    };
     let offset = values[1].to_i32() as usize;
     Ok(vec![WasmValue::from_i32(s.as_bytes()[offset] as i32)])
 }
 
-fn exchange(s: String, p: person) -> u32 {
-    println!("wasmedge: Get: {}", s);
-    println!("wasmedge: Get Name: {}", p.name);
-    println!("wasmedge: Get Age: {}", p.age);
-    0
+fn set_name(p: person, name: String) -> person {
+    println!("wasmedge: Person: {:?}", p);
+    person {
+        name: name,
+        age: p.age,
+    }
 }
 
 fn exchange_enum(c: color) -> u32 {
