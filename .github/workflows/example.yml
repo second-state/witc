@@ -44,6 +44,6 @@ jobs:
       - name: Run example/logging-demo
         run: |
           source $HOME/.wasmedge/env
-          pushd && cd example/logging-demo && cargo run --release && popd
-          pushd && cd example/keyvalue-demo && cargo run --release && popd
-          pushd && cd example/WitTest && cargo run --release && popd
+          (cd example/logging-demo && cargo run --release)
+          (cd example/keyvalue-demo && cargo run --release)
+          (cd example/WitTest && cargo run --release)
