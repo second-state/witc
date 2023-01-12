@@ -3,7 +3,7 @@ record person {
   age : u32
 }
 
-exchange: func(a : string, p : person) -> u32
+set-name: func(p : person, name : string) -> person
 
 enum color { red, green, blue }
 exchange-enum: func(c : color) -> u32

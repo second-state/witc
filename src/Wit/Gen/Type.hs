@@ -2,10 +2,6 @@
 module Wit.Gen.Type
   ( prettyTypeDef,
     prettyType,
-    prettyABIType,
-    prettyCallABIType,
-    prettyBinder,
-    prettyABIBinder,
   )
 where
 
@@ -17,8 +13,7 @@ prettyTypeDef (SrcPos _ d) = prettyTypeDef d
 prettyTypeDef (Func _) = undefined
 prettyTypeDef (Resource _ _) = undefined
 prettyTypeDef (Record name fields) =
-  (pretty "#[derive(Debug)]" <+> line)
-    <+> (pretty "#[repr(C)]" <+> line)
+  (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "struct"
     <+> pretty name
     <+> braces
@@ -31,8 +26,7 @@ prettyTypeDef (Record name fields) =
     prettyField (n, ty) = hsep [pretty n, pretty ":", prettyType ty]
 prettyTypeDef (TypeAlias name ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
 prettyTypeDef (Variant name cases) =
-  (pretty "#[derive(Debug)]" <+> line)
-    <+> (pretty "#[repr(C)]" <+> line)
+  (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "enum"
     <+> pretty name
     <+> braces (line <+> indent 4 (vsep $ punctuate comma (map prettyCase cases)) <+> line)
@@ -45,8 +39,7 @@ prettyTypeDef (Variant name cases) =
     boxType (User n) | n == name = pretty $ "Box<" ++ n ++ ">"
     boxType t = prettyType t
 prettyTypeDef (Enum name cases) =
-  (pretty "#[derive(Debug)]" <+> line)
-    <+> (pretty "#[repr(C)]" <+> line)
+  (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "enum"
     <+> pretty name
     <+> braces
@@ -54,12 +47,6 @@ prettyTypeDef (Enum name cases) =
           <+> indent 4 (vsep $ punctuate comma (map pretty cases))
           <+> line
       )
-
-prettyBinder :: (String, Type) -> Doc a
-prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
-
-prettyABIBinder :: (String, Type) -> Doc a
-prettyABIBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyABIType ty]
 
 prettyType :: Type -> Doc a
 prettyType (SrcPosType _ ty) = prettyType ty
@@ -82,20 +69,3 @@ prettyType (ExpectedTy ty ety) =
 prettyType (TupleTy ty_list) = parens (hsep $ punctuate comma (map prettyType ty_list))
 prettyType (User name) = pretty name
 prettyType _ = error "impossible"
-
-prettyABIType :: Type -> Doc a
-prettyABIType (SrcPosType _ ty) = prettyABIType ty
-prettyABIType PrimString = pretty "WitString"
-prettyABIType (Optional ty) = hsep [pretty "WitOption<", prettyABIType ty, pretty ">"]
-prettyABIType (ListTy ty) = hsep [pretty "WitVec<", prettyABIType ty, pretty ">"]
-prettyABIType (ExpectedTy ty ety) =
-  hsep [pretty "WitResult<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
-prettyABIType ty = prettyType ty
-
-prettyCallABIType :: Type -> Doc a
-prettyCallABIType (SrcPosType _ ty) = prettyCallABIType ty
-prettyCallABIType (Optional ty) = hsep [pretty "WitOption::<", prettyCallABIType ty, pretty ">"]
-prettyCallABIType (ListTy ty) = hsep [pretty "WitVec::<", prettyCallABIType ty, pretty ">"]
-prettyCallABIType (ExpectedTy ty ety) =
-  hsep [pretty "WitResult::<", prettyCallABIType ty, pretty ",", prettyCallABIType ety, pretty ">"]
-prettyCallABIType ty = prettyABIType ty

@@ -54,7 +54,7 @@ parseFile filepath = do
     Left e -> return $ Left (PErr e)
     Right ast -> return $ Right ast
 
-checkFile :: FilePath -> IO (WitFile, Env)
+checkFile :: FilePath -> IO WitFile
 checkFile = parseFile >=> eitherIO (check0 >=> eitherIO return)
 
 eitherIO :: Show e => (a -> IO b) -> Either e a -> IO b

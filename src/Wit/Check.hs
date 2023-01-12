@@ -34,18 +34,18 @@ type Env = [(Name, Type)]
 lookupEnv :: Name -> Env -> Maybe Type
 lookupEnv = lookup
 
-check0 :: WitFile -> IO (M (WitFile, Env))
+check0 :: WitFile -> IO (M WitFile)
 check0 = check []
 
-check :: Env -> WitFile -> IO (M (WitFile, Env))
+check :: Env -> WitFile -> IO (M WitFile)
 check ctx wit_file = do
   mapM_ checkUseFileExisted $ use_list wit_file
   case introUseIdentifiers ctx $ use_list wit_file of
     Left e -> return $ Left e
     Right env -> do
       case foldM checkDef env $ definition_list wit_file of
-        Left e -> return $ Left e
-        Right env' -> return $ Right (wit_file, env')
+        Left err -> return $ Left err
+        Right _ -> return $ Right wit_file
 
 introUseIdentifiers :: Env -> [Use] -> M Env
 introUseIdentifiers ctx = \case

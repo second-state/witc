@@ -1,7 +1,6 @@
 module Wit.Gen.Import
   ( prettyDefWrap,
     prettyDefExtern,
-    isTypeDef,
   )
 where
 
@@ -19,31 +18,34 @@ prettyDefWrap (Func (Function _attr name param_list result_ty)) =
     <+> hsep [pretty "->", prettyType result_ty]
     <+> braces
       ( -- unsafe call extern function
-        hsep
-          [ pretty $ "unsafe { extern_" ++ normalizeIdentifier name,
-            pretty "(",
-            hsep $ punctuate comma (map (paramInto . fst) param_list),
-            pretty ") }.into()"
-          ]
+        pretty "let s = "
+          <+> hsep
+            [ pretty $ "from_remote_string (unsafe { extern_" ++ normalizeIdentifier name,
+              parens $
+                hsep $
+                  punctuate comma (map (paramInto . fst) param_list),
+              pretty "});"
+            ]
+          <+> pretty "serde_json::from_str(s.as_str()).unwrap()"
       )
   where
     paramInto :: String -> Doc a
-    paramInto s = pretty $ s ++ ".into()"
+    paramInto s = pretty "as_remote_string" <+> parens (pretty s)
+
+    prettyBinder :: (String, Type) -> Doc a
+    prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
 prettyDefWrap d = error "should not get type definition here: " $ show d
 
 prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
 prettyDefExtern (Resource _name _) = undefined
-prettyDefExtern (Func (Function _attr name param_list result_ty)) =
+prettyDefExtern (Func (Function _attr name param_list _)) =
   hsep (map pretty ["fn", externalConvention name])
-    <+> parens (hsep $ punctuate comma (map prettyABIBinder param_list))
+    <+> parens (hsep $ punctuate comma (map (prettyBinder . fst) param_list))
     <+> pretty "->"
-    <+> prettyABIType result_ty
+    <+> pretty "(usize, usize)"
     <+> pretty ";"
+  where
+    prettyBinder :: String -> Doc a
+    prettyBinder field_name = hsep [pretty field_name, pretty ": (usize, usize)"]
 prettyDefExtern d = error "should not get type definition here: " $ show d
-
-isTypeDef :: Definition -> Bool
-isTypeDef (SrcPos _ d) = isTypeDef d
-isTypeDef (Resource _ _) = False
-isTypeDef (Func _) = False
-isTypeDef _ = True

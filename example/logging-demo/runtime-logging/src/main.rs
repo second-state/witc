@@ -1,11 +1,10 @@
 use anyhow::Error;
+use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     host_function, Caller, Vm, WasmValue,
 };
-use witc_abi::runtime::Runtime;
-use witc_abi::WitString;
-
+use witc_abi::*;
 invoke_witc::wit_runtime_export!("./logging.wit");
 
 fn log(p: pack) -> u32 {

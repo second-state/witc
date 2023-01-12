@@ -30,6 +30,7 @@ dependencies:
   - megaparsec
   - text
   - prettyprinter
+  - template-haskell
 
 ghc-options:
   - -Wall
