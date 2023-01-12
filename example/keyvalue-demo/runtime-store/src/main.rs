@@ -5,7 +5,7 @@ use wasmedge_sdk::{
     host_function, Caller, Vm, WasmValue,
 };
 use witc_abi::*;
-invoke_witc::wit_runtime_export!("./keyvalue.wit");
+invoke_witc::wit_runtime!(export("./keyvalue.wit"));
 
 static mut STORES: Vec<Store> = Vec::new();
 

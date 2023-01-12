@@ -1,6 +1,6 @@
 #![feature(wasm_abi)]
 use serde::{Deserialize, Serialize};
-invoke_witc::wit_instance_export!("./logging.wit");
+invoke_witc::wit_instance!(export("./logging.wit"));
 
 #[link(wasm_import_module = "runtime")]
 extern "wasm" {

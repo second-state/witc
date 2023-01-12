@@ -1,6 +1,6 @@
 #![feature(wasm_abi)]
 use serde::{Deserialize, Serialize};
-invoke_witc::wit_instance_import!("./logging.wit");
+invoke_witc::wit_instance!(import(instance_logging = "logging.wit"));
 
 #[no_mangle]
 pub unsafe extern "wasm" fn start() -> u32 {

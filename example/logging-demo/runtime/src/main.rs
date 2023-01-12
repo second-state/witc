@@ -27,7 +27,7 @@ fn main() -> Result<(), Error> {
     let vm = Vm::new(Some(config))?
         .register_import_module(import)?
         .register_module_from_file(
-            "instance-logging",
+            "instance_logging",
             "target/wasm32-wasi/release/instance_logging.wasm",
         )?
         .register_module_from_file(
