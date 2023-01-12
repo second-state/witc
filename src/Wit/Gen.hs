@@ -8,16 +8,15 @@ import Data.List (partition)
 import Prettyprinter
 import Prettyprinter.Render.Text
 import Wit.Ast
-import Wit.Check
 import Wit.Gen.Export
 import Wit.Gen.Import
 import Wit.Gen.Type
 
-renderInstanceImport :: (WitFile, Env) -> IO ()
-renderInstanceImport (f, env) = putDoc $ prettyFile Config {language = Rust, direction = Import, side = Instance} f env
+renderInstanceImport :: WitFile -> IO ()
+renderInstanceImport f = putDoc $ prettyFile Config {language = Rust, direction = Import, side = Instance} f
 
-renderRuntimeExport :: (WitFile, Env) -> IO ()
-renderRuntimeExport (f, env) = putDoc $ prettyFile Config {language = Rust, direction = Export, side = Runtime} f env
+renderRuntimeExport :: WitFile -> IO ()
+renderRuntimeExport f = putDoc $ prettyFile Config {language = Rust, direction = Export, side = Runtime} f
 
 data SupportedLanguage
   = Rust
@@ -36,8 +35,8 @@ data Config = Config
     side :: Side
   }
 
-prettyFile :: Config -> WitFile -> Env -> Doc a
-prettyFile config WitFile {definition_list = def_list} env =
+prettyFile :: Config -> WitFile -> Doc a
+prettyFile config WitFile {definition_list = def_list} =
   let (ty_defs, defs) = partition isTypeDef def_list
    in case (config.side, config.direction) of
         (Instance, Import) ->
