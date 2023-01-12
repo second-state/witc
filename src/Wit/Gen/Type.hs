@@ -7,12 +7,13 @@ where
 
 import Prettyprinter
 import Wit.Ast
+import Wit.Gen.Normalization
 
 prettyTypeDef :: Definition -> Doc a
 prettyTypeDef (SrcPos _ d) = prettyTypeDef d
 prettyTypeDef (Func _) = undefined
 prettyTypeDef (Resource _ _) = undefined
-prettyTypeDef (Record name fields) =
+prettyTypeDef (Record (normalizeIdentifier -> name) fields) =
   (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "struct"
     <+> pretty name
@@ -24,21 +25,21 @@ prettyTypeDef (Record name fields) =
   where
     prettyField :: (String, Type) -> Doc a
     prettyField (n, ty) = hsep [pretty n, pretty ":", prettyType ty]
-prettyTypeDef (TypeAlias name ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
-prettyTypeDef (Variant name cases) =
+prettyTypeDef (TypeAlias (normalizeIdentifier -> name) ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
+prettyTypeDef (Variant (normalizeIdentifier -> name) cases) =
   (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "enum"
     <+> pretty name
     <+> braces (line <+> indent 4 (vsep $ punctuate comma (map prettyCase cases)) <+> line)
   where
     prettyCase :: (String, [Type]) -> Doc a
-    prettyCase (n, []) = pretty n
-    prettyCase (n, tys) = pretty n <+> parens (hsep (punctuate comma (map boxType tys)))
+    prettyCase (normalizeIdentifier -> n, []) = pretty n
+    prettyCase (normalizeIdentifier -> n, tys) = pretty n <+> parens (hsep (punctuate comma (map boxType tys)))
     boxType :: Type -> Doc a
     boxType (SrcPosType _ t) = boxType t
     boxType (User n) | n == name = pretty $ "Box<" ++ n ++ ">"
     boxType t = prettyType t
-prettyTypeDef (Enum name cases) =
+prettyTypeDef (Enum (normalizeIdentifier -> name) cases) =
   (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "enum"
     <+> pretty name
@@ -50,6 +51,7 @@ prettyTypeDef (Enum name cases) =
 
 prettyType :: Type -> Doc a
 prettyType (SrcPosType _ ty) = prettyType ty
+prettyType PrimUnit = pretty "()"
 prettyType PrimString = pretty "String"
 prettyType PrimU8 = pretty "u8"
 prettyType PrimU16 = pretty "u16"
@@ -67,5 +69,5 @@ prettyType (ListTy ty) = hsep [pretty "Vec<", prettyType ty, pretty ">"]
 prettyType (ExpectedTy ty ety) =
   hsep [pretty "Result<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
 prettyType (TupleTy ty_list) = parens (hsep $ punctuate comma (map prettyType ty_list))
-prettyType (User name) = pretty name
+prettyType (User (normalizeIdentifier -> name)) = pretty name
 prettyType _ = error "impossible"

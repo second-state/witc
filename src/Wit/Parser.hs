@@ -148,6 +148,7 @@ pType =
     primitiveTy = do
       name <- identifier
       case name of
+        "unit" -> return PrimUnit
         "string" -> return PrimString
         "u8" -> return PrimU8
         "u16" -> return PrimU16

@@ -43,6 +43,7 @@ data Attr = Static
 instance Eq Type where
   (SrcPosType _ a) == (SrcPosType _ b) = a == b
   PrimString == PrimString = True
+  PrimUnit == PrimUnit = True
   PrimU8 == PrimU8 = True
   PrimU16 == PrimU16 = True
   PrimU32 == PrimU32 = True
@@ -64,6 +65,7 @@ instance Eq Type where
 data Type
   = SrcPosType SourcePos Type
   | PrimString
+  | PrimUnit
   | PrimU8
   | PrimU16
   | PrimU32

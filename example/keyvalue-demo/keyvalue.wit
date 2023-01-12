@@ -1,0 +1,18 @@
+variant keyvalue-error {
+	key-not-found(string),
+	invalid-key(string),
+	invalid-value(string),
+	connection-error(string),
+	authentication-error(string),
+	timeout-error(string),
+	io-error(string),
+	unexpected-error(string)
+}
+
+// a handle
+type keyvalue = u32
+// open a keyvalue store with name
+open-store: func(name: string) -> expected<keyvalue, keyvalue-error>
+
+store-set: func(store: keyvalue, key: string, value: list<u8>) -> expected<unit, keyvalue-error>
+store-get: func(store: keyvalue, key: string) -> expected<list<u8>, keyvalue-error> 
