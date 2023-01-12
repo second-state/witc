@@ -9,6 +9,7 @@ module Main (main) where
 import Control.Monad
 import Data.Functor
 import Data.List (isSuffixOf)
+import Prettyprinter.Render.Text
 import System.Directory
 import System.Environment
 import System.Exit (exitSuccess)
@@ -29,13 +30,23 @@ handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
   mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
+handle ["instance", mode, file, importName] = do
+  case mode of
+    "import" ->
+      parseFile file
+        >>= eitherIO check0
+        >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Import, side = Instance} importName)
+    _ -> putStrLn "bad usage"
 handle ["instance", mode, file] = do
   case mode of
     "import" ->
       parseFile file
         >>= eitherIO check0
-        >>= eitherIO renderInstanceImport
-    "export" -> error "unsupported instance export yet"
+        >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Import, side = Instance} "wasmedge")
+    "export" ->
+      parseFile file
+        >>= eitherIO check0
+        >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Export, side = Instance} "wasmedge")
     bad -> putStrLn $ "unknown option: " ++ bad
 handle ["runtime", mode, file] =
   case mode of
@@ -43,7 +54,7 @@ handle ["runtime", mode, file] =
     "export" ->
       parseFile file
         >>= eitherIO check0
-        >>= eitherIO renderRuntimeExport
+        >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Export, side = Runtime} "wasmedge")
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
 

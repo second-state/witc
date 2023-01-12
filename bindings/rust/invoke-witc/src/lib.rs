@@ -7,7 +7,18 @@ pub fn wit_instance_import(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as LitStr);
     let wit_file = input.value();
     let r = Command::new("witc-exe")
-        .args(["instance", "import", &wit_file])
+        .args(["instance", "import", &wit_file, "instance-logging"])
+        .output()
+        .unwrap();
+    String::from_utf8_lossy(&r.stdout).parse().unwrap()
+}
+
+#[proc_macro]
+pub fn wit_instance_export(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as LitStr);
+    let wit_file = input.value();
+    let r = Command::new("witc-exe")
+        .args(["instance", "export", &wit_file])
         .output()
         .unwrap();
     String::from_utf8_lossy(&r.stdout).parse().unwrap()
