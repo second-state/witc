@@ -82,7 +82,7 @@ toHostFunction (Func (Function _attr name param_list _result_ty)) =
                      pretty "let mut result_str = serde_json::to_string(&r).unwrap();",
                      pretty "let len = result_str.len() as i32;",
                      pretty "unsafe { COUNT = 0; BUCKET[COUNT] = result_str; }",
-                     pretty "Ok(vec![WasmValue::from_i32(0), WasmValue::from_i32(len)])"
+                     pretty "Ok(vec![wasmedge_sdk::WasmValue::from_i32(0), wasmedge_sdk::WasmValue::from_i32(len)])"
                    ]
           )
       )
@@ -98,7 +98,7 @@ toHostFunction (Func (Function _attr name param_list _result_ty)) =
           hcat
             [pretty "serde_json::from_str(unsafe { BUCKET[input[0].to_i32() as usize].as_str() }).unwrap();"]
         ]
-        <+> pretty "let input: Vec<WasmValue> = input[2..].into();"
+        <+> pretty "let input: Vec<wasmedge_sdk::WasmValue> = input[2..].into();"
 toHostFunction d = error "should not get type definition here: " $ show d
 
 witObject :: [Definition] -> Doc a
