@@ -13,17 +13,6 @@ fn println(s: String) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern "wasm" fn extern_log(count: usize, len: usize) -> (usize, usize) {
-    let s = &BUCKET[count];
-    let p: pack = serde_json::from_str(s.as_str()).unwrap();
-    let res = log(p);
-    let res_str = serde_json::to_string(&res).unwrap();
-    let len = res_str.len();
-    BUCKET[0] = res_str;
-    (0, len)
-}
-
 fn log(p: pack) -> u32 {
     println(format!("{} {}", p.level, p.message));
     p.level

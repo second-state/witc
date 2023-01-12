@@ -65,6 +65,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
           vsep $
             pretty rustInstanceExportHelper
               : map prettyTypeDef ty_defs
+              ++ map toUnsafeExtern defs
         (Runtime, Export) ->
           vsep (map prettyTypeDef ty_defs ++ map toHostFunction defs)
             <+> witObject defs
@@ -126,7 +127,6 @@ pub unsafe extern "wasm" fn write(count: usize, offset: usize, byte: u8) {
 }
 #[no_mangle]
 pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
-    COUNT = 0;
     let s = &BUCKET[count];
     s.as_bytes()[offset]
 }
