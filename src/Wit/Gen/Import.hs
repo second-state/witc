@@ -1,7 +1,6 @@
 module Wit.Gen.Import
   ( prettyDefWrap,
     prettyDefExtern,
-    isTypeDef,
   )
 where
 
@@ -37,7 +36,6 @@ prettyDefWrap (Func (Function _attr name param_list result_ty)) =
     prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
 prettyDefWrap d = error "should not get type definition here: " $ show d
 
--- TODO: should be all string pair
 prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
 prettyDefExtern (Resource _name _) = undefined
@@ -51,9 +49,3 @@ prettyDefExtern (Func (Function _attr name param_list _)) =
     prettyBinder :: String -> Doc a
     prettyBinder field_name = hsep [pretty field_name, pretty ": (usize, usize)"]
 prettyDefExtern d = error "should not get type definition here: " $ show d
-
-isTypeDef :: Definition -> Bool
-isTypeDef (SrcPos _ d) = isTypeDef d
-isTypeDef (Resource _ _) = False
-isTypeDef (Func _) = False
-isTypeDef _ = True

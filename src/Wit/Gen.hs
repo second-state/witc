@@ -70,3 +70,9 @@ prettyFile config WitFile {definition_list = def_list} =
             <+> vsep (map toHostFunction defs)
             <+> witObject defs
         (_, _) -> error "unsupported side, direction combination"
+
+isTypeDef :: Definition -> Bool
+isTypeDef (SrcPos _ d) = isTypeDef d
+isTypeDef (Resource _ _) = False
+isTypeDef (Func _) = False
+isTypeDef _ = True
