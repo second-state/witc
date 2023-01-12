@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-missing-fields #-}
+
 module QStr
   ( str,
   )
