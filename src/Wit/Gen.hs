@@ -41,8 +41,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
         (Instance, Import) ->
           vsep $
             map prettyTypeDef ty_defs
-              ++ [ pretty rustAsRemoteString,
-                   pretty rustFromRemoteString,
+              ++ [ pretty rustInstanceImportHelper,
                    pretty $ "#[link(wasm_import_module = " ++ "\"" ++ importName ++ "\")]",
                    pretty "extern \"wasm\"",
                    braces
@@ -63,7 +62,9 @@ prettyFile config importName WitFile {definition_list = def_list} =
                  ]
               ++ map prettyDefWrap defs
         (Instance, Export) ->
-          vsep (map prettyTypeDef ty_defs)
+          vsep $
+            pretty rustInstanceExportHelper
+              : map prettyTypeDef ty_defs
         (Runtime, Export) ->
           vsep (map prettyTypeDef ty_defs ++ map toHostFunction defs)
             <+> witObject defs
@@ -75,34 +76,58 @@ isTypeDef (Resource _ _) = False
 isTypeDef (Func _) = False
 isTypeDef _ = True
 
-rustAsRemoteString :: String
-rustAsRemoteString =
+rustInstanceImportHelper :: String
+rustInstanceImportHelper =
   [str|
 fn as_remote_string<A>(a: A) -> (usize, usize)
 where A: Serialize,
 {
-	let s = serde_json::to_string(&a).unwrap();
-	let remote_addr = unsafe { allocate(s.len() as usize) };
-	unsafe {
-		for (i, c) in s.bytes().enumerate() {
-			write(remote_addr, i, c);
-		}
-	}
-	(remote_addr, s.len())
+  let s = serde_json::to_string(&a).unwrap();
+  let remote_addr = unsafe { allocate(s.len() as usize) };
+  unsafe {
+    for (i, c) in s.bytes().enumerate() {
+      write(remote_addr, i, c);
+    }
+  }
+  (remote_addr, s.len())
+}
+
+fn from_remote_string(pair: (usize, usize)) -> String {
+  let (remote_addr, len) = pair;
+  let mut s = String::with_capacity(len);
+  unsafe {
+    for i in 0..len {
+      s.push(read(remote_addr, i) as char);
+    }
+  }
+  s
 }
 |]
 
-rustFromRemoteString :: String
-rustFromRemoteString =
+rustInstanceExportHelper :: String
+rustInstanceExportHelper =
   [str|
-fn from_remote_string(pair: (usize, usize)) -> String {
-	let (remote_addr, len) = pair;
-	let mut s = String::with_capacity(len);
-	unsafe {
-		for i in 0..len {
-			s.push(read(remote_addr, i) as char);
-		}
-	}
-	s
+const EMPTY_STRING: String = String::new();
+pub static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
+pub static mut COUNT: usize = 0;
+
+#[no_mangle]
+pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
+    let s = String::with_capacity(size);
+    BUCKET[COUNT] = s;
+    let count = COUNT;
+    COUNT += 1;
+    count
+}
+#[no_mangle]
+pub unsafe extern "wasm" fn write(count: usize, offset: usize, byte: u8) {
+    let string = &mut BUCKET[count];
+    string.insert(offset, byte as char);
+}
+#[no_mangle]
+pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
+    COUNT = 0;
+    let s = &BUCKET[count];
+    s.as_bytes()[offset]
 }
 |]

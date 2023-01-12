@@ -2,39 +2,20 @@
 use serde::{Deserialize, Serialize};
 invoke_witc::wit_instance_export!("./logging.wit");
 
-const EMPTY_STRING: String = String::new();
-pub static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
-pub static mut COUNT: usize = 0;
+#[link(wasm_import_module = "runtime")]
+extern "wasm" {
+    fn runtime_println(str_ptr: *const u8, str_len: usize) -> ();
+}
 
-// allocate : (size : usize) -> (addr : i32)
-#[no_mangle]
-pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
-    println!("allocate?");
-    let s = String::with_capacity(size);
-    BUCKET[COUNT] = s;
-    let count = COUNT;
-    COUNT += 1;
-    count
+fn println(s: String) {
+    unsafe {
+        runtime_println(s.as_ptr(), s.len());
+    }
 }
-// write : (addr : i32) -> (offset : i32) -> (byte : u8) -> ()
+
 #[no_mangle]
-pub unsafe extern "wasm" fn write(count: usize, offset: usize, byte: u8) {
-    println!("writing?");
-    let string = &mut BUCKET[count];
-    string.insert(offset, byte as char);
-}
-// read : (addr : i32) -> (offset : i32) -> (byte : u8)
-#[no_mangle]
-pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
-    println!("reading?");
-    COUNT = 0;
+pub unsafe extern "wasm" fn extern_log(count: usize, len: usize) -> (usize, usize) {
     let s = &BUCKET[count];
-    s.as_bytes()[offset]
-}
-
-#[no_mangle]
-pub unsafe extern "wasm" fn extern_log(ptr: usize, len: usize) -> (usize, usize) {
-    let s = String::from_raw_parts(ptr as *mut u8, len, len);
     let p: pack = serde_json::from_str(s.as_str()).unwrap();
     let res = log(p);
     let res_str = serde_json::to_string(&res).unwrap();
@@ -44,6 +25,6 @@ pub unsafe extern "wasm" fn extern_log(ptr: usize, len: usize) -> (usize, usize)
 }
 
 fn log(p: pack) -> u32 {
-    println!("{} {}", p.level, p.message);
+    println(format!("{} {}", p.level, p.message));
     p.level
 }
