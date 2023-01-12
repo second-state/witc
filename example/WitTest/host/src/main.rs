@@ -2,17 +2,14 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
-    host_function, Caller, Vm, WasmValue,
+    host_function, Caller, Vm,
 };
 use witc_abi::*;
 invoke_witc::wit_runtime_export!("../test.wit");
 
 fn set_name(p: person, name: String) -> person {
     println!("wasmedge: Person: {:?}", p);
-    person {
-        name: name,
-        age: p.age,
-    }
+    person { name, age: p.age }
 }
 
 fn exchange_enum(c: color) -> u32 {

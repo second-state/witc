@@ -10,7 +10,7 @@ pub unsafe extern "wasm" fn start() -> u32 {
         age: 30,
     };
     let p2 = set_name(p1, "Phillips".into());
-    let p3 = set_name(p2, "August".into());
+    let _p3 = set_name(p2, "August".into());
     // enum 0-product (wit enum)
     let _i = exchange_enum(color::green);
     // Option (wit option)
