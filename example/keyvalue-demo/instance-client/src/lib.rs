@@ -1,6 +1,6 @@
 #![feature(wasm_abi)]
 use serde::{Deserialize, Serialize};
-invoke_witc::wit_instance_import!("./keyvalue.wit");
+invoke_witc::wit_instance!(import("./keyvalue.wit"));
 
 struct Store {
     handle: keyvalue,

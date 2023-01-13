@@ -1,6 +1,7 @@
 module Wit.Gen.Export
   ( witObject,
     toHostFunction,
+    toUnsafeExtern,
   )
 where
 
@@ -8,6 +9,56 @@ import Prettyprinter
 import Wit.Ast
 import Wit.Gen.Normalization
 import Wit.Gen.Type
+
+toUnsafeExtern :: Definition -> Doc a
+toUnsafeExtern (SrcPos _ d) = toUnsafeExtern d
+toUnsafeExtern (Resource _ _) = undefined
+toUnsafeExtern (Func (Function _attr name param_list _result_ty)) =
+  vsep
+    [ pretty "#[no_mangle]",
+      pretty "pub unsafe extern \"wasm\"",
+      hsep
+        [ pretty "fn",
+          pretty $ externalConvention name,
+          parens $ hsep $ punctuate comma (map prettyBinder param_list),
+          pretty "-> (usize, usize)"
+        ],
+      braces
+        ( indent
+            4
+            ( vsep $
+                map letParam param_list
+                  ++ [ pretty "let r ="
+                         <+> pretty (normalizeIdentifier name)
+                         <+> tupled (map (\(x, _) -> pretty x) param_list)
+                         <+> pretty ";",
+                       pretty "let result_str = serde_json::to_string(&r).unwrap();",
+                       pretty "let len = result_str.len();",
+                       pretty "BUCKET[0] = result_str;",
+                       pretty "(0, len)"
+                     ]
+            )
+        )
+    ]
+  where
+    letParam :: (String, Type) -> Doc a
+    letParam (x, ty) =
+      hsep
+        [ pretty "let",
+          pretty x,
+          pretty ":",
+          prettyType ty,
+          pretty "=",
+          hcat
+            [ pretty "serde_json::from_str(&BUCKET[",
+              pretty x,
+              pretty ".0]).unwrap();"
+            ]
+        ]
+
+    prettyBinder :: (String, Type) -> Doc a
+    prettyBinder (normalizeIdentifier -> n, _) = hsep [pretty n, pretty ": (usize, usize)"]
+toUnsafeExtern d = error "should not get type definition here: " $ show d
 
 toHostFunction :: Definition -> Doc a
 toHostFunction (SrcPos _ d) = toHostFunction d

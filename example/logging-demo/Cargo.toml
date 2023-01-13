@@ -1,2 +1,6 @@
 [workspace]
-members = ["runtime-logging", "instance-service"]
+members = [
+	"runtime",
+	"instance-logging",
+	"instance-service"
+]
