@@ -1,64 +1,58 @@
-# Witc ABI
+# Note
 
-When choosing which ABI we should use in `witc`, we did some surveys like [C ABI](./c_abi.md) and [Wasm ABI](./wasm_abi.md).
-Originally, we use the Wasm ABI, which is based on the Rust memory layout.
-However, `Option`, `Result`, `Vec`, and `String` don't have a stable layout across different Rust versions,
-so we decide to define our types with a stable layout and convert between them.
+The current implementation is that, each component provides three functions (below is conceptual haskell code)
 
-### `string`
-
-The `string` type in wit will become `WitString` and could convert between Rust `String`.
-
-```rust
-#[repr(C)]
-pub struct WitString {
- addr: *mut u8,
- cap: usize,
- len: usize,
-}
+```haskell
+allocate :: U32 -> IO U32
+allocate size = makeHandle size
+write :: U32 -> U32 -> Byte -> IO ()
+write handle offset byte = do
+  bv <- getHandle handle
+  bv[offset] = byte
+read :: U32 -> U32 -> IO Byte
+read handle offset = do
+  bv <- getHandle handle
+  pure bv
 ```
 
-### `option`
+Every caller encode it's arguments to bytes and invokes `allocate` and `write` to put argument to callee. For example, `let c = foo(a, b)` can have generated `foo`
 
-The `option` type in wit will become `WitOption` and could convert between Rust `Option`.
+```haskell
+foo :: A -> B -> IO C
+foo a b = do
+  bv_a <- toJson a
+  han_a <- allocate (length bv_a)
+  for (write han_a) bv_a
 
-```rust
-#[repr(C, u32)]
-pub enum WitOption<T> {
- None,
- Some(T),
-}
+  bv_b <- toJson b
+  han_b <- allocate (length bv_b)
+  for (write han_b) bv_b
+
+  (han_c, size_c) <- extern_foo(han_a, han_b)
+  bv_c <- map (read han_c) [0..size_c-1]
+  fromJson bv_c
 ```
 
-### `expected`
+As you can see, the `foo` will be generated to wrap function that defined in another component automatically.
 
-The `expected` type in wit will become `WitResult` and could convert between Rust `Result`.
+In callee side, who implements the function, will get a generated wrapper.
 
-```rust
-#[repr(C, u32)]
-pub enum WitResult<T, E> {
- Ok(T),
- Err(E),
-}
+```haskell
+extern_foo :: U32 -> U32 -> IO (U32, U32)
+extern_foo han_a han_b = do
+  bv_a <- getHandle han_a
+  bv_b <- getHandle han_b
+  c <- apply foo (map fromJson [bv_a, bv_b])
+	bv_c <- toJson c
+	han_c <- putHandle bv_c
+	pure (han_c, length bv_c)
 ```
 
-### `list`
+With these, one can understand and modify this repository without fear.
 
-The `list` type in wit will become `WitVec` and could convert between Rust `Vec`.
+## Survey
 
-```rust
-#[repr(C)]
-pub struct WitVec<T> {
- ptr: usize,
- cap: usize,
- len: usize,
- phantom: PhantomData<T>,
-}
-```
+Before we use current solution, we have tried.
 
-### trait `Runtime`
-
-We create a trait `Runtime` which contains the size information and build logic for ABI objects.
-In addition to the above types, `witc` also generate implement code to other types like `record` and `enum`, which have stable layout.
-
-Check [witc-abi](../bindings/rust/witc-abi/) for more information.
+- [C ABI](./c_abi.md): `Option`, `Result`, `Vec`, and `String` don't have a stable layout across different rust versions, however. Therefore, we define our types with a stable layout and convert between them.
+- [wasm ABI](./wasm_abi.md): rust memory layout.
