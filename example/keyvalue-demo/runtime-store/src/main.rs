@@ -29,14 +29,14 @@ fn open_store(name: String) -> Result<keyvalue, keyvalue_error> {
         Ok((STORES.len() - 1) as u32)
     }
 }
-fn store_set(store: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
-    let store = unsafe { &mut STORES[store as usize] };
+fn store_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
+    let store = unsafe { &mut STORES[handle as usize] };
     store.map.insert(key.clone(), value);
     println!("insert `{}` to store `{}`", key, store.name);
     Ok(())
 }
-fn store_get(store: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
-    let store = unsafe { &mut STORES[store as usize] };
+fn store_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
+    let store = unsafe { &mut STORES[handle as usize] };
     println!("get `{}` from store `{}`", key, store.name);
     store
         .map
