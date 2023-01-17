@@ -5,7 +5,7 @@ use wasmedge_sdk::{
     host_function, Caller, Vm,
 };
 use witc_abi::*;
-invoke_witc::wit_runtime!(export("../test.wit"));
+invoke_witc::wit_runtime!(export("./test.wit"));
 
 fn set_name(p: person, name: String) -> person {
     println!("wasmedge: Person: {:?}", p);

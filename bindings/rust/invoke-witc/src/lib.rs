@@ -53,7 +53,13 @@ pub fn wit_runtime(input: TokenStream) -> TokenStream {
                 .output()
                 .unwrap()
         }
-        NestedMeta::Meta(_meta) => unreachable!(),
+        NestedMeta::Meta(meta) => {
+            let (import_name, wit_file) = name_value_meta(meta);
+            Command::new("witc-exe")
+                .args(["runtime", &mode, &wit_file, &import_name])
+                .output()
+                .unwrap()
+        }
     };
     String::from_utf8_lossy(&r.stdout).parse().unwrap()
 }

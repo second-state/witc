@@ -1,0 +1,7 @@
+enum light {
+	green,
+	yellow,
+	red
+}
+
+toggle : func(status : light) -> light

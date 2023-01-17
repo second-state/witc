@@ -30,13 +30,14 @@ handle ["check"] = do
   dir <- getCurrentDirectory
   fileList <- listDirectory dir
   mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
-handle ["instance", mode, file, importName] = do
-  case mode of
-    "import" ->
-      parseFile file
-        >>= eitherIO check0
-        >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Import, side = Instance} importName)
-    _ -> putStrLn "bad usage"
+handle ["instance", "import", file, importName] =
+  parseFile file
+    >>= eitherIO check0
+    >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Import, side = Instance} importName)
+handle ["runtime", "import", file, importName] =
+  parseFile file
+    >>= eitherIO check0
+    >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Import, side = Runtime} importName)
 handle ["instance", mode, file] = do
   case mode of
     "import" ->
@@ -50,7 +51,10 @@ handle ["instance", mode, file] = do
     bad -> putStrLn $ "unknown option: " ++ bad
 handle ["runtime", mode, file] =
   case mode of
-    "import" -> error "unsupported runtime import yet"
+    "import" ->
+      parseFile file
+        >>= eitherIO check0
+        >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Import, side = Runtime} "wasmedge")
     "export" ->
       parseFile file
         >>= eitherIO check0

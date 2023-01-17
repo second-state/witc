@@ -1,0 +1,15 @@
+cargo-features = [ "per-package-target" ]
+
+[package]
+name = "instance-lights"
+version = "0.1.0"
+edition = "2021"
+default-target = "wasm32-wasi"
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "*"
+invoke-witc = { path = "../../../bindings/rust/invoke-witc" }
