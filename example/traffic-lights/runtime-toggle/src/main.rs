@@ -5,19 +5,7 @@ use wasmedge_sdk::{
     Vm,
 };
 use witc_abi::*;
-// invoke_witc::wit_runtime!(import("./test.wit"));
-
-// gen: part
-fn id_string(vm: &Vm, s: String) -> String {
-    let cfg = CallingConfig::new(vm, "instance");
-
-    let args = cfg.put_to_remote(&s);
-    let r = cfg.run("extern_id_string", args);
-
-    let result_len = r[1].to_i32() as usize;
-    let mut s = String::with_capacity(result_len);
-    cfg.read_from_remote(&mut s, r[0], result_len)
-}
+invoke_witc::wit_runtime!(import(instance = "traffic-lights.wit"));
 
 fn main() -> Result<(), Error> {
     let config = ConfigBuilder::new(CommonConfigOptions::default())
@@ -29,7 +17,15 @@ fn main() -> Result<(), Error> {
         "target/wasm32-wasi/release/instance_export.wasm",
     )?;
 
-    println!("{}", id_string(&vm, "Hello".into()));
+    let start = light::green;
+    let r = toggle(&vm, start);
+    println!("{:?}", r);
+    let r = toggle(&vm, r);
+    println!("{:?}", r);
+    let r = toggle(&vm, r);
+    println!("{:?}", r);
+    let r = toggle(&vm, r);
+    println!("{:?}", r);
 
     Ok(())
 }

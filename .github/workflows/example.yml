@@ -47,3 +47,4 @@ jobs:
           (cd example/logging-demo && cargo run --release)
           (cd example/keyvalue-demo && cargo run --release)
           (cd example/WitTest && cargo run --release)
+          (cd example/traffic-lights && cargo run --release)

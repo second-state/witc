@@ -1,6 +1,7 @@
 module Wit.Gen.Import
   ( prettyDefWrap,
     prettyDefExtern,
+    toVmWrapper,
   )
 where
 
@@ -9,6 +10,36 @@ import Wit.Ast
 import Wit.Gen.Normalization
 import Wit.Gen.Type
 
+-- runtime
+toVmWrapper :: String -> Definition -> Doc a
+toVmWrapper importName = \case
+  (SrcPos _ d) -> toVmWrapper importName d
+  (Func (Function _ (normalizeIdentifier -> name) param_list result_ty)) ->
+    hsep
+      [ pretty "fn",
+        pretty name,
+        tupled $ pretty "vm: &wasmedge_sdk::Vm" : map (\(p, ty) -> pretty p <+> pretty ":" <+> prettyType ty) param_list,
+        pretty "->",
+        prettyType result_ty
+      ]
+      <+> braces
+        ( vsep
+            ( [ pretty "let cfg = CallingConfig::new" <+> tupled [pretty "vm", dquotes $ pretty importName] <+> pretty ";",
+                pretty "let mut args = vec![];"
+              ]
+                ++ map
+                  (\(p, _) -> pretty "let mut a = cfg.put_to_remote" <+> parens (pretty "&" <+> pretty p) <+> pretty ";" <+> pretty "args.append(&mut a);")
+                  param_list
+                ++ [ pretty "let r = cfg.run" <+> tupled [dquotes $ pretty $ externalConvention name, pretty "args"] <+> pretty ";",
+                     pretty "let result_len = r[1].to_i32() as usize;",
+                     pretty "let mut s = String::with_capacity(result_len);",
+                     pretty "cfg.read_from_remote(&mut s, r[0], result_len)"
+                   ]
+            )
+        )
+  d -> error "should not get this definition here: " $ show d
+
+-- instance
 prettyDefWrap :: Definition -> Doc a
 prettyDefWrap (SrcPos _ d) = prettyDefWrap d
 prettyDefWrap (Resource _ _) = undefined

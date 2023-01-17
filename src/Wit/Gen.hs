@@ -66,10 +66,11 @@ prettyFile config importName WitFile {definition_list = def_list} =
             pretty rustInstanceExportHelper
               : map prettyTypeDef ty_defs
               ++ map toUnsafeExtern defs
+        (Runtime, Import) ->
+          vsep (map prettyTypeDef ty_defs ++ map (toVmWrapper importName) defs)
         (Runtime, Export) ->
           vsep (map prettyTypeDef ty_defs ++ map toHostFunction defs)
             <+> witObject defs
-        (_, _) -> error "unsupported side, direction combination"
 
 isTypeDef :: Definition -> Bool
 isTypeDef (SrcPos _ d) = isTypeDef d
