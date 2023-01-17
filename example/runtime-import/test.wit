@@ -1,0 +1,1 @@
+id-string : func (s : string) -> string
