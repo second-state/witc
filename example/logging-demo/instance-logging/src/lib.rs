@@ -7,13 +7,10 @@ extern "wasm" {
     fn runtime_println(str_ptr: *const u8, str_len: usize) -> ();
 }
 
-fn println(s: String) {
+fn log(p: pack) -> u32 {
+    let s = format!("{} {}", p.level, p.message);
     unsafe {
         runtime_println(s.as_ptr(), s.len());
     }
-}
-
-fn log(p: pack) -> u32 {
-    println(format!("{} {}", p.level, p.message));
     p.level
 }
