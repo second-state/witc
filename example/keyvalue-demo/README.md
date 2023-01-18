@@ -23,7 +23,7 @@ store-set: func(store: keyvalue, key: string, value: list<u8>) -> expected<unit,
 store-get: func(store: keyvalue, key: string) -> expected<list<u8>, keyvalue-error>
 ```
 
-As you can see, the 
+The type like `keyvalue` call a handle, since eventually the resource will only live in the one side, caller will not have a real access to internal of a handle. This is promised by a handle is a number. A function contains handle type in its signature called a handle related function, such function is constructor if it has handle type as its return type, and such function is a method, if one of its parameter has handle as its type.
 
 ### instance (callsite)
 
