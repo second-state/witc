@@ -30,11 +30,11 @@ stack install
 
 `*.wit` files are sharing interface and common types between different component in the wasm ecosystem, a runtime is a component, a running wasm module is a component. In our context, wasmedge is the runtime, and wasm module instance is the instance. Under **witc**, you have three directions
 
-1. a instance invokes a runtime function
-2. a instance invokes a instance function
-3. (TODO) runtime invokes a instance function
+1. instance invokes a runtime function
+2. instance invokes an instance function
+3. runtime invokes an instance function
 
-In fact, without **witc** you can still invoke these function, but have to convert typing by yourself and figuring out complicated layout. Now, development is easy and lovely, all callsite and implementation using the native type of that language.
+Without **witc** you can still invoke these function, but have to convert typing by yourself and figuring out complicated layout. Now, development is easy and lovely, all callsite and implementation using the native type of that language.
 
 #### Rust example
 
