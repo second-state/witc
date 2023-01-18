@@ -36,21 +36,19 @@ stack install
 
 Without **witc** you can still invoke these function, but have to convert typing by yourself and figuring out complicated layout. Now, development is easy and lovely, all callsite and implementation using the native type of that language.
 
-#### Rust example
+#### Rust examples
 
 > **Note** Don't forget to install rust supplyment when you are trying to run example out of box
 
-To illustrate how to use witc, we have the following examples
+To illustrate how to use witc, we have the following examples, and you can use the following command to run them
+
+```sh
+cargo run --release
+```
 
 - [demo: keyvalue](./example/keyvalue-demo/): instance invokes runtime
 - [demo: logging](./example/logging-demo/): instance invokes instance
 - [demo: traffic lights](./example/traffic-lights/): runtime invokes instance
-
-You can use the command below to have a try
-
-```sh
-(cd example/keyvalue-demo && cargo run --release)
-```
 
 #### CLI
 
