@@ -20,8 +20,19 @@ mod tests {
         config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
         Vm,
     };
+
     #[bench]
-    fn instance_invokes_runtime(b: &mut Bencher) {
+    fn base_native(b: &mut Bencher) {
+        b.iter(|| {
+            base(c {
+                name: "test".to_string(),
+                age: 1,
+            });
+        });
+    }
+
+    #[bench]
+    fn base_instance_invokes_runtime(b: &mut Bencher) {
         let config = ConfigBuilder::new(CommonConfigOptions::default())
             .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
             .build()
