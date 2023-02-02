@@ -4,3 +4,4 @@ record c {
 }
 
 base: func(c: c) -> c
+fib: func(n: u64) -> u64
