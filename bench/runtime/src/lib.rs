@@ -21,7 +21,7 @@ mod tests {
         Vm,
     };
     #[bench]
-    fn b1(b: &mut Bencher) {
+    fn instance_invokes_runtime(b: &mut Bencher) {
         let config = ConfigBuilder::new(CommonConfigOptions::default())
             .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
             .build()
