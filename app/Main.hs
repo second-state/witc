@@ -6,18 +6,12 @@ cli design
 -}
 module Main (main) where
 
-import Control.Monad
 import Data.Functor
 import Data.List (isSuffixOf)
 import Prettyprinter.Render.Text
 import System.Directory
 import System.Environment
-import System.Exit (exitSuccess)
-import Text.Megaparsec
-import Wit.Ast
-import Wit.Check
-import Wit.Gen
-import Wit.Parser (ParserError, pWitFile)
+import Wit
 
 main :: IO ()
 main = do
@@ -61,26 +55,3 @@ handle ["runtime", mode, file] =
         >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Export, side = Runtime} "wasmedge")
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
-
-parseFile :: FilePath -> IO (Either FuseError WitFile)
-parseFile filepath = do
-  content <- readFile filepath
-  case parse pWitFile filepath content of
-    Left e -> return $ Left (PErr e)
-    Right ast -> return $ Right ast
-
-checkFile :: FilePath -> IO WitFile
-checkFile = parseFile >=> eitherIO (check0 >=> eitherIO return)
-
-eitherIO :: Show e => (a -> IO b) -> Either e a -> IO b
-eitherIO f = \case
-  Left e -> print e *> exitSuccess
-  Right a -> f a
-
-data FuseError
-  = PErr ParserError
-  | CErr CheckError
-
-instance Show FuseError where
-  show (PErr bundle) = errorBundlePretty bundle
-  show (CErr ce) = show ce
