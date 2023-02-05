@@ -5,7 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wasmedge-sdk = "0.7.1"
+
+[dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "*"

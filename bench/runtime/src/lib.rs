@@ -2,7 +2,7 @@
 extern crate test;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{error::HostFuncError, host_function, Caller, WasmValue};
-use witc_abi::*;
+use witc_abi::runtime::*;
 invoke_witc::wit_runtime!(export("base.wit"));
 
 fn base(c1: c) -> c {

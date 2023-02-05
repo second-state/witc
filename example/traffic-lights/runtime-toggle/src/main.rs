@@ -4,7 +4,7 @@ use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     Vm,
 };
-use witc_abi::*;
+use witc_abi::runtime::*;
 invoke_witc::wit_runtime!(import(lights = "traffic-lights.wit"));
 
 fn main() -> Result<(), Error> {
