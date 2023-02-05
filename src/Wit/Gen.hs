@@ -63,8 +63,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
               ++ map prettyDefWrap defs
         (Instance, Export) ->
           vsep $
-            pretty rustInstanceExportHelper
-              : map prettyTypeDef ty_defs
+            map prettyTypeDef ty_defs
               ++ map toUnsafeExtern defs
         (Runtime, Import) ->
           vsep (map prettyTypeDef ty_defs ++ map (toVmWrapper importName) defs)
@@ -103,32 +102,5 @@ fn from_remote_string(pair: (usize, usize)) -> String {
     }
   }
   s
-}
-|]
-
-rustInstanceExportHelper :: String
-rustInstanceExportHelper =
-  [str|
-const EMPTY_STRING: String = String::new();
-pub static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
-pub static mut COUNT: usize = 0;
-
-#[no_mangle]
-pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
-    let s = String::with_capacity(size);
-    BUCKET[COUNT] = s;
-    let count = COUNT;
-    COUNT += 1;
-    count
-}
-#[no_mangle]
-unsafe extern "wasm" fn write(count: usize, byte: u8) {
-    let s = &mut BUCKET[count];
-    s.push(byte as char);
-}
-#[no_mangle]
-pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
-    let s = &BUCKET[count];
-    s.as_bytes()[offset]
 }
 |]
