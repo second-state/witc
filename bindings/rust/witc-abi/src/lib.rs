@@ -26,6 +26,7 @@ pub fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     unsafe {
         let string = &mut BUCKET[count];
         let offset = values[1].to_i32() as usize;
+        // TODO: read as u64, and decode big endian
         let byte = values[2].to_i32() as u8;
         string.insert(offset, byte as char);
     }
@@ -34,8 +35,9 @@ pub fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
 }
 #[host_function]
 pub fn read(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let s = unsafe { &BUCKET[values[COUNT].to_i32() as usize] };
+    let s: &String = unsafe { &BUCKET[values[COUNT].to_i32() as usize] };
     let offset = values[1].to_i32() as usize;
+    // TODO: return u64, encode as big endian
     Ok(vec![WasmValue::from_i32(s.as_bytes()[offset] as i32)])
 }
 

@@ -88,6 +88,7 @@ where A: Serialize,
   let remote_addr = unsafe { allocate(s.len() as usize) };
   unsafe {
     for (i, c) in s.bytes().enumerate() {
+			// TODO: group every 8 char to one u64, in big endian
       write(remote_addr, i, c);
     }
   }
@@ -99,6 +100,7 @@ fn from_remote_string(pair: (usize, usize)) -> String {
   let mut s = String::with_capacity(len);
   unsafe {
     for i in 0..len {
+			// TODO: read out should be u64, not u8
       s.push(read(remote_addr, i) as char);
     }
   }
@@ -123,11 +125,13 @@ pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
 }
 #[no_mangle]
 pub unsafe extern "wasm" fn write(count: usize, offset: usize, byte: u8) {
+		// TODO: expected u64
     let string = &mut BUCKET[count];
     string.insert(offset, byte as char);
 }
 #[no_mangle]
 pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
+		// TODO: return u64
     let s = &BUCKET[count];
     s.as_bytes()[offset]
 }
