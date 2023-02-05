@@ -25,9 +25,16 @@ pub fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     let count = values[0].to_i32() as usize;
     unsafe {
         let s = &mut BUCKET[count];
-        // TODO: read as u64, and decode big endian
-        let byte = values[1].to_i32() as u8;
-        s.push(byte as char);
+        for b in values[1].to_i32().to_be_bytes() {
+            if b != 0 {
+                s.push(b as char);
+            }
+        }
+        for b in values[2].to_i32().to_be_bytes() {
+            if b != 0 {
+                s.push(b as char);
+            }
+        }
     }
 
     Ok(vec![])

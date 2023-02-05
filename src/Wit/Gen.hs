@@ -52,7 +52,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
                                map
                                  pretty
                                  [ "fn allocate(size: usize) -> usize;",
-                                   "fn write(addr: usize, byte: u8);",
+                                   "fn write(addr: usize, data: u32, data2: u32);",
                                    "fn read(addr: usize, offset: usize) -> u8;"
                                  ]
                                  ++ map prettyDefExtern defs
@@ -83,12 +83,49 @@ rustInstanceImportHelper =
 fn as_remote_string<A>(a: A) -> (usize, usize)
 where A: Serialize,
 {
-  let s = serde_json::to_string(&a).unwrap();
+  let mut s = serde_json::to_string(&a).unwrap();
   let remote_addr = unsafe { allocate(s.len() as usize) };
   unsafe {
-    for c in s.bytes() {
-			// TODO: group every 8 char to one u64, in big endian
-      write(remote_addr, c);
+    let cc = s.as_bytes().chunks_exact(8);
+    let rest = cc.remainder();
+    for c in cc {
+      let data = u32::from_be_bytes([c[0], c[1], c[2], c[3]]);
+      let data2 = u32::from_be_bytes([c[4], c[5], c[6], c[7]]);
+      write(remote_addr, data, data2);
+    }
+    match rest.len() {
+      1 => {
+        let data = u32::from_be_bytes([rest[0], 0, 0, 0]);
+        write(remote_addr, data, 0);
+      }
+      2 => {
+        let data = u32::from_be_bytes([rest[0], rest[1], 0, 0]);
+        write(remote_addr, data, 0);
+      }
+      3 => {
+        let data = u32::from_be_bytes([rest[0], rest[1], rest[2], 0]);
+        write(remote_addr, data, 0);
+      }
+      4 => {
+        let data = u32::from_be_bytes([rest[0], rest[1], rest[2], rest[3]]);
+        write(remote_addr, data, 0);
+      }
+      5 => {
+        let data = u32::from_be_bytes([rest[0], rest[1], rest[2], rest[3]]);
+        let data2 = u32::from_be_bytes([rest[4], 0, 0, 0]);
+        write(remote_addr, data, data2);
+      }
+      6 => {
+        let data = u32::from_be_bytes([rest[0], rest[1], rest[2], rest[3]]);
+        let data2 = u32::from_be_bytes([rest[4], rest[5], 0, 0]);
+        write(remote_addr, data, data2);
+      }
+      7 => {
+        let data = u32::from_be_bytes([rest[0], rest[1], rest[2], rest[3]]);
+        let data2 = u32::from_be_bytes([rest[4], rest[5], rest[6], 0]);
+        write(remote_addr, data, data2);
+      }
+      _ => unreachable!()
     }
   }
   (remote_addr, s.len())
