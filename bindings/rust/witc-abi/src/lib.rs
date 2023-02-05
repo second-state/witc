@@ -24,11 +24,10 @@ pub fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue
 pub fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     let count = values[0].to_i32() as usize;
     unsafe {
-        let string = &mut BUCKET[count];
-        let offset = values[1].to_i32() as usize;
+        let s = &mut BUCKET[count];
         // TODO: read as u64, and decode big endian
-        let byte = values[2].to_i32() as u8;
-        string.insert(offset, byte as char);
+        let byte = values[1].to_i32() as u8;
+        s.push(byte as char);
     }
 
     Ok(vec![])
@@ -69,15 +68,8 @@ impl<'a> CallingConfig<'a> {
             vec![WasmValue::from_i32(encode_json.len() as i32)],
         );
         let han_a = r[0];
-        for (i, c) in encode_json.bytes().enumerate() {
-            self.run(
-                "write",
-                vec![
-                    han_a,
-                    WasmValue::from_i32(i as i32),
-                    WasmValue::from_i32(c as i32),
-                ],
-            );
+        for c in encode_json.bytes() {
+            self.run("write", vec![han_a, WasmValue::from_i32(c as i32)]);
         }
 
         vec![han_a, WasmValue::from_i32(encode_json.len() as i32)]

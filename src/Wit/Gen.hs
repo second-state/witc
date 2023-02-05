@@ -52,7 +52,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
                                map
                                  pretty
                                  [ "fn allocate(size: usize) -> usize;",
-                                   "fn write(addr: usize, offset: usize, byte: u8);",
+                                   "fn write(addr: usize, byte: u8);",
                                    "fn read(addr: usize, offset: usize) -> u8;"
                                  ]
                                  ++ map prettyDefExtern defs
@@ -87,9 +87,9 @@ where A: Serialize,
   let s = serde_json::to_string(&a).unwrap();
   let remote_addr = unsafe { allocate(s.len() as usize) };
   unsafe {
-    for (i, c) in s.bytes().enumerate() {
+    for c in s.bytes() {
 			// TODO: group every 8 char to one u64, in big endian
-      write(remote_addr, i, c);
+      write(remote_addr, c);
     }
   }
   (remote_addr, s.len())
@@ -124,10 +124,10 @@ pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
     count
 }
 #[no_mangle]
-pub unsafe extern "wasm" fn write(count: usize, offset: usize, byte: u8) {
+pub unsafe extern "wasm" fn write(count: usize, byte: u8) {
 		// TODO: expected u64
-    let string = &mut BUCKET[count];
-    string.insert(offset, byte as char);
+    let s = &mut BUCKET[count];
+    s.push(byte as char);
 }
 #[no_mangle]
 pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {

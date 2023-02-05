@@ -5,10 +5,10 @@ The current implementation is that, each component provides three functions (bel
 ```haskell
 allocate :: U32 -> IO U32
 allocate size = makeHandle size
-write :: U32 -> U32 -> Byte -> IO ()
-write handle offset byte = do
+write :: U32 -> Byte -> IO ()
+write handle byte = do
   bv <- getHandle handle
-  bv[offset] = byte
+  push bv byte
 read :: U32 -> U32 -> IO Byte
 read handle offset = do
   bv <- getHandle handle
@@ -17,6 +17,7 @@ read handle offset = do
 
 - `getHandle :: U32 -> IO [Byte]` is an assumed function, which pull put handle from a global mutable pool (such as `IORef` in haskell).
 - `putHandle :: [Byte] -> IO U32` inserted a bytes into the pool, and returns a new unique `U32` value as handle.
+- `push :: [Byte] -> Byte -> IO ()` modify the bytes directly.
 
 ## Caller
 
