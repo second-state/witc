@@ -63,11 +63,10 @@ impl<'a> CallingConfig<'a> {
     {
         let encode_json = serde_json::to_string(a).unwrap();
 
-        let r = self.run(
+        let han_a = self.run(
             "allocate",
             vec![WasmValue::from_i32(encode_json.len() as i32)],
-        );
-        let han_a = r[0];
+        )[0];
         for c in encode_json.bytes() {
             self.run("write", vec![han_a, WasmValue::from_i32(c as i32)]);
         }
