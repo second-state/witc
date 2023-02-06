@@ -1,0 +1,117 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           witc
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/second-state/witc#readme>
+homepage:       https://github.com/second-state/witc#readme
+bug-reports:    https://github.com/second-state/witc/issues
+author:         secondstate
+maintainer:     dannypsnl@secondstate.io,
+                dm4@users.noreply.github.com
+copyright:      2022 secondstate
+license:        Apache-2.0
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/second-state/witc
+
+library
+  exposed-modules:
+      QStr
+      Wit
+      Wit.Ast
+      Wit.Check
+      Wit.Gen
+      Wit.Gen.Export
+      Wit.Gen.Import
+      Wit.Gen.Normalization
+      Wit.Gen.Type
+      Wit.Parser
+  other-modules:
+      Paths_witc
+  hs-source-dirs:
+      src
+  default-extensions:
+      ImportQualifiedPost
+      DuplicateRecordFields
+      OverloadedRecordDot
+      LambdaCase
+      ViewPatterns
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , directory
+    , megaparsec
+    , mtl
+    , prettyprinter
+    , primitive
+    , template-haskell
+    , text
+    , transformers
+  default-language: Haskell2010
+
+executable witc-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_witc
+  hs-source-dirs:
+      app
+  default-extensions:
+      ImportQualifiedPost
+      DuplicateRecordFields
+      OverloadedRecordDot
+      LambdaCase
+      ViewPatterns
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , directory
+    , megaparsec
+    , mtl
+    , prettyprinter
+    , primitive
+    , template-haskell
+    , text
+    , transformers
+    , witc
+  default-language: Haskell2010
+
+test-suite witc-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Wit.CheckSpec
+      Wit.ParserSpec
+      Paths_witc
+  hs-source-dirs:
+      test
+  default-extensions:
+      ImportQualifiedPost
+      DuplicateRecordFields
+      OverloadedRecordDot
+      LambdaCase
+      ViewPatterns
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , directory
+    , hspec
+    , hspec-megaparsec
+    , megaparsec
+    , mtl
+    , prettyprinter
+    , primitive
+    , template-haskell
+    , text
+    , transformers
+    , witc
+  default-language: Haskell2010

@@ -1,0 +1,14 @@
+[package]
+name = "runtime-logging"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+wasmedge-sdk = "0.7.1"
+anyhow = "*"
+invoke-witc = { path = "../../../bindings/rust/invoke-witc" }
+witc-abi = { path = "../../../bindings/rust/witc-abi" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "*"

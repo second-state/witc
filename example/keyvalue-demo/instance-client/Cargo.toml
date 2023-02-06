@@ -1,0 +1,15 @@
+cargo-features = [ "per-package-target" ]
+
+[package]
+name = "instance-service"
+version = "0.1.0"
+edition = "2021"
+default-target = "wasm32-wasi"
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+invoke-witc = { path = "../../../bindings/rust/invoke-witc" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "*"

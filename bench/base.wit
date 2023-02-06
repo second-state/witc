@@ -1,0 +1,7 @@
+record c {
+	name: string,
+	age: u32
+}
+
+base: func(c: c) -> c
+fib: func(n: u64) -> u64

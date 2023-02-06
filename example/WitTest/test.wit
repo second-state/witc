@@ -1,0 +1,23 @@
+record person {
+  name : string,
+  age : u32
+}
+
+set-name: func(p : person, name : string) -> person
+
+enum color { red, green, blue }
+exchange-enum: func(c : color) -> u32
+
+maybe-test: func(r : option<u8>) -> u32
+
+send-result: func(r : expected<string, string>) -> u32
+send-result2: func(r : expected<s8, u8>) -> u32
+
+exchange-list: func(l : list<u8>) -> u32
+exchange-list-string: func(l : list<string>) -> u32
+
+variant nat {
+  zero,
+  suc(nat)
+}
+pass-nat: func(n : nat) -> u32;
