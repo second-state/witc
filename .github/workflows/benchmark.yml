@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: rustup toolchain update nightly && rustup default nightly
       - name: Run benchmark
-        run: cd bench && cargo build --release && cargo +nightly bench -p runtime | tee output.txt
+        run: source $HOME/.wasmedge/env && cd bench && cargo build --release && cargo +nightly bench -p runtime | tee output.txt
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
