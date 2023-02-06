@@ -12,13 +12,11 @@ pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
 }
 #[no_mangle]
 pub unsafe extern "wasm" fn write(count: usize, byte: u8) {
-    // TODO: expected u64
     let s = &mut BUCKET[count];
     s.push(byte as char);
 }
 #[no_mangle]
 pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
-    // TODO: return u64
     let s = &BUCKET[count];
     s.as_bytes()[offset]
 }
