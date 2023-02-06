@@ -105,6 +105,7 @@ dependencies = [
  "invoke-witc",
  "serde",
  "serde_json",
+ "witc-abi",
 ]
 
 [[package]]

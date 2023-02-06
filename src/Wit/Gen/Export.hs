@@ -109,7 +109,7 @@ witObject defs =
           <+> parens
             ( pretty "wasmedge_sdk::ImportObjectBuilder::new()"
                 <+> pretty ".with_func::<i32, i32>(\"allocate\", allocate)?"
-                <+> pretty ".with_func::<(i32, i32, i32), ()>(\"write\", write)?"
+                <+> pretty ".with_func::<(i32, i32), ()>(\"write\", write)?"
                 <+> pretty ".with_func::<(i32, i32), i32>(\"read\", read)?"
                 <+> vsep (map withFunc defs)
                 <+> pretty ".build(\"wasmedge\")?"

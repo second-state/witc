@@ -52,7 +52,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
                                map
                                  pretty
                                  [ "fn allocate(size: usize) -> usize;",
-                                   "fn write(addr: usize, offset: usize, byte: u8);",
+                                   "fn write(addr: usize, byte: u8);",
                                    "fn read(addr: usize, offset: usize) -> u8;"
                                  ]
                                  ++ map prettyDefExtern defs
@@ -63,8 +63,7 @@ prettyFile config importName WitFile {definition_list = def_list} =
               ++ map prettyDefWrap defs
         (Instance, Export) ->
           vsep $
-            pretty rustInstanceExportHelper
-              : map prettyTypeDef ty_defs
+            map prettyTypeDef ty_defs
               ++ map toUnsafeExtern defs
         (Runtime, Import) ->
           vsep (map prettyTypeDef ty_defs ++ map (toVmWrapper importName) defs)
@@ -87,8 +86,8 @@ where A: Serialize,
   let s = serde_json::to_string(&a).unwrap();
   let remote_addr = unsafe { allocate(s.len() as usize) };
   unsafe {
-    for (i, c) in s.bytes().enumerate() {
-      write(remote_addr, i, c);
+    for c in s.bytes() {
+      write(remote_addr, c);
     }
   }
   (remote_addr, s.len())
@@ -103,32 +102,5 @@ fn from_remote_string(pair: (usize, usize)) -> String {
     }
   }
   s
-}
-|]
-
-rustInstanceExportHelper :: String
-rustInstanceExportHelper =
-  [str|
-const EMPTY_STRING: String = String::new();
-pub static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
-pub static mut COUNT: usize = 0;
-
-#[no_mangle]
-pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
-    let s = String::with_capacity(size);
-    BUCKET[COUNT] = s;
-    let count = COUNT;
-    COUNT += 1;
-    count
-}
-#[no_mangle]
-pub unsafe extern "wasm" fn write(count: usize, offset: usize, byte: u8) {
-    let string = &mut BUCKET[count];
-    string.insert(offset, byte as char);
-}
-#[no_mangle]
-pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
-    let s = &BUCKET[count];
-    s.as_bytes()[offset]
 }
 |]
