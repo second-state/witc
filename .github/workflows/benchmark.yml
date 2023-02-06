@@ -29,7 +29,10 @@ jobs:
         run: |
           stack install
       - name: Run benchmark
-        run: source $HOME/.wasmedge/env && cd bench && cargo build --release && cargo bench -p runtime | tee output.txt
+        run: |
+          source $HOME/.wasmedge/env
+          cd bench && cargo build --release
+          cargo bench -p runtime | tee output.txt
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
