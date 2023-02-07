@@ -3,7 +3,9 @@
 > **Warning**
 > This is an early-stage project
 
-A compiler generates code for `*.wit` files.
+A compiler generates code for `*.wit` files, this project purpose to make `*.wit` supportment for [wasmedge](https://github.com/WasmEdge/WasmEdge).
+
+- [benchmark tracking](https://second-state.github.io/witc/dev/bench/index.html)
 
 ### Overview
 
