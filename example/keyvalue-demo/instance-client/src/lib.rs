@@ -9,16 +9,16 @@ struct Store {
 impl Store {
     fn open(name: String) -> Self {
         Self {
-            handle: open_store(name).unwrap(),
+            handle: keyvalue_open(name).unwrap(),
         }
     }
 
     fn set(&self, key: String, value: Vec<u8>) {
-        store_set(self.handle, key, value).unwrap();
+        keyvalue_set(self.handle, key, value).unwrap();
     }
 
     fn get(&self, key: String) -> Vec<u8> {
-        store_get(self.handle, key).unwrap()
+        keyvalue_get(self.handle, key).unwrap()
     }
 }
 

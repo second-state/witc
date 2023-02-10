@@ -16,6 +16,7 @@ import Wit.Ast
 import Wit.Gen.Export
 import Wit.Gen.Import
 import Wit.Gen.Type
+import Wit.Transform
 
 data SupportedLanguage
   = Rust
@@ -35,7 +36,7 @@ data Config = Config
   }
 
 prettyFile :: Config -> String -> WitFile -> Doc a
-prettyFile config importName WitFile {definition_list = def_list} =
+prettyFile config importName WitFile {definition_list = (transformDefinitions -> def_list)} =
   let (ty_defs, defs) = partition isTypeDef def_list
    in case (config.side, config.direction) of
         (Instance, Import) ->

@@ -53,14 +53,12 @@ pUse = do
 
 pDefinition :: Parser Definition
 pDefinition =
-  choice
-    [ pRecord,
-      pTypeAlias,
-      pVariant,
-      pEnum,
-      pResource,
-      pFunc
-    ]
+  pRecord
+    <|> pTypeAlias
+    <|> pVariant
+    <|> pEnum
+    <|> pResource
+    <|> pFunc
 
 -- object definition
 pResource, pFunc :: Parser Definition
@@ -69,14 +67,9 @@ pResource = do
   Resource <$> identifier <*> braces (many resourceFunc)
   where
     resourceFunc = do
-      attr <- optional $ keyword "static"
+      attr <- option Member (keyword "static" $> Static)
       f <- pFunction
-      pure
-        ( case attr of
-            Just _ -> Static
-            Nothing -> Member,
-          f
-        )
+      return (attr, f)
 pFunc = Func <$> pFunction
 
 pFunction :: Parser Function
