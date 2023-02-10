@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1675754125343,
+  "lastUpdate": 1675991809501,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -203,6 +203,56 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 235,
             "range": "± 8",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "second-state",
+            "username": "second-state"
+          },
+          "committer": {
+            "name": "second-state",
+            "username": "second-state"
+          },
+          "id": "d07bee3b053d37b5ec2bd2ceded40ae9ac401e01",
+          "message": "support `resource`",
+          "timestamp": "2023-02-06T10:57:58Z",
+          "url": "https://github.com/second-state/witc/pull/62/commits/d07bee3b053d37b5ec2bd2ceded40ae9ac401e01"
+        },
+        "date": 1675991804015,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 92390,
+            "range": "± 2511",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 2479,
+            "range": "± 97",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 14228,
+            "range": "± 313",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 188,
+            "range": "± 0",
             "unit": "ns/iter"
           }
         ]
