@@ -66,20 +66,25 @@ pDefinition =
 pResource, pFunc :: Parser Definition
 pResource = do
   keyword "resource"
-  Resource <$> identifier <*> braces (many pFunction)
+  Resource <$> identifier <*> braces (many resourceFunc)
+  where
+    resourceFunc = do
+      attr <- optional $ keyword "static"
+      f <- pFunction
+      pure
+        ( case attr of
+            Just _ -> Static
+            Nothing -> Member,
+          f
+        )
 pFunc = Func <$> pFunction
 
 pFunction :: Parser Function
 pFunction = do
-  attr <- optional $ keyword "static"
   fn_name <- identifier
   symbol ":"
   keyword "func"
   Function
-    ( case attr of
-        Just _ -> Just Static
-        Nothing -> Nothing
-    )
     fn_name
     <$> parens (sepEndBy pParam (symbol ","))
     <*> pResultType

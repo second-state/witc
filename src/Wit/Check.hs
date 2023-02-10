@@ -84,7 +84,7 @@ checkModFileExisted mod_name = do
 checkDef :: Env -> Definition -> M Env
 checkDef env = \case
   SrcPos pos def -> addPos pos $ checkDef env def
-  Func (Function _attr _name binders result_ty) -> do
+  Func (Function _name binders result_ty) -> do
     checkBinders env binders
     checkTy env result_ty
     return env

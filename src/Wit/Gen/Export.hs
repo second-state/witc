@@ -13,7 +13,7 @@ import Wit.Gen.Type
 toUnsafeExtern :: Definition -> Doc a
 toUnsafeExtern (SrcPos _ d) = toUnsafeExtern d
 toUnsafeExtern (Resource _ _) = undefined
-toUnsafeExtern (Func (Function _attr name param_list _result_ty)) =
+toUnsafeExtern (Func (Function name param_list _result_ty)) =
   vsep
     [ pretty "#[no_mangle]",
       pretty "pub unsafe extern \"wasm\"",
@@ -63,7 +63,7 @@ toUnsafeExtern d = error "should not get type definition here: " $ show d
 toHostFunction :: Definition -> Doc a
 toHostFunction (SrcPos _ d) = toHostFunction d
 toHostFunction (Resource _ _) = undefined
-toHostFunction (Func (Function _attr name param_list _result_ty)) =
+toHostFunction (Func (Function name param_list _result_ty)) =
   pretty "#[host_function]"
     <+> line
     <+> hsep (map pretty ["fn", externalConvention name])
@@ -123,7 +123,7 @@ witObject defs =
 
     withFunc :: Definition -> Doc a
     withFunc (SrcPos _ d) = withFunc d
-    withFunc (Func (Function _attr (pretty . externalConvention -> name) params _)) =
+    withFunc (Func (Function (pretty . externalConvention -> name) params _)) =
       pretty ".with_func::"
         <+> angles
           ( -- get a list of string, each is a (addr, size) pair
