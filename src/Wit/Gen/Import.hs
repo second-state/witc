@@ -42,7 +42,6 @@ toVmWrapper importName = \case
 -- instance
 prettyDefWrap :: Definition -> Doc a
 prettyDefWrap (SrcPos _ d) = prettyDefWrap d
-prettyDefWrap (Resource _ _) = undefined
 prettyDefWrap (Func (Function name param_list result_ty)) =
   hsep (map pretty ["fn", normalizeIdentifier name])
     <+> parens (hsep $ punctuate comma (map prettyBinder param_list))
@@ -69,7 +68,6 @@ prettyDefWrap d = error "should not get type definition here: " $ show d
 
 prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
-prettyDefExtern (Resource _name _) = undefined
 prettyDefExtern (Func (Function name param_list _)) =
   hsep (map pretty ["fn", externalConvention name])
     <+> parens (hsep $ punctuate comma (map (prettyBinder . fst) param_list))

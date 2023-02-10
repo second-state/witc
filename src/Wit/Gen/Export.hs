@@ -12,7 +12,6 @@ import Wit.Gen.Type
 
 toUnsafeExtern :: Definition -> Doc a
 toUnsafeExtern (SrcPos _ d) = toUnsafeExtern d
-toUnsafeExtern (Resource _ _) = undefined
 toUnsafeExtern (Func (Function name param_list _result_ty)) =
   vsep
     [ pretty "#[no_mangle]",
@@ -62,7 +61,6 @@ toUnsafeExtern d = error "should not get type definition here: " $ show d
 
 toHostFunction :: Definition -> Doc a
 toHostFunction (SrcPos _ d) = toHostFunction d
-toHostFunction (Resource _ _) = undefined
 toHostFunction (Func (Function name param_list _result_ty)) =
   pretty "#[host_function]"
     <+> line

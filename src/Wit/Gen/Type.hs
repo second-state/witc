@@ -11,8 +11,6 @@ import Wit.Gen.Normalization
 
 prettyTypeDef :: Definition -> Doc a
 prettyTypeDef (SrcPos _ d) = prettyTypeDef d
-prettyTypeDef (Func _) = undefined
-prettyTypeDef (Resource _ _) = undefined
 prettyTypeDef (Record (normalizeIdentifier -> name) fields) =
   (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
     <+> pretty "struct"
@@ -48,6 +46,7 @@ prettyTypeDef (Enum (normalizeIdentifier -> name) cases) =
           <+> indent 4 (vsep $ punctuate comma (map pretty cases))
           <+> line
       )
+prettyTypeDef _ = error "not a type definition"
 
 prettyType :: Type -> Doc a
 prettyType (SrcPosType _ ty) = prettyType ty
