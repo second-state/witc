@@ -24,6 +24,6 @@ resource keyvalue {
 	keys: func() -> expected<list<string>, keyvalue-error>
 
 	/// delete the payload for a given key
-	delete: func(key:string) -> expected<unit, keyvalue-error>
+	delete: func(key: string) -> expected<unit, keyvalue-error>
 }
 

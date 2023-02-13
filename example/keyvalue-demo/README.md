@@ -1,6 +1,6 @@
 # keyvalue
 
-This demo shows how to wrap handle related functions as struct and its `impl` in rust. With a `keyvalue.wit` as the following
+This demo shows how to implement resource. With a `keyvalue.wit` as the following
 
 ```wit
 variant keyvalue-error {
@@ -14,16 +14,36 @@ variant keyvalue-error {
 	unexpected-error(string)
 }
 
-// a handle
-type keyvalue = u32
-// open a keyvalue store with name
-open-store: func(name: string) -> expected<keyvalue, keyvalue-error>
+/// a keyvalue interface
+resource keyvalue {
+	/// open a key-value store
+	static open: func(name: string) -> expected<keyvalue, keyvalue-error>
 
-store-set: func(store: keyvalue, key: string, value: list<u8>) -> expected<unit, keyvalue-error>
-store-get: func(store: keyvalue, key: string) -> expected<list<u8>, keyvalue-error>
+	/// get the payload for a given key
+	get: func(key: string) -> expected<list<u8>, keyvalue-error> 
+
+	/// set the payload for a given key
+	set: func(key: string, value: list<u8>) -> expected<unit, keyvalue-error>
+
+	/// list the keys in the store
+	keys: func() -> expected<list<string>, keyvalue-error>
+
+	/// delete the payload for a given key
+	delete: func(key: string) -> expected<unit, keyvalue-error>
+}
 ```
 
-The type like `keyvalue` call a handle, since eventually the resource will only live in the one side, caller will not have a real access to internal of a handle. This is promised by a handle is a number. A function contains handle type in its signature called a handle related function, such function is constructor if it has handle type as its return type, and such function is a method, if one of its parameter has handle as its type.
+The type like `keyvalue` call **resource**, it will only live in the one side, caller will not have a real access to internal of it. Those function in resource can be separated by is static or not.
+
+1. static one is related but no signature changes
+2. non-static will get `handle : keyvalue` binding as first parameter
+
+Let's see some mangling
+
+1. `keyvalue_open : func(name: string) -> expected<keyvalue, keyvalue-error>`
+2. `set: func(handle: keyvalue, key: string, value: list<u8>) -> expected<unit, keyvalue-error>`
+
+Now, you have all idea about the transformation
 
 ### instance (callsite)
 
@@ -39,26 +59,34 @@ struct Store {
 impl Store {
     fn open(name: String) -> Self {
         Self {
-            handle: open_store(name).unwrap(),
+            handle: open_keyvalue(name).unwrap(),
         }
     }
 
     fn set(&self, key: String, value: Vec<u8>) {
-        store_set(self.handle, key, value).unwrap();
+        keyvalue_set(self.handle, key, value).unwrap();
     }
 
     fn get(&self, key: String) -> Vec<u8> {
-        store_get(self.handle, key).unwrap()
+        keyvalue_get(self.handle, key).unwrap()
+    }
+
+    fn keys(&self) -> Vec<String> {
+        keyvalue_keys(self.handle).unwrap()
+    }
+
+    fn delete(&self, key: String) {
+        keyvalue_delete(self.handle, key).unwrap()
     }
 }
 ```
 
-As you see, you always can wrap a set of handle related functions to a struct, which is resource concept in wasm interface types intend to.
+This is resource concept's correspondning in rust.
 
 ### runtime (provides implementations)
 
 ```rust
-use witc_abi::*;
+use witc_abi::runtime::*;
 invoke_witc::wit_runtime!(export("./keyvalue.wit"));
 
 static mut STORES: Vec<Store> = Vec::new();
@@ -76,20 +104,20 @@ impl Store {
     }
 }
 
-fn open_store(name: String) -> Result<keyvalue, keyvalue_error> {
+fn open_keyvalue(name: String) -> Result<keyvalue, keyvalue_error> {
     println!("new store `{}`", name);
     unsafe {
         STORES.push(Store::new(name));
         Ok((STORES.len() - 1) as u32)
     }
 }
-fn store_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
+fn keyvalue_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
     store.map.insert(key.clone(), value);
     println!("insert `{}` to store `{}`", key, store.name);
     Ok(())
 }
-fn store_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
+fn keyvalue_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
     println!("get `{}` from store `{}`", key, store.name);
     store
@@ -97,6 +125,20 @@ fn store_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
         .get(key.as_str())
         .map(|v| v.to_vec())
         .ok_or(keyvalue_error::key_not_found(key))
+}
+
+fn keyvalue_keys(handle: keyvalue) -> Result<Vec<String>, keyvalue_error> {
+    let store = unsafe { &mut STORES[handle as usize] };
+    let keys = store.map.clone().into_keys().collect();
+    println!("store `{}` keys: {:?}", store.name, keys);
+    Ok(keys)
+}
+
+fn keyvalue_delete(handle: keyvalue, key: String) -> Result<(), keyvalue_error> {
+    let store = unsafe { &mut STORES[handle as usize] };
+    store.map.remove(&key);
+    println!("remove `{}` from store `{}`", key, store.name);
+    Ok(())
 }
 ```
  
