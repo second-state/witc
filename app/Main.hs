@@ -12,7 +12,6 @@ import Data.Functor
 import Data.List (isSuffixOf)
 import Prettyprinter
 import Prettyprinter.Render.Terminal
--- import Prettyprinter.Render.Text
 import System.Directory
 import System.Environment
 import Wit
