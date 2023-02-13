@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1676255780553,
+  "lastUpdate": 1676272708303,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -503,6 +503,60 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 186,
             "range": "± 0",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "z54981220@gmail.com",
+            "name": "hydai",
+            "username": "hydai"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ae8628f88386bc78163c18590084e8c3bb8cefa5",
+          "message": "support `resource` (#62)\n\n1. support `resource` by transform its sub-definition to top-level\r\nfunctions\r\n2. update keyvalue example\r\n3. update documents\r\n\r\n- resolve #60\r\n- resolve #61",
+          "timestamp": "2023-02-13T15:14:04+08:00",
+          "tree_id": "ed648ec851220f531b784093c19785ae2a3c8bfc",
+          "url": "https://github.com/second-state/witc/commit/ae8628f88386bc78163c18590084e8c3bb8cefa5"
+        },
+        "date": 1676272707419,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 88228,
+            "range": "± 592",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1801,
+            "range": "± 13",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 13769,
+            "range": "± 129",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 178,
+            "range": "± 17",
             "unit": "ns/iter"
           }
         ]
