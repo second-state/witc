@@ -26,7 +26,7 @@ data Use
 
 data Definition
   = SrcPos SourcePos Definition
-  | Resource String [Function]
+  | Resource String [(Attr, Function)]
   | Func Function
   | Record String [(String, Type)] -- record event { specversion: string, ty: string }
   | TypeAlias String Type -- type payload = list<u8>
@@ -34,10 +34,12 @@ data Definition
   | Enum String [String]
   deriving (Show, Eq)
 
-data Function = Function (Maybe Attr) String [(String, Type)] Type
+data Function = Function String [(String, Type)] Type
   deriving (Show, Eq)
 
-data Attr = Static
+data Attr
+  = Static
+  | Member
   deriving (Show, Eq)
 
 instance Eq Type where

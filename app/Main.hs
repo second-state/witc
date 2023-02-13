@@ -3,27 +3,25 @@ cli design
 
     witc instance import xxx.wit
     witc runtime export xxx.wit
+    witc check xxx.wit
+    witc check -- check all wit files in current directory
 -}
 module Main (main) where
 
 import Data.Functor
 import Data.List (isSuffixOf)
-import Prettyprinter.Render.Text
+import Prettyprinter
+import Prettyprinter.Render.Terminal
 import System.Directory
 import System.Environment
 import Wit
 
-main :: IO ()
-main = do
-  args <- getArgs
-  handle args
-
 handle :: [String] -> IO ()
-handle ["check", file] = checkFile file $> ()
+handle ["check", file] = checkFileWithDoneHint file
 handle ["check"] = do
   dir <- getCurrentDirectory
-  fileList <- listDirectory dir
-  mapM_ checkFile $ filter (".wit" `isSuffixOf`) fileList
+  witFileList <- filter (".wit" `isSuffixOf`) <$> listDirectory dir
+  mapM_ checkFileWithDoneHint witFileList
 handle ["instance", "import", file, importName] =
   parseFile file
     >>= eitherIO check0
@@ -55,3 +53,13 @@ handle ["runtime", mode, file] =
         >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = Export, side = Runtime} "wasmedge")
     bad -> putStrLn $ "unknown option: " ++ bad
 handle _ = putStrLn "bad usage"
+
+checkFileWithDoneHint :: FilePath -> IO ()
+checkFileWithDoneHint file = do
+  checkFile file $> ()
+  putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
+
+main :: IO ()
+main = do
+  args <- getArgs
+  handle args

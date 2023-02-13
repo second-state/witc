@@ -7,6 +7,7 @@ module Wit.Check
 where
 
 import Control.Monad
+import Data.Functor
 import System.Directory
 import Text.Megaparsec
 import Wit.Ast
@@ -84,11 +85,11 @@ checkModFileExisted mod_name = do
 checkDef :: Env -> Definition -> M Env
 checkDef env = \case
   SrcPos pos def -> addPos pos $ checkDef env def
-  Func (Function _attr _name binders result_ty) -> do
-    checkBinders env binders
-    checkTy env result_ty
-    return env
-  Resource _name _func_list -> error "unimplemented"
+  Func f -> checkFn env f $> env
+  Resource name func_list -> do
+    let env' = (name, User name) : env
+    mapM_ (checkFn env' . snd) func_list
+    return env'
   Enum name _ -> return $ (name, PrimU32) : env
   Record name fields -> do
     checkBinders env fields
@@ -106,6 +107,12 @@ checkDef env = \case
     checkBinders ctx' = mapM_ (checkTy ctx' . snd)
     checkTyList :: Env -> [Type] -> M ()
     checkTyList ctx' = mapM_ (checkTy ctx')
+
+    checkFn :: Env -> Function -> M ()
+    checkFn env' (Function _name binders result_ty) = do
+      checkBinders env' binders
+      checkTy env' result_ty
+      return ()
 
 -- check if type is valid
 checkTy :: Env -> Type -> M ()

@@ -14,7 +14,7 @@ import Wit.Gen.Type
 toVmWrapper :: String -> Definition -> Doc a
 toVmWrapper importName = \case
   (SrcPos _ d) -> toVmWrapper importName d
-  (Func (Function _ (normalizeIdentifier -> name) param_list result_ty)) ->
+  (Func (Function (normalizeIdentifier -> name) param_list result_ty)) ->
     hsep
       [ pretty "fn",
         pretty name,
@@ -42,8 +42,7 @@ toVmWrapper importName = \case
 -- instance
 prettyDefWrap :: Definition -> Doc a
 prettyDefWrap (SrcPos _ d) = prettyDefWrap d
-prettyDefWrap (Resource _ _) = undefined
-prettyDefWrap (Func (Function _attr name param_list result_ty)) =
+prettyDefWrap (Func (Function name param_list result_ty)) =
   hsep (map pretty ["fn", normalizeIdentifier name])
     <+> parens (hsep $ punctuate comma (map prettyBinder param_list))
     <+> hsep [pretty "->", prettyType result_ty]
@@ -69,8 +68,7 @@ prettyDefWrap d = error "should not get type definition here: " $ show d
 
 prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
-prettyDefExtern (Resource _name _) = undefined
-prettyDefExtern (Func (Function _attr name param_list _)) =
+prettyDefExtern (Func (Function name param_list _)) =
   hsep (map pretty ["fn", externalConvention name])
     <+> parens (hsep $ punctuate comma (map (prettyBinder . fst) param_list))
     <+> pretty "->"

@@ -30,6 +30,7 @@ dependencies:
   - megaparsec
   - text
   - prettyprinter
+  - prettyprinter-ansi-terminal
   - template-haskell
 
 ghc-options:

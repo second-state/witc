@@ -36,6 +36,7 @@ library
       Wit.Gen.Normalization
       Wit.Gen.Type
       Wit.Parser
+      Wit.Transform
   other-modules:
       Paths_witc
   hs-source-dirs:
@@ -53,6 +54,7 @@ library
     , megaparsec
     , mtl
     , prettyprinter
+    , prettyprinter-ansi-terminal
     , primitive
     , template-haskell
     , text
@@ -78,6 +80,7 @@ executable witc-exe
     , megaparsec
     , mtl
     , prettyprinter
+    , prettyprinter-ansi-terminal
     , primitive
     , template-haskell
     , text
@@ -109,6 +112,7 @@ test-suite witc-test
     , megaparsec
     , mtl
     , prettyprinter
+    , prettyprinter-ansi-terminal
     , primitive
     , template-haskell
     , text

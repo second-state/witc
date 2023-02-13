@@ -22,20 +22,20 @@ impl Store {
     }
 }
 
-fn open_store(name: String) -> Result<keyvalue, keyvalue_error> {
+fn keyvalue_open(name: String) -> Result<keyvalue, keyvalue_error> {
     println!("new store `{}`", name);
     unsafe {
         STORES.push(Store::new(name));
         Ok((STORES.len() - 1) as u32)
     }
 }
-fn store_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
+fn keyvalue_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
     store.map.insert(key.clone(), value);
     println!("insert `{}` to store `{}`", key, store.name);
     Ok(())
 }
-fn store_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
+fn keyvalue_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
     println!("get `{}` from store `{}`", key, store.name);
     store
@@ -43,6 +43,18 @@ fn store_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
         .get(key.as_str())
         .map(|v| v.to_vec())
         .ok_or(keyvalue_error::key_not_found(key))
+}
+fn keyvalue_keys(handle: keyvalue) -> Result<Vec<String>, keyvalue_error> {
+    let store = unsafe { &mut STORES[handle as usize] };
+    let keys = store.map.clone().into_keys().collect();
+    println!("store `{}` keys: {:?}", store.name, keys);
+    Ok(keys)
+}
+fn keyvalue_delete(handle: keyvalue, key: String) -> Result<(), keyvalue_error> {
+    let store = unsafe { &mut STORES[handle as usize] };
+    store.map.remove(&key);
+    println!("remove `{}` from store `{}`", key, store.name);
+    Ok(())
 }
 
 fn main() -> Result<(), Error> {
@@ -58,7 +70,7 @@ fn main() -> Result<(), Error> {
         )?;
 
     let result = vm.run_func(Some("instance-service"), "start", None)?;
-    assert!(result[0].to_i32() == 0);
+    assert!(result[0].to_i32() == 2);
 
     Ok(())
 }
