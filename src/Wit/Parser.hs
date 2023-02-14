@@ -34,6 +34,7 @@ type ParserError = ParseErrorBundle String Void
 
 pWitFile :: Parser WitFile
 pWitFile = do
+  lexeme space
   us <- many $ lexeme (withPos SrcPosUse pUse)
   ds <- many $ lexeme (withPos SrcPos pDefinition)
   return WitFile {use_list = us, definition_list = ds}
