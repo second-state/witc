@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1676351486317,
+  "lastUpdate": 1676353838731,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -607,6 +607,60 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 225,
             "range": "± 17",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "z54981220@gmail.com",
+            "name": "hydai",
+            "username": "hydai"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "63cc5f4dbbad9f2c091fc334696fb643d695e84b",
+          "message": "order irrelevant (#65)",
+          "timestamp": "2023-02-14T13:46:30+08:00",
+          "tree_id": "afecc31c6dd25d57484cb00d1988b442927a5a6b",
+          "url": "https://github.com/second-state/witc/commit/63cc5f4dbbad9f2c091fc334696fb643d695e84b"
+        },
+        "date": 1676353838209,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 90634,
+            "range": "± 713",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1809,
+            "range": "± 7",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 13654,
+            "range": "± 53",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 199,
+            "range": "± 4",
             "unit": "ns/iter"
           }
         ]
