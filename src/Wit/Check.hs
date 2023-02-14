@@ -7,7 +7,6 @@ module Wit.Check
 where
 
 import Control.Monad
-import Data.Functor
 import System.Directory
 import Text.Megaparsec
 import Wit.Ast
@@ -44,23 +43,20 @@ check ctx wit_file = do
   case introUseIdentifiers ctx $ use_list wit_file of
     Left e -> return $ Left e
     Right env -> do
-      case foldM checkDef env $ definition_list wit_file of
+      newEnv <- foldM addTypeDef env $ definition_list wit_file
+      case forM (definition_list wit_file) (checkDef newEnv) of
         Left err -> return $ Left err
         Right _ -> return $ Right wit_file
 
 introUseIdentifiers :: Env -> [Use] -> M Env
-introUseIdentifiers ctx = \case
-  [] -> return ctx
-  (u : us) -> introUseIdentifiers (ctx `extend` u) us
+introUseIdentifiers env = \case
+  [] -> return env
+  (u : us) -> introUseIdentifiers (env `extend` u) us
   where
     extend :: Env -> Use -> Env
     extend env' = \case
       (SrcPosUse _pos u) -> env' `extend` u
-      (Use imports _) ->
-        foldl
-          (\env'' name -> (name, User name) : env'')
-          env'
-          imports
+      (Use imports _) -> foldl (\env'' name -> (name, User name) : env'') env' imports
       (UseAll _) -> env'
 
 checkUseFileExisted :: Use -> IO (M ())
@@ -77,42 +73,42 @@ checkModFileExisted mod_name = do
   existed <- doesFileExist $ mod_name ++ ".wit"
   if existed then return (Right ()) else return $ report "no file xxx"
 
+addTypeDef :: Env -> Definition -> IO Env
+addTypeDef env = \case
+  SrcPos _ def -> addTypeDef env def
+  Func _ -> return env
+  Resource name _ -> return $ (name, User name) : env
+  Enum name _ -> return $ (name, PrimU32) : env
+  Record name fields -> return $ (name, TupleTy $ map snd fields) : env
+  TypeAlias name ty -> return $ (name, ty) : env
+  -- as a sum of product, it's ok to be defined recursively
+  Variant name cases -> return $ (name, VSum name $ map (TupleTy . snd) cases) : env
+
 -- insert type definition into Env
 -- e.g.
 --   Ctx |- check `record A { ... }`
 --   -------------------------------
 --          (A, User) : Ctx
-checkDef :: Env -> Definition -> M Env
+checkDef :: Env -> Definition -> M ()
 checkDef env = \case
   SrcPos pos def -> addPos pos $ checkDef env def
-  Func f -> checkFn env f $> env
-  Resource name func_list -> do
-    let env' = (name, User name) : env
-    mapM_ (checkFn env' . snd) func_list
-    return env'
-  Enum name _ -> return $ (name, PrimU32) : env
-  Record name fields -> do
-    checkBinders env fields
-    return $ (name, TupleTy $ map snd fields) : env
-  TypeAlias name ty -> do
-    checkTy env ty
-    return $ (name, ty) : env
-  Variant name cases -> do
-    let env' = (name, VSum name $ map (TupleTy . snd) cases) : env
-    -- as a sum of product, it's ok to be defined recursively
-    mapM_ (checkTyList env' . snd) cases
-    return env'
+  Func f -> checkFn env f
+  Resource _name func_list -> forM_ func_list (checkFn env . snd)
+  Enum _name _ -> return ()
+  Record _name fields -> checkBinders env fields
+  TypeAlias _name ty -> checkTy env ty
+  Variant _name cases -> forM_ cases (checkTyList env . snd)
   where
     checkBinders :: Env -> [(String, Type)] -> M ()
-    checkBinders ctx' = mapM_ (checkTy ctx' . snd)
+    checkBinders env' = mapM_ (checkTy env' . snd)
+
     checkTyList :: Env -> [Type] -> M ()
-    checkTyList ctx' = mapM_ (checkTy ctx')
+    checkTyList env' = mapM_ (checkTy env')
 
     checkFn :: Env -> Function -> M ()
     checkFn env' (Function _name binders result_ty) = do
       checkBinders env' binders
       checkTy env' result_ty
-      return ()
 
 -- check if type is valid
 checkTy :: Env -> Type -> M ()
