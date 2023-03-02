@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1677731222446,
+  "lastUpdate": 1677738434469,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -711,6 +711,60 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 176,
             "range": "± 18",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b1286feb61af58eec4779644f3ac27ffff4d0ff",
+          "message": "update README of example (#66)\n\nThe type definition order are not matter now",
+          "timestamp": "2023-03-02T14:21:12+08:00",
+          "tree_id": "c134c77092932fb1f140d469956acc33ffffe541",
+          "url": "https://github.com/second-state/witc/commit/8b1286feb61af58eec4779644f3ac27ffff4d0ff"
+        },
+        "date": 1677738433511,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 104408,
+            "range": "± 12518",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 2373,
+            "range": "± 268",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 16032,
+            "range": "± 1868",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 243,
+            "range": "± 33",
             "unit": "ns/iter"
           }
         ]
