@@ -3,17 +3,6 @@
 This demo shows how to implement resource. With a `keyvalue.wit` as the following
 
 ```wit
-variant keyvalue-error {
-	key-not-found(string),
-	invalid-key(string),
-	invalid-value(string),
-	connection-error(string),
-	authentication-error(string),
-	timeout-error(string),
-	io-error(string),
-	unexpected-error(string)
-}
-
 /// a keyvalue interface
 resource keyvalue {
 	/// open a key-value store
@@ -29,7 +18,19 @@ resource keyvalue {
 	keys: func() -> expected<list<string>, keyvalue-error>
 
 	/// delete the payload for a given key
-	delete: func(key: string) -> expected<unit, keyvalue-error>
+	delete: func(key:string) -> expected<unit, keyvalue-error>
+}
+
+/// common keyvalue errors
+variant keyvalue-error {
+	key-not-found(string),
+	invalid-key(string),
+	invalid-value(string),
+	connection-error(string),
+	authentication-error(string),
+	timeout-error(string),
+	io-error(string),
+	unexpected-error(string)
 }
 ```
 
