@@ -2,9 +2,11 @@
 name = "invoke-witc"
 version = "0.1.0"
 edition = "2021"
+description = "rust macros invokes witc"
+license = "Apache-2.0"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = "*"
+syn = "1"
