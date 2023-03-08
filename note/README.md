@@ -62,5 +62,5 @@ With these, one can understand and modify this repository without fear.
 
 Before we use current solution, we have tried.
 
-- [C ABI](./c_abi.md): `Option`, `Result`, `Vec`, and `String` don't have a stable layout across different rust versions, however. Therefore, we define our types with a stable layout and convert between them.
-- [wasm ABI](./wasm_abi.md): rust memory layout.
+- [C ABI](./drop/c_abi.md): `Option`, `Result`, `Vec`, and `String` don't have a stable layout across different rust versions, however. Therefore, we define our types with a stable layout and convert between them.
+- [wasm ABI](./drop/wasm_abi.md): rust memory layout.
