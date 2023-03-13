@@ -17,6 +17,7 @@ import System.Environment
 import Wit
 
 handle :: [String] -> IO ()
+handle ["version"] = putStrLn "0.1.0"
 handle ["check", file] = checkFileWithDoneHint file
 handle ["check"] = do
   dir <- getCurrentDirectory
