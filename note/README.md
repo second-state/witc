@@ -1,5 +1,12 @@
 # Note
 
+## Misc
+
+1. using `#![feature(wasm_abi)]`, since rust has no stable binary format for whatever type
+2. using `#[link(wasm_import_module = "mod")]`
+
+## Current implementation
+
 The current implementation is that, each component provides three functions (below is conceptual haskell code)
 
 ```haskell
@@ -19,7 +26,7 @@ read handle offset = do
 - `putHandle :: [Byte] -> IO U32` inserted a bytes into the pool, and returns a new unique `U32` value as handle.
 - `push :: [Byte] -> Byte -> IO ()` modify the bytes directly.
 
-## Caller
+### Caller
 
 Every caller encode it's arguments to bytes and invokes `allocate` and `write` to put argument to callee. For example, `let c = foo(a, b)` can have generated `foo :: A -> B -> IO C`
 
@@ -41,7 +48,7 @@ foo a b = do
 
 As you can see, the `foo` will be generated to wrap function that defined in another component automatically.
 
-## Callee
+### Callee
 
 In callee side, who implements the function, will get a generated wrapper (wrapper has mangled name).
 
@@ -62,5 +69,5 @@ With these, one can understand and modify this repository without fear.
 
 Before we use current solution, we have tried.
 
-- [C ABI](./c_abi.md): `Option`, `Result`, `Vec`, and `String` don't have a stable layout across different rust versions, however. Therefore, we define our types with a stable layout and convert between them.
-- [wasm ABI](./wasm_abi.md): rust memory layout.
+- [C ABI](./drop/c_abi.md): `Option`, `Result`, `Vec`, and `String` don't have a stable layout across different rust versions, however. Therefore, we define our types with a stable layout and convert between them.
+- [wasm ABI](./drop/wasm_abi.md): rust memory layout.
