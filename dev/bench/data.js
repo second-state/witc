@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1678673791269,
+  "lastUpdate": 1678675586978,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -965,6 +965,60 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 198,
             "range": "± 0",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4263ec5fcb035368e5713b6e9554687c867afce0",
+          "message": "changes for cargo publish  (#67)",
+          "timestamp": "2023-03-13T10:40:09+08:00",
+          "tree_id": "6cd094fe202ccae02e155ddd9f544adf4acf8e28",
+          "url": "https://github.com/second-state/witc/commit/4263ec5fcb035368e5713b6e9554687c867afce0"
+        },
+        "date": 1678675585894,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 94805,
+            "range": "± 12981",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 3058,
+            "range": "± 382",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 15862,
+            "range": "± 2211",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 187,
+            "range": "± 26",
             "unit": "ns/iter"
           }
         ]
