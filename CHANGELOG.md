@@ -8,4 +8,16 @@ and this project adheres to the
 
 ## Unreleased
 
-## 0.1.0.0 - YYYY-MM-DD
+## 0.1.0.0
+
+- wasm interface types supporting
+    - `func`
+    - `record`
+    - `variant`
+    - `enum`
+    - `resource`
+- backend: code generation
+    - rust
+      - runtime import/export
+      - instance import/export
+- check command
