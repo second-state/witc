@@ -2,10 +2,8 @@
 
 ## Misc
 
-1. using `#![feature(wasm_abi)]`
+1. using `#![feature(wasm_abi)]`, since rust has no stable binary format for whatever type
 2. using `#[link(wasm_import_module = "mod")]`
-
-TODO analysis what if we remove `#![feature(wasm_abi)]`
 
 ## Current implementation
 
