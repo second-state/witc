@@ -111,6 +111,8 @@ dependencies = [
 [[package]]
 name = "invoke-witc"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e460643c91644e1aef1f397037da133be95e86e57363dea47e5319dce84c9b49"
 dependencies = [
  "syn",
 ]
@@ -610,6 +612,8 @@ checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
 [[package]]
 name = "witc-abi"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5b5fa107d89bf31c9cd280635f61e6f63813da89c3c9d0e7b2d3f667fe7a855"
 dependencies = [
  "serde",
  "serde_json",
