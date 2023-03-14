@@ -18,8 +18,17 @@ fn name_value_meta(meta: &Meta) -> (String, String) {
     }
 }
 
+fn check_version() {
+    let ver_output = Command::new("witc-exe").args(["version"]).output().unwrap();
+    let ver = String::from_utf8(ver_output.stdout).unwrap();
+    if ver != "0.2.0\n" {
+        panic!("witc-exe version mismatch: expected 0.2.0, got {}", ver);
+    }
+}
+
 #[proc_macro]
 pub fn wit_instance(input: TokenStream) -> TokenStream {
+    check_version();
     let MetaList { path, nested, .. } = parse_macro_input!(input);
     let mode = path.get_ident().unwrap().to_string();
     let r: Output = match &nested[0] {
@@ -43,6 +52,7 @@ pub fn wit_instance(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn wit_runtime(input: TokenStream) -> TokenStream {
+    check_version();
     let MetaList { path, nested, .. } = parse_macro_input!(input);
     let mode = path.get_ident().unwrap().to_string();
     let r: Output = match &nested[0] {
