@@ -63,13 +63,14 @@ checkUseFileExisted :: Use -> IO (M ())
 checkUseFileExisted (SrcPosUse pos u) = do
   a <- checkUseFileExisted u
   return $ addPos pos a
--- TODO: check imports should exist in that module
-checkUseFileExisted (Use _imports mod_name) = checkModFileExisted mod_name
-checkUseFileExisted (UseAll mod_name) = checkModFileExisted mod_name
+checkUseFileExisted (Use imports mod_name) = checkModFileExisted imports mod_name
+checkUseFileExisted (UseAll mod_name) = checkModFileExisted [] mod_name
 
-checkModFileExisted :: String -> IO (M ())
+checkModFileExisted :: [String] -> String -> IO (M ())
 -- fileExist
-checkModFileExisted mod_name = do
+checkModFileExisted requires mod_name = do
+  -- TODO: check requires exist in the module
+  -- In fact, we should check modules recursively
   existed <- doesFileExist $ mod_name ++ ".wit"
   if existed then return (Right ()) else return $ report "no file xxx"
 
