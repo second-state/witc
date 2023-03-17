@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- check imports existed, e.g. `use {a, b, c} from m` will ensure `m` does have type definition `a`, `b`, and `c`
+
 ## 0.1.0.0
 
 - wasm interface types supporting
