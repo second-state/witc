@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1679376002057,
+  "lastUpdate": 1679378806001,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -1531,6 +1531,60 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 188,
             "range": "± 35",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2bb8b078acc6393ed8873ef9211abebf9ecea518",
+          "message": "extract `codegen` & introduce `optparse-applicative` (#73)\n\n- introduce `optparse-applicative` to parse CLI input\r\n- extract `codegen` to simplify program\r\n\r\nWith optparse, user can get CLI helps\r\n```shell\r\n$ witc-exe -h instance\r\nUsage: witc-exe instance COMMAND\r\n\r\n  Generate code for instance (wasm)\r\n\r\nAvailable commands:\r\n  import                   Generate import code for instance (wasm)\r\n  export                   Generate export code for instance (wasm)\r\n```",
+          "timestamp": "2023-03-21T14:01:43+08:00",
+          "tree_id": "5766d411cd536bba0fcb89c8124367f14af9c30d",
+          "url": "https://github.com/second-state/witc/commit/2bb8b078acc6393ed8873ef9211abebf9ecea518"
+        },
+        "date": 1679378804853,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 92560,
+            "range": "± 2568",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 2568,
+            "range": "± 22",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 14992,
+            "range": "± 292",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 199,
+            "range": "± 0",
             "unit": "ns/iter"
           }
         ]
