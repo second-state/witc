@@ -48,17 +48,17 @@ main = do
                       ( command
                           "import"
                           ( info
-                              ( instanceImport
+                              ( codegen Import Instance
                                   <$> strArgument (metavar "FILE" <> help "Wit file")
-                                  <*> optional (strArgument (metavar "NAME" <> help "Name of import"))
+                                  <*> strArgument (value "wasmedge" <> help "Name of import")
                               )
-                              (progDesc "test")
+                              (progDesc "Generate import code for instance (wasm)")
                           )
                           <> command
                             "export"
                             ( info
-                                (instanceExport <$> strArgument (metavar "FILE" <> help "Wit file"))
-                                (progDesc "test")
+                                ((\f -> codegen Export Instance f "wasmedge") <$> strArgument (metavar "FILE" <> help "Wit file"))
+                                (progDesc "Generate export code for instance (wasm)")
                             )
                       )
                   )
@@ -71,17 +71,17 @@ main = do
                       ( command
                           "import"
                           ( info
-                              ( runtimeImport
+                              ( codegen Import Runtime
                                   <$> strArgument (metavar "FILE" <> help "Wit file")
-                                  <*> optional (strArgument (metavar "NAME" <> help "Name of import"))
+                                  <*> strArgument (value "wasmedge" <> help "Name of import")
                               )
-                              (progDesc "test")
+                              (progDesc "Generate import code for runtime (WasmEdge)")
                           )
                           <> command
                             "export"
                             ( info
-                                (runtimeExport <$> strArgument (metavar "FILE" <> help "Wit file"))
-                                (progDesc "test")
+                                ((\f -> codegen Export Runtime f "wasmedge") <$> strArgument (metavar "FILE" <> help "Wit file"))
+                                (progDesc "Generate export code for runtime (WasmEdge)")
                             )
                       )
                   )
@@ -101,22 +101,8 @@ checkFileWithDoneHint file = do
   checkFile file $> ()
   putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
 
-instanceImport :: FilePath -> Maybe String -> IO ()
-instanceImport file (Just importName) = codegen file Import Instance importName
-instanceImport file Nothing = codegen file Import Instance "wasmedge"
-
-instanceExport :: FilePath -> IO ()
-instanceExport file = codegen file Export Instance "wasmedge"
-
-runtimeImport :: FilePath -> Maybe String -> IO ()
-runtimeImport file (Just importName) = codegen file Import Runtime importName
-runtimeImport file Nothing = codegen file Import Runtime "wasmedge"
-
-runtimeExport :: FilePath -> IO ()
-runtimeExport file = codegen file Export Runtime "wasmedge"
-
-codegen :: FilePath -> Direction -> Side -> String -> IO ()
-codegen file d s importName =
+codegen :: Direction -> Side -> FilePath -> String -> IO ()
+codegen d s file importName =
   parseFile file
     >>= eitherIO check0
     >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName)
