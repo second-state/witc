@@ -53,6 +53,7 @@ library
     , directory
     , megaparsec
     , mtl
+    , optparse-applicative
     , prettyprinter
     , prettyprinter-ansi-terminal
     , primitive
@@ -79,6 +80,7 @@ executable witc-exe
     , directory
     , megaparsec
     , mtl
+    , optparse-applicative
     , prettyprinter
     , prettyprinter-ansi-terminal
     , primitive
@@ -111,6 +113,7 @@ test-suite witc-test
     , hspec-megaparsec
     , megaparsec
     , mtl
+    , optparse-applicative
     , prettyprinter
     , prettyprinter-ansi-terminal
     , primitive
