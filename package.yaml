@@ -32,6 +32,7 @@ dependencies:
   - prettyprinter
   - prettyprinter-ansi-terminal
   - template-haskell
+  - optparse-applicative
 
 ghc-options:
   - -Wall
