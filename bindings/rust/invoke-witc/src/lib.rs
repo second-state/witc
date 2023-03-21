@@ -19,7 +19,10 @@ fn name_value_meta(meta: &Meta) -> (String, String) {
 }
 
 fn check_version() {
-    let ver_output = Command::new("witc-exe").args(["version"]).output().unwrap();
+    let ver_output = Command::new("witc-exe")
+        .args(["--version"])
+        .output()
+        .unwrap();
     let ver = String::from_utf8(ver_output.stdout).unwrap();
     if ver != "0.2.0\n" {
         panic!("witc-exe version mismatch: expected 0.2.0, got {}", ver);
