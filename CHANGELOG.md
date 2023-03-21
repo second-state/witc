@@ -8,6 +8,9 @@ and this project adheres to the
 
 ## Unreleased
 
+- command line interface get improved (with `--help` and subcommand)
+- check imports existed, e.g. `use {a, b, c} from m` will ensure `m` does have type definition `a`, `b`, and `c`
+
 ## 0.1.0.0
 
 - wasm interface types supporting
