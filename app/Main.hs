@@ -57,7 +57,7 @@ main = do
                           <> command
                             "export"
                             ( info
-                                ((\f -> codegen Export Instance f "wasmedge") <$> strArgument (metavar "FILE" <> help "Wit file"))
+                                (flip (codegen Export Instance) "wasmedge" <$> strArgument (metavar "FILE" <> help "Wit file"))
                                 (progDesc "Generate export code for instance (wasm)")
                             )
                       )
@@ -80,7 +80,7 @@ main = do
                           <> command
                             "export"
                             ( info
-                                ((\f -> codegen Export Runtime f "wasmedge") <$> strArgument (metavar "FILE" <> help "Wit file"))
+                                (flip (codegen Export Runtime) "wasmedge" <$> strArgument (metavar "FILE" <> help "Wit file"))
                                 (progDesc "Generate export code for runtime (WasmEdge)")
                             )
                       )
@@ -89,12 +89,28 @@ main = do
               )
         )
 
+ifM :: Monad m => m Bool -> m a -> m a -> m a
+ifM act t e = do
+  b <- act
+  if b then t else e
+
 check :: Maybe FilePath -> IO ()
-check (Just file) = checkFileWithDoneHint file
+check (Just file) =
+  ifM
+    (doesDirectoryExist file)
+    (checkDir file)
+    $ ifM
+      (doesFileExist file)
+      (checkFileWithDoneHint file)
+      (putStrLn "no file or directory")
 check Nothing = do
   dir <- getCurrentDirectory
+  checkDir dir
+
+checkDir :: FilePath -> IO ()
+checkDir dir = do
   witFileList <- filter (".wit" `isSuffixOf`) <$> listDirectory dir
-  mapM_ checkFileWithDoneHint witFileList
+  mapM_ (\f -> checkFileWithDoneHint (dir ++ "/" ++ f)) witFileList
 
 checkFileWithDoneHint :: FilePath -> IO ()
 checkFileWithDoneHint file = do
