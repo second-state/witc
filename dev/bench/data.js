@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1681101624319,
+  "lastUpdate": 1681104339013,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -1739,6 +1739,60 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 203,
             "range": "± 1",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1835127acdb14fe0568510e163ec3a0e04190be5",
+          "message": "project level cleanup (#79)",
+          "timestamp": "2023-04-10T13:20:51+08:00",
+          "tree_id": "1ff689b34cbeb8d4e575b30ef0a534ed82d26af3",
+          "url": "https://github.com/second-state/witc/commit/1835127acdb14fe0568510e163ec3a0e04190be5"
+        },
+        "date": 1681104338053,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 93117,
+            "range": "± 2223",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 2603,
+            "range": "± 85",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 14871,
+            "range": "± 393",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 199,
+            "range": "± 11",
             "unit": "ns/iter"
           }
         ]
