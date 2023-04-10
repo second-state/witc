@@ -10,6 +10,7 @@ module Wit.Check
 where
 
 import Control.Monad
+import Data.Map.Lazy qualified as M
 import Data.Maybe
 import System.Directory
 import System.Exit (exitSuccess)
@@ -38,10 +39,10 @@ addPos pos ma = case ma of
 
 type Name = String
 
-type Env = [(Name, Type)]
+type Env = M.Map Name Type
 
 lookupEnv :: Name -> Env -> Maybe Type
-lookupEnv = lookup
+lookupEnv = M.lookup
 
 parseFile :: FilePath -> IO (Either CheckError WitFile)
 parseFile filepath = do
@@ -59,7 +60,7 @@ eitherIO f = \case
   Right a -> f a
 
 check0 :: WitFile -> IO (M WitFile)
-check0 = check []
+check0 = check M.empty
 
 check :: Env -> WitFile -> IO (M WitFile)
 check ctx wit_file = do
@@ -83,7 +84,7 @@ introUseIdentifiers env = \case
     extend :: Env -> Use -> Env
     extend env' = \case
       (SrcPosUse _pos u) -> env' `extend` u
-      (Use imports _) -> foldl (\env'' name -> (name, User name) : env'') env' imports
+      (Use imports _) -> foldl (\env'' name -> M.insert name (User name) env'') env' imports
       (UseAll _) -> env'
 
 checkUseFileExisted :: Use -> IO (M ())
@@ -100,39 +101,40 @@ checkModFileExisted requires mod_name = do
   existed <- doesFileExist module_file
   if existed
     then do
-      -- and this ensure checking recursively
+      -- checking files recursively
       m <- checkFile module_file
-      results <- forM requires $ ensure_require (mapMaybe collect_type_name m.definition_list)
+      results <- forM requires $ ensureRequire (mapMaybe collectTypeName m.definition_list)
       case sequence results of
         Left e -> return $ Left e
         Right _ -> return $ Right ()
     else return $ report $ "no file " ++ module_file
   where
-    ensure_require :: [String] -> String -> IO (M ())
-    ensure_require types req = do
+    -- ensure required types are defined in the imported module
+    ensureRequire :: [String] -> String -> IO (M ())
+    ensureRequire types req = do
       if req `elem` types
         then return $ Right ()
         else return $ report $ "no type " ++ req ++ " in module " ++ mod_name
 
-    collect_type_name :: Definition -> Maybe String
-    collect_type_name (SrcPos _ d) = collect_type_name d
-    collect_type_name (Resource name _) = Just name
-    collect_type_name (Enum name _) = Just name
-    collect_type_name (Record name _) = Just name
-    collect_type_name (TypeAlias name _) = Just name
-    collect_type_name (Variant name _) = Just name
-    collect_type_name (Func _) = Nothing
+    collectTypeName :: Definition -> Maybe String
+    collectTypeName (SrcPos _ d) = collectTypeName d
+    collectTypeName (Resource name _) = Just name
+    collectTypeName (Enum name _) = Just name
+    collectTypeName (Record name _) = Just name
+    collectTypeName (TypeAlias name _) = Just name
+    collectTypeName (Variant name _) = Just name
+    collectTypeName (Func _) = Nothing
 
 addTypeDef :: Env -> Definition -> IO Env
 addTypeDef env = \case
   SrcPos _ def -> addTypeDef env def
   Func _ -> return env
-  Resource name _ -> return $ (name, User name) : env
-  Enum name _ -> return $ (name, PrimU32) : env
-  Record name fields -> return $ (name, TupleTy $ map snd fields) : env
-  TypeAlias name ty -> return $ (name, ty) : env
+  Resource name _ -> return $ M.insert name (User name) env
+  Enum name _ -> return $ M.insert name PrimU32 env
+  Record name fields -> return $ M.insert name (TupleTy $ map snd fields) env
+  TypeAlias name ty -> return $ M.insert name ty env
   -- as a sum of product, it's ok to be defined recursively
-  Variant name cases -> return $ (name, VSum name $ map (TupleTy . snd) cases) : env
+  Variant name cases -> return $ M.insert name (VSum name $ map (TupleTy . snd) cases) env
 
 -- insert type definition into Env
 -- e.g.

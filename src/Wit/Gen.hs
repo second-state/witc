@@ -38,39 +38,39 @@ data Config = Config
 prettyFile :: Config -> String -> WitFile -> Doc a
 prettyFile config importName WitFile {definition_list = (transformDefinitions -> def_list)} =
   let (ty_defs, defs) = partition isTypeDef def_list
-   in case (config.side, config.direction) of
-        (Instance, Import) ->
-          vsep $
-            map prettyTypeDef ty_defs
-              ++ [ pretty rustInstanceImportHelper,
-                   pretty $ "#[link(wasm_import_module = " ++ "\"" ++ importName ++ "\")]",
-                   pretty "extern \"wasm\"",
-                   braces
-                     ( line
-                         <+> indent
-                           4
-                           ( vsep $
-                               map
-                                 pretty
-                                 [ "fn allocate(size: usize) -> usize;",
-                                   "fn write(addr: usize, byte: u8);",
-                                   "fn read(addr: usize, offset: usize) -> u8;"
-                                 ]
-                                 ++ map prettyDefExtern defs
-                           )
-                         <+> line
-                     )
-                 ]
-              ++ map prettyDefWrap defs
-        (Instance, Export) ->
-          vsep $
-            map prettyTypeDef ty_defs
-              ++ map toUnsafeExtern defs
-        (Runtime, Import) ->
-          vsep (map prettyTypeDef ty_defs ++ map (toVmWrapper importName) defs)
-        (Runtime, Export) ->
-          vsep (map prettyTypeDef ty_defs ++ map toHostFunction defs)
-            <+> witObject defs
+   in vsep
+        ( map prettyTypeDef ty_defs
+            ++ ( case (config.side, config.direction) of
+                   (Instance, Import) ->
+                     [ pretty rustInstanceImportHelper,
+                       pretty $ "#[link(wasm_import_module = " ++ "\"" ++ importName ++ "\")]",
+                       pretty "extern \"wasm\"",
+                       braces
+                         ( line
+                             <+> indent
+                               4
+                               ( vsep $
+                                   map
+                                     pretty
+                                     [ "fn allocate(size: usize) -> usize;",
+                                       "fn write(addr: usize, byte: u8);",
+                                       "fn read(addr: usize, offset: usize) -> u8;"
+                                     ]
+                                     ++ map prettyDefExtern defs
+                               )
+                             <+> line
+                         )
+                     ]
+                       ++ map prettyDefWrap defs
+                   (Instance, Export) -> map toUnsafeExtern defs
+                   (Runtime, Import) -> map (toVmWrapper importName) defs
+                   (Runtime, Export) -> map toHostFunction defs
+               )
+        )
+        <+> ( case (config.side, config.direction) of
+                (Runtime, Export) -> witObject defs
+                _ -> mempty
+            )
 
 isTypeDef :: Definition -> Bool
 isTypeDef (SrcPos _ d) = isTypeDef d
