@@ -194,7 +194,8 @@ angles = wrap "<" ">"
 
 keyword :: String -> Parser ()
 keyword kw = do
-  _ <- string kw <?> ("keyword: `" ++ kw ++ "`")
+  x <- string kw <?> ("keyword: `" ++ kw ++ "`")
+  guard (isKeyword x)
   (takeWhile1P Nothing isAlphaNum *> empty) <|> whitespace
 
 identifier :: Parser String
@@ -208,6 +209,17 @@ identifier = do
     isValidChar c = isAlphaNum c
 
 isKeyword :: String -> Bool
+isKeyword "use" = True
+isKeyword "from" = True
+isKeyword "resource" = True
+isKeyword "static" = True
+isKeyword "func" = True
 isKeyword "record" = True
-isKeyword "optional" = True
+isKeyword "type" = True
+isKeyword "variant" = True
+isKeyword "enum" = True
+isKeyword "expected" = True
+isKeyword "tuple" = True
+isKeyword "list" = True
+isKeyword "option" = True
 isKeyword _ = False
