@@ -70,8 +70,8 @@ You can also use following commands to let compiler output to stdout
 To get the proper Haskell configuration, we recommend you install the following combination with [`ghcup`](https://www.haskell.org/ghcup/).
 
 ```shell
-ghcup install ghc 9.2.5
-ghcup install hls 1.9.0.0
+ghcup install ghc 9.2.7
+ghcup install hls 1.10.0.0
 ```
 
 ### Why witc?
