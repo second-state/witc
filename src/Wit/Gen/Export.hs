@@ -19,8 +19,7 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
       hsep
         [ pretty "fn",
           pretty $ externalConvention name,
-          parens $ hsep $ punctuate comma (map prettyBinder param_list),
-          pretty "-> (usize, usize)"
+          parens $ pretty "id: i32"
         ],
       braces
         ( indent
@@ -32,9 +31,7 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
                          <+> tupled (map (\(x, _) -> pretty x) param_list)
                          <+> pretty ";",
                        pretty "let result_str = serde_json::to_string(&r).unwrap();",
-                       pretty "let len = result_str.len();",
-                       pretty "BUCKET[0] = result_str;",
-                       pretty "(0, len)"
+                       pretty "write(id, result_str.as_ptr() as usize, result_str.len());"
                      ]
             )
         )
@@ -49,9 +46,7 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
           prettyType ty,
           pretty "=",
           hcat
-            [ pretty "serde_json::from_str(&BUCKET[",
-              pretty x,
-              pretty ".0]).unwrap();"
+            [ pretty "serde_json::from_str(read(id).to_string().as_str()).unwrap();"
             ]
         ]
 
@@ -72,15 +67,16 @@ toHostFunction (Func (Function name param_list _result_ty)) =
       ( indent
           4
           ( vsep $
-              map letParam param_list
+              [ pretty "let id = input[0].to_i32();"
+              ]
+                ++ map letParam param_list
                 ++ [ pretty "let r ="
                        <+> pretty (normalizeIdentifier name)
                        <+> tupled (map (\(x, _) -> pretty x) param_list)
                        <+> pretty ";",
-                     pretty "let mut result_str = serde_json::to_string(&r).unwrap();",
-                     pretty "let len = result_str.len() as i32;",
-                     pretty "unsafe { COUNT = 0; BUCKET[COUNT] = result_str; }",
-                     pretty "Ok(vec![wasmedge_sdk::WasmValue::from_i32(0), wasmedge_sdk::WasmValue::from_i32(len)])"
+                     pretty "let result_str = serde_json::to_string(&r).unwrap();",
+                     pretty "unsafe { STATE.put_buffer(id, result_str) }",
+                     pretty "Ok(vec![])"
                    ]
           )
       )
@@ -94,7 +90,7 @@ toHostFunction (Func (Function name param_list _result_ty)) =
           prettyType ty,
           pretty "=",
           hcat
-            [pretty "serde_json::from_str(unsafe { BUCKET[input[0].to_i32() as usize].as_str() }).unwrap();"]
+            [pretty "serde_json::from_str(unsafe { STATE.read_buffer(id).as_str() }).unwrap();"]
         ]
         <+> pretty "let input: Vec<wasmedge_sdk::WasmValue> = input[2..].into();"
 toHostFunction d = error "should not get type definition here: " $ show d
@@ -106,29 +102,21 @@ witObject defs =
       ( pretty "Ok"
           <+> parens
             ( pretty "wasmedge_sdk::ImportObjectBuilder::new()"
-                <+> pretty ".with_func::<i32, i32>(\"allocate\", allocate)?"
-                <+> pretty ".with_func::<(i32, i32), ()>(\"write\", write)?"
-                <+> pretty ".with_func::<(i32, i32), i32>(\"read\", read)?"
                 <+> vsep (map withFunc defs)
                 <+> pretty ".build(\"wasmedge\")?"
             )
       )
   where
-    prettyEnc :: Int -> Doc a
-    prettyEnc 0 = pretty "()"
-    prettyEnc 1 = pretty "i32"
-    prettyEnc n = tupled $ replicate n (pretty "i32")
-
     withFunc :: Definition -> Doc a
     withFunc (SrcPos _ d) = withFunc d
-    withFunc (Func (Function (pretty . externalConvention -> name) params _)) =
+    withFunc (Func (Function (pretty . externalConvention -> name) _ _)) =
       pretty ".with_func::"
         <+> angles
-          ( -- get a list of string, each is a (addr, size) pair
-            prettyEnc (2 * length params)
+          ( -- every convention function should just get the id of the queue
+            pretty "i32"
               <+> comma
-              -- returns a allocated string anyway
-              <+> prettyEnc 2
+              -- returns nothing (real returns will be sent by queue)
+              <+> pretty "()"
           )
         <+> tupled [dquotes name, name]
         <+> pretty "?"

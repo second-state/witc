@@ -1,6 +1,7 @@
 #![feature(wasm_abi)]
 use serde::{Deserialize, Serialize};
 invoke_witc::wit_instance!(import("base.wit"));
+use witc_abi::instance::*;
 
 #[link(wasm_import_module = "host")]
 extern "wasm" {

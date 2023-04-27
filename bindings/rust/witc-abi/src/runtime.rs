@@ -4,8 +4,8 @@ use std::{
     sync::atomic::{AtomicI32, Ordering},
 };
 use wasmedge_sdk::{
-    error::HostFuncError, host_function, Caller, ImportObject, ImportObjectBuilder, Vm,
-    WasmEdgeResult, WasmValue,
+    error::HostFuncError, host_function, Caller, ImportObject, ImportObjectBuilder, WasmEdgeResult,
+    WasmValue,
 };
 
 struct GrowCache {
@@ -13,7 +13,7 @@ struct GrowCache {
     pages: u32,
 }
 
-struct GlobalState {
+pub struct GlobalState {
     counter: AtomicI32,
     grow_cache: HashMap<String, GrowCache>,
     queue_pool: HashMap<i32, VecDeque<String>>,
@@ -31,17 +31,17 @@ impl GlobalState {
     // This allocation algorithm relys on HashMap will limit the bucket size to a fixed number,
     // and the calls will not grow too fast (run out of i32 to use).
     // It still might have problem, if two limits above are broke.
-    fn new_queue(&mut self) -> i32 {
+    pub fn new_queue(&mut self) -> i32 {
         let id = self.counter.fetch_add(1, Ordering::SeqCst);
         self.queue_pool.insert(id, VecDeque::new());
         id
     }
 
-    fn put_buffer(&mut self, queue_id: i32, buf: String) {
+    pub fn put_buffer(&mut self, queue_id: i32, buf: String) {
         self.queue_pool.get_mut(&queue_id).unwrap().push_back(buf);
     }
 
-    fn read_buffer(&mut self, queue_id: i32) -> String {
+    pub fn read_buffer(&mut self, queue_id: i32) -> String {
         self.queue_pool
             .get_mut(&queue_id)
             .unwrap()
@@ -59,7 +59,7 @@ impl GlobalState {
     }
 }
 
-static mut STATE: Lazy<GlobalState> = Lazy::new(|| GlobalState::new());
+pub static mut STATE: Lazy<GlobalState> = Lazy::new(|| GlobalState::new());
 
 #[host_function]
 fn require_queue(_caller: Caller, _input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
@@ -154,7 +154,7 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     }
 }
 
-pub fn wit_object() -> WasmEdgeResult<ImportObject> {
+pub fn component_model_wit_object() -> WasmEdgeResult<ImportObject> {
     ImportObjectBuilder::new()
         .with_func::<(), i32>("require_queue", require_queue)?
         .with_func::<(i32, i32, i32), ()>("write", put_buffer)?

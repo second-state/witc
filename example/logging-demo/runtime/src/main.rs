@@ -4,6 +4,7 @@ use wasmedge_sdk::{
     error::HostFuncError,
     host_function, Caller, ImportObjectBuilder, Vm, WasmValue,
 };
+
 fn load_string(caller: &Caller, addr: u32, size: u32) -> String {
     let mem = caller.memory(0).unwrap();
     let data = mem.read(addr, size).expect("fail to get string");
@@ -25,6 +26,7 @@ fn main() -> Result<(), Error> {
         .with_func::<(i32, i32), ()>("runtime_println", runtime_println)?
         .build("runtime")?;
     let vm = Vm::new(Some(config))?
+        .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
         .register_import_module(import)?
         .register_module_from_file(
             "instance_logging",

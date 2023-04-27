@@ -41,7 +41,8 @@ mod tests {
             .build()
             .unwrap();
 
-        let import_object = wit_import_object().unwrap();
+        let import_object = witc_abi::runtime::component_model_wit_object().unwrap();
+        let import_object_2 = wit_import_object().unwrap();
 
         let i2 = ImportObjectBuilder::new()
             .with_func::<i64, i64>("host_fib", host_fib)
@@ -52,6 +53,8 @@ mod tests {
         Vm::new(Some(config))
             .unwrap()
             .register_import_module(import_object)
+            .unwrap()
+            .register_import_module(import_object_2)
             .unwrap()
             .register_import_module(i2)
             .unwrap()
