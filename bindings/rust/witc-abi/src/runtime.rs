@@ -1,92 +1,163 @@
-use serde::{Deserialize, Serialize};
-use wasmedge_sdk::{error::HostFuncError, host_function, Caller, Vm, WasmValue};
+use once_cell::sync::Lazy;
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::atomic::{AtomicI32, Ordering},
+};
+use wasmedge_sdk::{
+    error::HostFuncError, host_function, Caller, ImportObject, ImportObjectBuilder, Vm,
+    WasmEdgeResult, WasmValue,
+};
 
-const EMPTY_STRING: String = String::new();
-pub static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
-pub static mut COUNT: usize = 0;
+struct GrowCache {
+    offset: u32,
+    pages: u32,
+}
 
-// runtime export
-#[host_function]
-pub fn allocate(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let size = values[0].to_i32() as usize;
+struct GlobalState {
+    counter: AtomicI32,
+    grow_cache: HashMap<String, GrowCache>,
+    queue_pool: HashMap<i32, VecDeque<String>>,
+}
 
-    let s = String::with_capacity(size);
+impl GlobalState {
+    fn new() -> Self {
+        Self {
+            counter: AtomicI32::new(0),
+            queue_pool: HashMap::new(),
+            grow_cache: HashMap::new(),
+        }
+    }
 
-    unsafe {
-        BUCKET[COUNT] = s;
-        let count = COUNT;
-        COUNT += 1;
+    // This allocation algorithm relys on HashMap will limit the bucket size to a fixed number,
+    // and the calls will not grow too fast (run out of i32 to use).
+    // It still might have problem, if two limits above are broke.
+    fn new_queue(&mut self) -> i32 {
+        let id = self.counter.fetch_add(1, Ordering::SeqCst);
+        self.queue_pool.insert(id, VecDeque::new());
+        id
+    }
 
-        Ok(vec![WasmValue::from_i32(count as i32)])
+    fn put_buffer(&mut self, queue_id: i32, buf: String) {
+        self.queue_pool.get_mut(&queue_id).unwrap().push_back(buf);
+    }
+
+    fn read_buffer(&mut self, queue_id: i32) -> String {
+        self.queue_pool
+            .get_mut(&queue_id)
+            .unwrap()
+            .pop_front()
+            .unwrap()
+    }
+
+    fn get_cache(&self, instance_name: &String) -> Option<&GrowCache> {
+        self.grow_cache.get(instance_name)
+    }
+
+    fn update_cache(&mut self, instance_name: String, offset: u32, pages: u32) {
+        self.grow_cache
+            .insert(instance_name, GrowCache { offset, pages });
     }
 }
+
+static mut STATE: Lazy<GlobalState> = Lazy::new(|| GlobalState::new());
+
 #[host_function]
-pub fn write(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let count = values[0].to_i32() as usize;
+fn require_queue(_caller: Caller, _input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
     unsafe {
-        let s = &mut BUCKET[count];
-        let byte = values[1].to_i32() as u8;
-        s.push(byte as char);
+        let id = STATE.new_queue();
+        Ok(vec![WasmValue::from_i32(id)])
+    }
+}
+
+#[host_function]
+fn put_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let id = input[0].to_i32();
+    let offset = input[1].to_i32() as u32;
+    let len = input[2].to_i32() as u32;
+
+    let data_buffer = caller.memory(0).unwrap().read_string(offset, len).unwrap();
+
+    println!("enqueue {}", data_buffer.clone());
+
+    unsafe {
+        STATE.put_buffer(id, data_buffer);
     }
 
     Ok(vec![])
 }
+
 #[host_function]
-pub fn read(_caller: Caller, values: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let s: &String = unsafe { &BUCKET[values[COUNT].to_i32() as usize] };
-    let offset = values[1].to_i32() as usize;
-    Ok(vec![WasmValue::from_i32(s.as_bytes()[offset] as i32)])
-}
+fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let id = input[0].to_i32();
 
-// runtime import
-pub struct CallingConfig<'a> {
-    vm: &'a Vm,
-    mod_name: &'a str,
-}
+    let data_buffer = unsafe { &STATE.read_buffer(id) };
+    let data_size = (data_buffer.as_bytes().len() * 8) as u32;
+    // one page = 64KiB = 65,536 bytes
+    let pages = (data_size / (65536)) + 1;
 
-impl<'a> CallingConfig<'a> {
-    pub fn new(vm: &'a Vm, mod_name: &'a str) -> Self {
-        Self { vm, mod_name }
-    }
+    println!(
+        "dequeue `{}`\n pages: {} (64KiB each page)\n data size: {} bytes",
+        data_buffer, pages, data_size,
+    );
 
-    pub fn run(self: &Self, fn_name: &str, values: Vec<WasmValue>) -> Vec<WasmValue> {
-        self.vm
-            .run_func(Some(self.mod_name), fn_name, values)
-            .unwrap()
-    }
+    let mut mem = caller.memory(0).unwrap();
 
-    pub fn put_to_remote<A>(self: &Self, a: &A) -> Vec<WasmValue>
-    where
-        A: Serialize,
-    {
-        let encode_json = serde_json::to_string(a).unwrap();
+    let instance_name = caller.instance().unwrap().name().unwrap();
+    let cache = unsafe { STATE.get_cache(&instance_name) };
 
-        let han_a = self.run(
-            "allocate",
-            vec![WasmValue::from_i32(encode_json.len() as i32)],
-        )[0];
-        for c in encode_json.bytes() {
-            self.run("write", vec![han_a, WasmValue::from_i32(c as i32)]);
+    match cache {
+        // 1. cache missing than grow 50
+        None => {
+            let current_tail = mem.size();
+
+            mem.grow(pages).unwrap();
+            let offset = current_tail + 1;
+            // 1. memory the `current_tail+1` as `offset`
+            mem.write(data_buffer, offset).unwrap();
+            // 2. memory the `pages` we just grow
+            unsafe {
+                STATE.update_cache(instance_name, offset, pages);
+            }
+
+            Ok(vec![
+                WasmValue::from_i32(offset as i32),
+                WasmValue::from_i32(data_buffer.len() as i32),
+            ])
         }
+        // 2. cache existed, than reuse `offset` in cache
+        Some(cache) => {
+            let offset = cache.offset;
+            // the size we already have
+            let grew_pages = cache.pages;
 
-        vec![han_a, WasmValue::from_i32(encode_json.len() as i32)]
+            if grew_pages >= pages {
+                // 1. if `grow_size` is big enough than reuse it
+                mem.write(data_buffer, offset).unwrap();
+                Ok(vec![
+                    WasmValue::from_i32(offset as i32),
+                    WasmValue::from_i32(data_buffer.len() as i32),
+                ])
+            } else {
+                // 2. or grow more to reach the needed, than update the cache
+                mem.grow(pages - grew_pages).unwrap();
+                mem.write(data_buffer, offset).unwrap();
+                unsafe {
+                    STATE.update_cache(instance_name, offset, pages);
+                }
+
+                Ok(vec![
+                    WasmValue::from_i32(offset as i32),
+                    WasmValue::from_i32(data_buffer.len() as i32),
+                ])
+            }
+        }
     }
 }
 
-impl<'a, 'b> CallingConfig<'a> {
-    pub fn read_from_remote<A>(
-        self: &Self,
-        s: &'b mut String,
-        result_han: WasmValue,
-        result_len: usize,
-    ) -> A
-    where
-        A: Deserialize<'b>,
-    {
-        for i in 0..result_len {
-            let r = self.run("read", vec![result_han, WasmValue::from_i32(i as i32)]);
-            s.push(char::from_u32(r[0].to_i32() as u32).unwrap())
-        }
-        serde_json::from_str(s).unwrap()
-    }
+pub fn wit_object() -> WasmEdgeResult<ImportObject> {
+    ImportObjectBuilder::new()
+        .with_func::<(), i32>("require_queue", require_queue)?
+        .with_func::<(i32, i32, i32), ()>("write", put_buffer)?
+        .with_func::<i32, (i32, i32)>("read", read_buffer)?
+        .build("wasmedge.component.model")
 }
