@@ -53,11 +53,7 @@ prettyDefWrap (Func (Function name param_list result_ty)) =
             ( -- require queue
               pretty
                 "let id = require_queue();"
-                <+> hsep
-                  ( punctuate
-                      comma
-                      (map sendArgument param_list)
-                  )
+                <+> hsep (map sendArgument param_list)
                 <+> pretty (externalConvention name ++ "(id);")
                 <+> pretty "let mut returns: Vec<String> = vec![];"
                 -- NOTE: we must clone the string, because next `read` will reuse this memory block

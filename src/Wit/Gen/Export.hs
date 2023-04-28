@@ -49,9 +49,6 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
             [ pretty "serde_json::from_str(read(id).to_string().as_str()).unwrap();"
             ]
         ]
-
-    prettyBinder :: (String, Type) -> Doc a
-    prettyBinder (normalizeIdentifier -> n, _) = hsep [pretty n, pretty ": (usize, usize)"]
 toUnsafeExtern d = error "should not get type definition here: " $ show d
 
 toHostFunction :: Definition -> Doc a
@@ -66,7 +63,7 @@ toHostFunction (Func (Function name param_list _result_ty)) =
     <+> braces
       ( indent
           4
-          ( vsep $
+          ( hsep $
               [ pretty "let id = input[0].to_i32();"
               ]
                 ++ map letParam param_list
@@ -92,7 +89,6 @@ toHostFunction (Func (Function name param_list _result_ty)) =
           hcat
             [pretty "serde_json::from_str(unsafe { STATE.read_buffer(id).as_str() }).unwrap();"]
         ]
-        <+> pretty "let input: Vec<wasmedge_sdk::WasmValue> = input[2..].into();"
 toHostFunction d = error "should not get type definition here: " $ show d
 
 witObject :: [Definition] -> Doc a
