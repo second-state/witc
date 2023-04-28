@@ -23,21 +23,23 @@ toVmWrapper importName = \case
         prettyType result_ty
       ]
       <+> braces
-        ( vsep
-            ( [ pretty "let cfg = CallingConfig::new" <+> tupled [pretty "vm", dquotes $ pretty importName] <+> pretty ";",
-                pretty "let mut args = vec![];"
-              ]
-                ++ map
-                  (\(p, _) -> pretty "let mut a = cfg.put_to_remote" <+> parens (pretty "&" <+> pretty p) <+> pretty ";" <+> pretty "args.append(&mut a);")
-                  param_list
-                ++ [ pretty "let r = cfg.run" <+> tupled [dquotes $ pretty $ externalConvention name, pretty "args"] <+> pretty ";",
-                     pretty "let result_len = r[1].to_i32() as usize;",
-                     pretty "let mut s = String::with_capacity(result_len);",
-                     pretty "cfg.read_from_remote(&mut s, r[0], result_len)"
+        ( hsep
+            ( [pretty "let id = unsafe { STATE.new_queue() }; "]
+                ++ map sendArgument param_list
+                ++ [ pretty "serde_json::from_str(unsafe { STATE.read_buffer(id).as_str() }).unwrap()"
                    ]
             )
         )
   d -> error "should not get this definition here: " $ show d
+  where
+    sendArgument :: (String, Type) -> Doc a
+    sendArgument (param_name, _) =
+      hsep $
+        map
+          pretty
+          [ "let r = serde_json::to_string(&" ++ param_name ++ ").unwrap();",
+            "unsafe { STATE.put_buffer(id, r); }"
+          ]
 
 -- instance
 prettyDefWrap :: Definition -> Doc a
