@@ -1,5 +1,3 @@
-#![feature(wasm_abi)]
-
 #[cfg(target_arch = "wasm32")]
 pub mod instance;
 

@@ -86,36 +86,33 @@ fn put_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, H
 
 #[host_function]
 fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
-    let id = input[0].to_i32();
+    let read_buf_struct_ptr = input[0].to_i32() as u32;
+    let queue_id = input[1].to_i32();
 
-    let data_buffer = unsafe { &STATE.read_buffer(id) };
-    let data_size = (data_buffer.as_bytes().len() * 8) as u32;
+    let data_buffer = unsafe { &STATE.read_buffer(queue_id) };
+    // capacity will use underlying vector's capacity
+    // potential problem is it might be bigger than exact (data) needs
+    let data_size = (data_buffer.capacity() * 8) as u32;
     // one page = 64KiB = 65,536 bytes
     let pages = (data_size / (65536)) + 1;
 
     let mut mem = caller.memory(0).unwrap();
 
     let instance_name = caller.instance().unwrap().name().unwrap();
-    let cache = unsafe { STATE.get_cache(&instance_name) };
-
-    match cache {
+    let offset = match unsafe { STATE.get_cache(&instance_name) } {
         // 1. cache missing than grow 50
         None => {
             let current_tail = mem.size();
+            let offset = current_tail + 1;
 
             mem.grow(pages).unwrap();
-            let offset = current_tail + 1;
             // 1. memory the `current_tail+1` as `offset`
-            mem.write(data_buffer, offset).unwrap();
             // 2. memory the `pages` we just grow
             unsafe {
                 STATE.update_cache(instance_name, offset, pages);
             }
 
-            Ok(vec![
-                WasmValue::from_i32(offset as i32),
-                WasmValue::from_i32(data_buffer.len() as i32),
-            ])
+            offset
         }
         // 2. cache existed, than reuse `offset` in cache
         Some(cache) => {
@@ -123,34 +120,40 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
             // the size we already have
             let grew_pages = cache.pages;
 
-            if grew_pages >= pages {
-                // 1. if `grow_size` is big enough than reuse it
-                mem.write(data_buffer, offset).unwrap();
-                Ok(vec![
-                    WasmValue::from_i32(offset as i32),
-                    WasmValue::from_i32(data_buffer.len() as i32),
-                ])
-            } else {
-                // 2. or grow more to reach the needed, than update the cache
+            // if `grew_pages` isn't big enough then grow more to reach the needed
+            if grew_pages < pages {
                 mem.grow(pages - grew_pages).unwrap();
-                mem.write(data_buffer, offset).unwrap();
                 unsafe {
+                    // and update the cache
                     STATE.update_cache(instance_name, offset, pages);
                 }
-
-                Ok(vec![
-                    WasmValue::from_i32(offset as i32),
-                    WasmValue::from_i32(data_buffer.len() as i32),
-                ])
             }
+
+            offset
         }
-    }
+    };
+
+    mem.write(data_buffer, offset).unwrap();
+
+    let instance_ptr = offset as u32;
+    let mut struct_content = instance_ptr.to_le_bytes().to_vec();
+    // This assuming that the struct `ReadBuf` in instance will have linear layout
+    //
+    // #[repr(C)]
+    // pub struct ReadBuf {
+    //     pub offset: usize,
+    //     pub len: usize,
+    // }
+    struct_content.extend((data_buffer.len() as u32).to_le_bytes());
+    mem.write(struct_content, read_buf_struct_ptr).unwrap();
+
+    Ok(vec![])
 }
 
 pub fn component_model_wit_object() -> WasmEdgeResult<ImportObject> {
     ImportObjectBuilder::new()
         .with_func::<(), i32>("require_queue", require_queue)?
         .with_func::<(i32, i32, i32), ()>("write", put_buffer)?
-        .with_func::<i32, (i32, i32)>("read", read_buffer)?
+        .with_func::<(i32, i32), ()>("read", read_buffer)?
         .build("wasmedge.component.model")
 }

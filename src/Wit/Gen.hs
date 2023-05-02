@@ -42,7 +42,7 @@ prettyFile config importName WitFile {definition_list = (transformDefinitions ->
             ++ ( case (config.side, config.direction) of
                    (Instance, Import) ->
                      [ pretty $ "#[link(wasm_import_module = " ++ "\"" ++ importName ++ "\")]",
-                       pretty "extern \"wasm\"",
+                       pretty "extern \"C\"",
                        braces
                          ( line
                              <+> indent

@@ -15,7 +15,7 @@ toUnsafeExtern (SrcPos _ d) = toUnsafeExtern d
 toUnsafeExtern (Func (Function name param_list _result_ty)) =
   vsep
     [ pretty "#[no_mangle]",
-      pretty "pub unsafe extern \"wasm\"",
+      pretty "pub unsafe extern \"C\"",
       hsep
         [ pretty "fn",
           pretty $ externalConvention name,

@@ -1,10 +1,9 @@
-#![feature(wasm_abi)]
 use serde::{Deserialize, Serialize};
 use witc_abi::instance::*;
 invoke_witc::wit_instance!(import(wasmedge = "./test.wit"));
 
 #[no_mangle]
-pub unsafe extern "wasm" fn start() -> u32 {
+pub unsafe extern "C" fn start() -> u32 {
     // string & struct (wit record)
     let p1 = person {
         name: "Carlo".into(),
