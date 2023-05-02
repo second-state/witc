@@ -13,7 +13,7 @@ fn main() -> Result<(), Error> {
         .build()?;
 
     let vm = Vm::new(Some(config))?
-        .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
+        .register_import_module(component_model_wit_object()?)?
         .register_module_from_file("lights", "target/wasm32-wasi/release/instance_lights.wasm")?;
 
     let start = light::green;

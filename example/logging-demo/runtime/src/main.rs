@@ -22,12 +22,13 @@ fn main() -> Result<(), Error> {
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
         .build()?;
 
-    let import = ImportObjectBuilder::new()
-        .with_func::<(i32, i32), ()>("runtime_println", runtime_println)?
-        .build("runtime")?;
     let vm = Vm::new(Some(config))?
         .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
-        .register_import_module(import)?
+        .register_import_module(
+            ImportObjectBuilder::new()
+                .with_func::<(i32, i32), ()>("runtime_println", runtime_println)?
+                .build("runtime")?,
+        )?
         .register_module_from_file(
             "instance_logging",
             "target/wasm32-wasi/release/instance_logging.wasm",
