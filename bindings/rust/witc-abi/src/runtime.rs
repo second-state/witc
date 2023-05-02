@@ -77,8 +77,6 @@ fn put_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, H
 
     let data_buffer = caller.memory(0).unwrap().read_string(offset, len).unwrap();
 
-    println!("enqueue {}", data_buffer.clone());
-
     unsafe {
         STATE.put_buffer(id, data_buffer);
     }
@@ -94,11 +92,6 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     let data_size = (data_buffer.as_bytes().len() * 8) as u32;
     // one page = 64KiB = 65,536 bytes
     let pages = (data_size / (65536)) + 1;
-
-    println!(
-        "dequeue `{}`\n pages: {} (64KiB each page)\n data size: {} bytes",
-        data_buffer, pages, data_size,
-    );
 
     let mut mem = caller.memory(0).unwrap();
 

@@ -58,9 +58,8 @@ prettyDefWrap (Func (Function name param_list result_ty)) =
                 <+> hsep (map sendArgument param_list)
                 <+> pretty (externalConvention name ++ "(id);")
                 <+> pretty "let mut returns: Vec<String> = vec![];"
-                -- NOTE: we must clone the string, because next `read` will reuse this memory block
                 -- FIXME: maybe we need to check how many `read` calls are needed?
-                <+> pretty "let returns = read(id).to_string().clone();"
+                <+> pretty "let returns = read(id).to_string();"
                 <+> pretty "serde_json::from_str(returns.as_str()).unwrap()"
             )
       )

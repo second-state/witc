@@ -9,7 +9,7 @@ resource keyvalue {
 	static open: func(name: string) -> expected<keyvalue, keyvalue-error>
 
 	/// get the payload for a given key
-	get: func(key: string) -> expected<list<u8>, keyvalue-error> 
+	get: func(key: string) -> expected<list<u8>, keyvalue-error>
 
 	/// set the payload for a given key
 	set: func(key: string, value: list<u8>) -> expected<unit, keyvalue-error>
@@ -114,8 +114,8 @@ fn open_keyvalue(name: String) -> Result<keyvalue, keyvalue_error> {
 }
 fn keyvalue_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
-    store.map.insert(key.clone(), value);
     println!("insert `{}` to store `{}`", key, store.name);
+    store.map.insert(key, value);
     Ok(())
 }
 fn keyvalue_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
@@ -142,4 +142,4 @@ fn keyvalue_delete(handle: keyvalue, key: String) -> Result<(), keyvalue_error> 
     Ok(())
 }
 ```
- 
+

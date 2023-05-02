@@ -11,7 +11,6 @@ where
 
 import Data.List (partition)
 import Prettyprinter
-import QStr
 import Wit.Ast
 import Wit.Gen.Export
 import Wit.Gen.Import

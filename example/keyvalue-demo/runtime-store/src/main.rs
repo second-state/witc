@@ -31,8 +31,8 @@ fn keyvalue_open(name: String) -> Result<keyvalue, keyvalue_error> {
 }
 fn keyvalue_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
-    store.map.insert(key.clone(), value);
     println!("insert `{}` to store `{}`", key, store.name);
+    store.map.insert(key, value);
     Ok(())
 }
 fn keyvalue_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
