@@ -1,0 +1,6 @@
+record c2 {
+	name: string,
+	age: u32
+}
+
+base2: func(c: c2) -> c2

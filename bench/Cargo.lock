@@ -99,7 +99,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
-name = "instance"
+name = "instance_export"
+version = "0.1.0"
+dependencies = [
+ "invoke-witc",
+ "serde",
+ "serde_json",
+ "witc-abi",
+]
+
+[[package]]
+name = "instance_import"
 version = "0.1.0"
 dependencies = [
  "invoke-witc",

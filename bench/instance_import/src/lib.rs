@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-invoke_witc::wit_instance!(import("base.wit"));
+invoke_witc::wit_instance!(import("runtime_export.wit"));
+invoke_witc::wit_instance!(import(instance_export = "instance_export.wit"));
 use witc_abi::instance::*;
 
 #[link(wasm_import_module = "host")]
@@ -14,6 +15,16 @@ pub unsafe extern "C" fn call_base() -> u32 {
         age: 1,
     };
     let r = base(arg);
+    return r.age;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn call_base2() -> u32 {
+    let arg = c2 {
+        name: "test".to_string(),
+        age: 1,
+    };
+    let r = base2(arg);
     return r.age;
 }
 

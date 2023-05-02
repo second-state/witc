@@ -3,7 +3,8 @@ extern crate test;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{error::HostFuncError, host_function, Caller, WasmValue};
 use witc_abi::runtime::*;
-invoke_witc::wit_runtime!(export("base.wit"));
+invoke_witc::wit_runtime!(export("runtime_export.wit"));
+invoke_witc::wit_runtime!(import(instance_export = "instance_export.wit"));
 
 fn base(c1: c) -> c {
     c {
@@ -45,6 +46,11 @@ mod tests {
             .unwrap()
             .register_import_module(component_model_wit_object().unwrap())
             .unwrap()
+            .register_module_from_file(
+                "instance_export",
+                "../target/wasm32-wasi/release/instance_export.wasm",
+            )
+            .unwrap()
             .register_import_module(wit_import_object().unwrap())
             .unwrap()
             .register_import_module(
@@ -55,7 +61,10 @@ mod tests {
                     .unwrap(),
             )
             .unwrap()
-            .register_module_from_file("instance", "../target/wasm32-wasi/release/instance.wasm")
+            .register_module_from_file(
+                "instance_import",
+                "../target/wasm32-wasi/release/instance_import.wasm",
+            )
             .unwrap()
     }
 
@@ -76,7 +85,33 @@ mod tests {
         let vm = test_vm();
 
         b.iter(|| {
-            vm.run_func(Some("instance"), "call_base", None).unwrap();
+            vm.run_func(Some("instance_import"), "call_base", None)
+                .unwrap();
+        });
+    }
+
+    #[bench]
+    fn base_instance_invokes_instance(b: &mut Bencher) {
+        let vm = test_vm();
+
+        b.iter(|| {
+            vm.run_func(Some("instance_import"), "call_base2", None)
+                .unwrap();
+        });
+    }
+
+    #[bench]
+    fn base_runtime_invokes_instance(b: &mut Bencher) {
+        let vm = test_vm();
+
+        b.iter(|| {
+            base2(
+                &vm,
+                c2 {
+                    name: "test".to_string(),
+                    age: 1,
+                },
+            );
         });
     }
 
@@ -94,7 +129,8 @@ mod tests {
         let vm = test_vm();
 
         b.iter(|| {
-            vm.run_func(Some("instance"), "call_fib", None).unwrap();
+            vm.run_func(Some("instance_import"), "call_fib", None)
+                .unwrap();
         });
     }
 
@@ -103,7 +139,7 @@ mod tests {
         let vm = test_vm();
 
         b.iter(|| {
-            vm.run_func(Some("instance"), "call_host_fib", None)
+            vm.run_func(Some("instance_import"), "call_host_fib", None)
                 .unwrap();
         });
     }

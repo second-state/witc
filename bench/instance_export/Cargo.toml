@@ -1,7 +1,7 @@
 cargo-features = [ "per-package-target" ]
 
 [package]
-name = "instance"
+name = "instance_export"
 version = "0.1.0"
 edition = "2021"
 default-target = "wasm32-wasi"
