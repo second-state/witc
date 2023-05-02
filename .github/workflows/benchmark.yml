@@ -24,7 +24,7 @@ jobs:
           target: wasm32-wasi
       - name: Install WasmEdge
         run: |
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -e all -v 0.11.2
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v 0.11.2
       - name: Install witc
         run: |
           stack install
