@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 invoke_witc::wit_instance!(import("runtime_export.wit"));
 invoke_witc::wit_instance!(import(instance_export = "instance_export.wit"));
-use witc_abi::instance::*;
 
 #[link(wasm_import_module = "host")]
 extern "C" {

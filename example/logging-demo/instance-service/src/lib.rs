@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use witc_abi::instance::*;
 invoke_witc::wit_instance!(import(instance_logging = "logging.wit"));
 
 #[no_mangle]

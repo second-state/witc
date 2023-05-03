@@ -2,7 +2,6 @@
 extern crate test;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{error::HostFuncError, host_function, Caller, WasmValue};
-use witc_abi::runtime::*;
 invoke_witc::wit_runtime!(export("runtime_export.wit"));
 invoke_witc::wit_runtime!(import(instance_export = "instance_export.wit"));
 
@@ -44,7 +43,7 @@ mod tests {
 
         Vm::new(Some(config))
             .unwrap()
-            .register_import_module(component_model_wit_object().unwrap())
+            .register_import_module(witc_abi::runtime::component_model_wit_object().unwrap())
             .unwrap()
             .register_module_from_file(
                 "instance_export",

@@ -25,20 +25,20 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
         ( indent
             4
             ( vsep $
-                map letParam param_list
+                map getParameter param_list
                   ++ [ pretty "let r ="
                          <+> pretty (normalizeIdentifier name)
                          <+> tupled (map (\(x, _) -> pretty x) param_list)
                          <+> pretty ";",
                        pretty "let result_str = serde_json::to_string(&r).unwrap();",
-                       pretty "write(id, result_str.as_ptr() as usize, result_str.len());"
+                       pretty "witc_abi::instance::write(id, result_str.as_ptr() as usize, result_str.len());"
                      ]
             )
         )
     ]
   where
-    letParam :: (String, Type) -> Doc a
-    letParam (x, ty) =
+    getParameter :: (String, Type) -> Doc a
+    getParameter (x, ty) =
       hsep
         [ pretty "let",
           pretty x,
@@ -46,7 +46,7 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
           prettyType ty,
           pretty "=",
           hcat
-            [ pretty "serde_json::from_str(read(id).to_string().as_str()).unwrap();"
+            [ pretty "serde_json::from_str(witc_abi::instance::read(id).to_string().as_str()).unwrap();"
             ]
         ]
 toUnsafeExtern d = error "should not get type definition here: " $ show d
@@ -72,7 +72,7 @@ toHostFunction (Func (Function name param_list _result_ty)) =
                        <+> tupled (map (\(x, _) -> pretty x) param_list)
                        <+> pretty ";",
                      pretty "let result_str = serde_json::to_string(&r).unwrap();",
-                     pretty "unsafe { STATE.put_buffer(id, result_str) }",
+                     pretty "unsafe { witc_abi::runtime::STATE.put_buffer(id, result_str) }",
                      pretty "Ok(vec![])"
                    ]
           )
@@ -87,7 +87,7 @@ toHostFunction (Func (Function name param_list _result_ty)) =
           prettyType ty,
           pretty "=",
           hcat
-            [pretty "serde_json::from_str(unsafe { STATE.read_buffer(id).as_str() }).unwrap();"]
+            [pretty "serde_json::from_str(unsafe { witc_abi::runtime::STATE.read_buffer(id).as_str() }).unwrap();"]
         ]
 toHostFunction d = error "should not get type definition here: " $ show d
 

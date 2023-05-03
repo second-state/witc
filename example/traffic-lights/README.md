@@ -48,6 +48,5 @@ println!("{:?}", r)
 Just like in wasm module, you have to write the below code to import another component correctly
 
 ```rust
-use witc_abi::runtime::*;
 invoke_witc::wit_runtime!(import(instance = "traffic-lights.wit"));
 ```

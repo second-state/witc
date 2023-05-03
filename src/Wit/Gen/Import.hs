@@ -24,9 +24,9 @@ toVmWrapper importName = \case
       ]
       <+> braces
         ( hsep
-            ( [pretty "let id = unsafe { STATE.new_queue() }; "]
+            ( [pretty "let id = unsafe { witc_abi::runtime::STATE.new_queue() }; "]
                 ++ map sendArgument param_list
-                ++ [ pretty "serde_json::from_str(unsafe { STATE.read_buffer(id).as_str() }).unwrap()"
+                ++ [ pretty "serde_json::from_str(unsafe { witc_abi::runtime::STATE.read_buffer(id).as_str() }).unwrap()"
                    ]
             )
         )
@@ -38,7 +38,7 @@ toVmWrapper importName = \case
         map
           pretty
           [ "let r = serde_json::to_string(&" ++ param_name ++ ").unwrap();",
-            "unsafe { STATE.put_buffer(id, r); }"
+            "unsafe { witc_abi::runtime::STATE.put_buffer(id, r); }"
           ]
 
 -- instance
@@ -54,13 +54,11 @@ prettyDefWrap (Func (Function name param_list result_ty)) =
           <+> braces
             ( -- require queue
               pretty
-                "let id = require_queue();"
+                "let id = witc_abi::instance::require_queue();"
                 <+> hsep (map sendArgument param_list)
                 <+> pretty (externalConvention name ++ "(id);")
                 <+> pretty "let mut returns: Vec<String> = vec![];"
-                -- FIXME: maybe we need to check how many `read` calls are needed?
-                <+> pretty "let returns = read(id).to_string();"
-                <+> pretty "serde_json::from_str(returns.as_str()).unwrap()"
+                <+> pretty "serde_json::from_str(witc_abi::instance::read(id).to_string().as_str()).unwrap()"
             )
       )
   where
@@ -70,7 +68,7 @@ prettyDefWrap (Func (Function name param_list result_ty)) =
         map
           pretty
           [ "let r = serde_json::to_string(&" ++ param_name ++ ").unwrap();",
-            "write(id, r.as_ptr() as usize, r.len());"
+            "witc_abi::instance::write(id, r.as_ptr() as usize, r.len());"
           ]
 
     prettyBinder :: (String, Type) -> Doc a
