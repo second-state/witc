@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1683100914031,
+  "lastUpdate": 1683103849316,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -2307,6 +2307,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 235,
             "range": "± 5",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d049d38c9dd491cfbe860e7fd6eade83e3f0c39e",
+          "message": "memory exchanging foundation: queue of call (#82)\n\nrust bindings runtime: add three host functions\r\n1. require_queue (each call will need to require a new queue)\r\n2. write (write arguments/returns into queue)\r\n3. read (read from queue)\r\n\r\nEach caller do\r\n1. requires a queue, get an ID\r\n2. write all parameters to queue by ID\r\n3. invokes convention function, send ID to it\r\n4. read all returns back from queue by ID\r\n\r\nEach callee (implementor) do\r\n1. read all arguments back from queue by ID\r\n2. compute via implement function\r\n3. write returns back to queue by ID\r\n\r\nresolve #71\r\nresolve #76 \r\nresolve #52",
+          "timestamp": "2023-05-03T16:47:18+08:00",
+          "tree_id": "4cb9055f2570a6f2536a0a3921078be6b126b257",
+          "url": "https://github.com/second-state/witc/commit/d049d38c9dd491cfbe860e7fd6eade83e3f0c39e"
+        },
+        "date": 1683103848758,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 118426,
+            "range": "± 921",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 63923,
+            "range": "± 503",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 57564,
+            "range": "± 345",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1954,
+            "range": "± 11",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 13379,
+            "range": "± 148",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 201,
+            "range": "± 8",
             "unit": "ns/iter"
           }
         ]
