@@ -92,9 +92,14 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     let data_buffer = unsafe { &STATE.read_buffer(queue_id) };
     // capacity will use underlying vector's capacity
     // potential problem is it might be bigger than exact (data) needs
-    let data_size = (data_buffer.capacity() * 8) as u32;
-    // one page = 64KiB = 65,536 bytes
-    let pages = (data_size / (65536)) + 1;
+    let data_size = data_buffer.capacity() as u32;
+    // A page is 64KiB = 65,536 bytes, and the capacity of a string base on how many u8 it had,
+    // exactly how many bytes it had
+    let pages = if data_size < 65536 {
+        1
+    } else {
+        data_size / 65536 + 1
+    };
 
     let mut mem = caller.memory(0).unwrap();
 
