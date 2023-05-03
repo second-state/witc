@@ -1,22 +1,18 @@
-const EMPTY_STRING: String = String::new();
-pub static mut BUCKET: [String; 100] = [EMPTY_STRING; 100];
-pub static mut COUNT: usize = 0;
+#[repr(C)]
+pub struct ReadBuf {
+    offset: usize,
+    len: usize,
+}
 
-#[no_mangle]
-pub unsafe extern "wasm" fn allocate(size: usize) -> usize {
-    let s = String::with_capacity(size);
-    BUCKET[COUNT] = s;
-    let count = COUNT;
-    COUNT += 1;
-    count
+impl ToString for ReadBuf {
+    fn to_string(self: &Self) -> String {
+        unsafe { String::from_raw_parts(self.offset as *mut u8, self.len, self.len) }
+    }
 }
-#[no_mangle]
-pub unsafe extern "wasm" fn write(count: usize, byte: u8) {
-    let s = &mut BUCKET[count];
-    s.push(byte as char);
-}
-#[no_mangle]
-pub unsafe extern "wasm" fn read(count: usize, offset: usize) -> u8 {
-    let s = &BUCKET[count];
-    s.as_bytes()[offset]
+
+#[link(wasm_import_module = "wasmedge.component.model")]
+extern "C" {
+    pub fn require_queue() -> i32;
+    pub fn write(id: i32, offset: usize, len: usize);
+    pub fn read(id: i32) -> ReadBuf;
 }

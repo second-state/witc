@@ -4,7 +4,6 @@ use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     host_function, Caller, Vm,
 };
-use witc_abi::runtime::*;
 invoke_witc::wit_runtime!(export("./keyvalue.wit"));
 
 static mut STORES: Vec<Store> = Vec::new();
@@ -31,8 +30,8 @@ fn keyvalue_open(name: String) -> Result<keyvalue, keyvalue_error> {
 }
 fn keyvalue_set(handle: keyvalue, key: String, value: Vec<u8>) -> Result<(), keyvalue_error> {
     let store = unsafe { &mut STORES[handle as usize] };
-    store.map.insert(key.clone(), value);
     println!("insert `{}` to store `{}`", key, store.name);
+    store.map.insert(key, value);
     Ok(())
 }
 fn keyvalue_get(handle: keyvalue, key: String) -> Result<Vec<u8>, keyvalue_error> {
@@ -63,6 +62,7 @@ fn main() -> Result<(), Error> {
         .build()?;
 
     let vm = Vm::new(Some(config))?
+        .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
         .register_import_module(wit_import_object()?)?
         .register_module_from_file(
             "instance-service",

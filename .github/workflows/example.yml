@@ -33,11 +33,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           default: true
-          toolchain: nightly-2022-12-30
+          toolchain: nightly
           target: wasm32-wasi
       - name: Install WasmEdge
         run: |
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v 0.11.2
       - name: Install witc
         run: |
           stack install

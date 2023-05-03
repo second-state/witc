@@ -23,21 +23,31 @@ toVmWrapper importName = \case
         prettyType result_ty
       ]
       <+> braces
-        ( vsep
-            ( [ pretty "let cfg = CallingConfig::new" <+> tupled [pretty "vm", dquotes $ pretty importName] <+> pretty ";",
-                pretty "let mut args = vec![];"
-              ]
-                ++ map
-                  (\(p, _) -> pretty "let mut a = cfg.put_to_remote" <+> parens (pretty "&" <+> pretty p) <+> pretty ";" <+> pretty "args.append(&mut a);")
-                  param_list
-                ++ [ pretty "let r = cfg.run" <+> tupled [dquotes $ pretty $ externalConvention name, pretty "args"] <+> pretty ";",
-                     pretty "let result_len = r[1].to_i32() as usize;",
-                     pretty "let mut s = String::with_capacity(result_len);",
-                     pretty "cfg.read_from_remote(&mut s, r[0], result_len)"
-                   ]
+        ( indent
+            4
+            ( vsep
+                ( [pretty "let id = unsafe { witc_abi::runtime::STATE.new_queue() }; "]
+                    ++ map sendArgument param_list
+                    ++ [ hsep
+                           [ pretty "vm.run_func(Some(",
+                             dquotes (pretty importName),
+                             pretty "), ",
+                             dquotes (pretty $ externalConvention name),
+                             pretty ", vec![wasmedge_sdk::WasmValue::from_i32(id)]).unwrap();"
+                           ],
+                         pretty "serde_json::from_str(unsafe { witc_abi::runtime::STATE.read_buffer(id).as_str() }).unwrap()"
+                       ]
+                )
             )
         )
   d -> error "should not get this definition here: " $ show d
+  where
+    sendArgument :: (String, Type) -> Doc a
+    sendArgument (param_name, _) =
+      pretty $
+        "unsafe { witc_abi::runtime::STATE.put_buffer(id, serde_json::to_string(&"
+          ++ param_name
+          ++ ").unwrap()); }"
 
 -- instance
 prettyDefWrap :: Definition -> Doc a
@@ -47,20 +57,27 @@ prettyDefWrap (Func (Function name param_list result_ty)) =
     <+> parens (hsep $ punctuate comma (map prettyBinder param_list))
     <+> hsep [pretty "->", prettyType result_ty]
     <+> braces
-      ( -- unsafe call extern function
-        pretty "let s = "
-          <+> hsep
-            [ pretty $ "from_remote_string (unsafe { extern_" ++ normalizeIdentifier name,
-              parens $
-                hsep $
-                  punctuate comma (map (paramInto . fst) param_list),
-              pretty "});"
-            ]
-          <+> pretty "serde_json::from_str(s.as_str()).unwrap()"
+      ( pretty
+          "unsafe"
+          <+> braces
+            ( -- require queue
+              pretty
+                "let id = witc_abi::instance::require_queue();"
+                <+> hsep (map sendArgument param_list)
+                <+> pretty (externalConvention name ++ "(id);")
+                <+> pretty "let mut returns: Vec<String> = vec![];"
+                <+> pretty "serde_json::from_str(witc_abi::instance::read(id).to_string().as_str()).unwrap()"
+            )
       )
   where
-    paramInto :: String -> Doc a
-    paramInto s = pretty "as_remote_string" <+> parens (pretty s)
+    sendArgument :: (String, Type) -> Doc a
+    sendArgument (param_name, _) =
+      hsep $
+        map
+          pretty
+          [ "let r = serde_json::to_string(&" ++ param_name ++ ").unwrap();",
+            "witc_abi::instance::write(id, r.as_ptr() as usize, r.len());"
+          ]
 
     prettyBinder :: (String, Type) -> Doc a
     prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
@@ -68,13 +85,8 @@ prettyDefWrap d = error "should not get type definition here: " $ show d
 
 prettyDefExtern :: Definition -> Doc a
 prettyDefExtern (SrcPos _ d) = prettyDefExtern d
-prettyDefExtern (Func (Function name param_list _)) =
+prettyDefExtern (Func (Function name _ _)) =
   hsep (map pretty ["fn", externalConvention name])
-    <+> parens (hsep $ punctuate comma (map (prettyBinder . fst) param_list))
-    <+> pretty "->"
-    <+> pretty "(usize, usize)"
+    <+> pretty "(id: i32)"
     <+> pretty ";"
-  where
-    prettyBinder :: String -> Doc a
-    prettyBinder field_name = hsep [pretty field_name, pretty ": (usize, usize)"]
 prettyDefExtern d = error "should not get type definition here: " $ show d

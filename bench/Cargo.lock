@@ -99,12 +99,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
-name = "instance"
+name = "instance_export"
 version = "0.1.0"
 dependencies = [
  "invoke-witc",
  "serde",
  "serde_json",
+ "witc-abi",
+]
+
+[[package]]
+name = "instance_import"
+version = "0.1.0"
+dependencies = [
+ "invoke-witc",
+ "serde",
+ "serde_json",
+ "witc-abi",
 ]
 
 [[package]]
@@ -205,6 +216,12 @@ checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
 
 [[package]]
 name = "parking_lot"
@@ -618,7 +635,6 @@ checksum = "447660ad36a13288b1db4d4248e857b510e8c3a225c822ba4fb748c0aafecffd"
 name = "witc-abi"
 version = "0.2.0"
 dependencies = [
- "serde",
- "serde_json",
+ "once_cell",
  "wasmedge-sdk",
 ]

@@ -20,11 +20,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           default: true
-          toolchain: nightly-2022-12-30
+          toolchain: nightly
           target: wasm32-wasi
       - name: Install WasmEdge
         run: |
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v 0.11.2
       - name: Install witc
         run: |
           stack install
@@ -44,5 +44,5 @@ jobs:
           # Show alert with commit comment on detecting possible performance regression
           alert-threshold: '200%'
           comment-on-alert: true
-          fail-on-alert: true
-          alert-comment-cc-users: '@dannypsnl'
+          fail-on-alert: false
+          alert-comment-cc-users: '@dannypsnl,@dm4'

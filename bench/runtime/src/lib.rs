@@ -2,8 +2,8 @@
 extern crate test;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{error::HostFuncError, host_function, Caller, WasmValue};
-use witc_abi::runtime::*;
-invoke_witc::wit_runtime!(export("base.wit"));
+invoke_witc::wit_runtime!(export("runtime_export.wit"));
+invoke_witc::wit_runtime!(import(instance_export = "instance_export.wit"));
 
 fn base(c1: c) -> c {
     c {
@@ -41,21 +41,29 @@ mod tests {
             .build()
             .unwrap();
 
-        let import_object = wit_import_object().unwrap();
-
-        let i2 = ImportObjectBuilder::new()
-            .with_func::<i64, i64>("host_fib", host_fib)
-            .unwrap()
-            .build("host")
-            .unwrap();
-
         Vm::new(Some(config))
             .unwrap()
-            .register_import_module(import_object)
+            .register_import_module(witc_abi::runtime::component_model_wit_object().unwrap())
             .unwrap()
-            .register_import_module(i2)
+            .register_module_from_file(
+                "instance_export",
+                "../target/wasm32-wasi/release/instance_export.wasm",
+            )
             .unwrap()
-            .register_module_from_file("instance", "../target/wasm32-wasi/release/instance.wasm")
+            .register_import_module(wit_import_object().unwrap())
+            .unwrap()
+            .register_import_module(
+                ImportObjectBuilder::new()
+                    .with_func::<i64, i64>("host_fib", host_fib)
+                    .unwrap()
+                    .build("host")
+                    .unwrap(),
+            )
+            .unwrap()
+            .register_module_from_file(
+                "instance_import",
+                "../target/wasm32-wasi/release/instance_import.wasm",
+            )
             .unwrap()
     }
 
@@ -76,7 +84,33 @@ mod tests {
         let vm = test_vm();
 
         b.iter(|| {
-            vm.run_func(Some("instance"), "call_base", None).unwrap();
+            vm.run_func(Some("instance_import"), "call_base", None)
+                .unwrap();
+        });
+    }
+
+    #[bench]
+    fn base_instance_invokes_instance(b: &mut Bencher) {
+        let vm = test_vm();
+
+        b.iter(|| {
+            vm.run_func(Some("instance_import"), "call_base2", None)
+                .unwrap();
+        });
+    }
+
+    #[bench]
+    fn base_runtime_invokes_instance(b: &mut Bencher) {
+        let vm = test_vm();
+
+        b.iter(|| {
+            base2(
+                &vm,
+                c2 {
+                    name: "test".to_string(),
+                    age: 1,
+                },
+            );
         });
     }
 
@@ -94,7 +128,8 @@ mod tests {
         let vm = test_vm();
 
         b.iter(|| {
-            vm.run_func(Some("instance"), "call_fib", None).unwrap();
+            vm.run_func(Some("instance_import"), "call_fib", None)
+                .unwrap();
         });
     }
 
@@ -103,7 +138,7 @@ mod tests {
         let vm = test_vm();
 
         b.iter(|| {
-            vm.run_func(Some("instance"), "call_host_fib", None)
+            vm.run_func(Some("instance_import"), "call_host_fib", None)
                 .unwrap();
         });
     }

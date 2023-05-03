@@ -1,4 +1,3 @@
-#![feature(wasm_abi)]
 use serde::{Deserialize, Serialize};
 invoke_witc::wit_instance!(import("./keyvalue.wit"));
 
@@ -31,7 +30,7 @@ impl Store {
 }
 
 #[no_mangle]
-pub unsafe extern "wasm" fn start() -> u32 {
+pub unsafe extern "C" fn start() -> u32 {
     let store = Store::open("store A".to_string());
 
     store.set("key1".to_string(), vec![1, 2, 3]);

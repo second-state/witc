@@ -1,2 +1,2 @@
 [workspace]
-members = ["runtime", "instance"]
+members = ["runtime", "instance_import", "instance_export"]
