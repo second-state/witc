@@ -23,23 +23,31 @@ toVmWrapper importName = \case
         prettyType result_ty
       ]
       <+> braces
-        ( hsep
-            ( [pretty "let id = unsafe { witc_abi::runtime::STATE.new_queue() }; "]
-                ++ map sendArgument param_list
-                ++ [ pretty "serde_json::from_str(unsafe { witc_abi::runtime::STATE.read_buffer(id).as_str() }).unwrap()"
-                   ]
+        ( indent
+            4
+            ( vsep
+                ( [pretty "let id = unsafe { witc_abi::runtime::STATE.new_queue() }; "]
+                    ++ map sendArgument param_list
+                    ++ [ hsep
+                           [ pretty "vm.run_func(Some(",
+                             dquotes (pretty importName),
+                             pretty "), ",
+                             dquotes (pretty $ externalConvention name),
+                             pretty ", vec![wasmedge_sdk::WasmValue::from_i32(id)]).unwrap();"
+                           ],
+                         pretty "serde_json::from_str(unsafe { witc_abi::runtime::STATE.read_buffer(id).as_str() }).unwrap()"
+                       ]
+                )
             )
         )
   d -> error "should not get this definition here: " $ show d
   where
     sendArgument :: (String, Type) -> Doc a
     sendArgument (param_name, _) =
-      hsep $
-        map
-          pretty
-          [ "let r = serde_json::to_string(&" ++ param_name ++ ").unwrap();",
-            "unsafe { witc_abi::runtime::STATE.put_buffer(id, r); }"
-          ]
+      pretty $
+        "unsafe { witc_abi::runtime::STATE.put_buffer(id, serde_json::to_string(&"
+          ++ param_name
+          ++ ").unwrap()); }"
 
 -- instance
 prettyDefWrap :: Definition -> Doc a
