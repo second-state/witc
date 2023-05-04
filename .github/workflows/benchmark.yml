@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   benchmark:
-    name: Run Rust benchmark example
+    name: Run Rust benchmark
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
