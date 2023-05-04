@@ -50,7 +50,7 @@ mod tests {
                 "../target/wasm32-wasi/release/instance_export.wasm",
             )
             .unwrap()
-            .register_import_module(wit_import_object().unwrap())
+            .register_import_module(wasmedge::wit_import_object().unwrap())
             .unwrap()
             .register_import_module(
                 ImportObjectBuilder::new()
