@@ -1,0 +1,12 @@
+[package]
+name = "test-project"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasmedge-sdk = "0.7.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "*"
+
+invoke-witc = { path = "../bindings/rust/invoke-witc" }
+witc-abi = { path = "../bindings/rust/witc-abi" }

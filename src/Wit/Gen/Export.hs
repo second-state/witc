@@ -10,6 +10,7 @@ import Wit.Ast
 import Wit.Gen.Normalization
 import Wit.Gen.Type
 
+-- instance
 toUnsafeExtern :: Definition -> Doc a
 toUnsafeExtern (SrcPos _ d) = toUnsafeExtern d
 toUnsafeExtern (Func (Function name param_list _result_ty)) =
@@ -51,10 +52,11 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
         ]
 toUnsafeExtern d = error "should not get type definition here: " $ show d
 
+-- runtime
 toHostFunction :: Definition -> Doc a
 toHostFunction (SrcPos _ d) = toHostFunction d
 toHostFunction (Func (Function name param_list _result_ty)) =
-  pretty "#[host_function]"
+  pretty "#[wasmedge_sdk::host_function]"
     <+> line
     <+> hsep (map pretty ["fn", externalConvention name])
     <+> parens (pretty "caller: wasmedge_sdk::Caller, input: Vec<wasmedge_sdk::WasmValue>")
@@ -91,29 +93,30 @@ toHostFunction (Func (Function name param_list _result_ty)) =
         ]
 toHostFunction d = error "should not get type definition here: " $ show d
 
-witObject :: [Definition] -> Doc a
-witObject defs =
-  pretty "fn wit_import_object() -> wasmedge_sdk::WasmEdgeResult<wasmedge_sdk::ImportObject>"
+-- runtime wasm import object
+witObject :: String -> [Definition] -> Doc a
+witObject exportName defs =
+  pretty "pub fn wit_import_object() -> wasmedge_sdk::WasmEdgeResult<wasmedge_sdk::ImportObject>"
     <+> braces
       ( pretty "Ok"
           <+> parens
             ( pretty "wasmedge_sdk::ImportObjectBuilder::new()"
                 <+> vsep (map withFunc defs)
-                <+> pretty ".build(\"wasmedge\")?"
+                <+> ( pretty
+                        ( ".build(\""
+                            ++ exportName
+                            ++ "\")?"
+                        )
+                    )
             )
       )
   where
     withFunc :: Definition -> Doc a
     withFunc (SrcPos _ d) = withFunc d
     withFunc (Func (Function (pretty . externalConvention -> name) _ _)) =
-      pretty ".with_func::"
-        <+> angles
-          ( -- every convention function should just get the id of the queue
-            pretty "i32"
-              <+> comma
-              -- returns nothing (real returns will be sent by queue)
-              <+> pretty "()"
-          )
+      -- i32: every convention function should just get the id of the queue
+      -- (): returns nothing (real returns will be sent by queue)
+      pretty ".with_func::<i32, ()>"
         <+> tupled [dquotes name, name]
         <+> pretty "?"
     withFunc d = error $ "bad definition" ++ show d

@@ -35,13 +35,13 @@ data Config = Config
   }
 
 prettyFile :: Config -> String -> WitFile -> Doc a
-prettyFile config importName WitFile {definition_list = (transformDefinitions -> def_list)} =
+prettyFile config inOutName WitFile {definition_list = (transformDefinitions -> def_list)} =
   let (ty_defs, defs) = partition isTypeDef def_list
    in vsep
         ( map prettyTypeDef ty_defs
             ++ ( case (config.side, config.direction) of
                    (Instance, Import) ->
-                     [ pretty $ "#[link(wasm_import_module = " ++ "\"" ++ importName ++ "\")]",
+                     [ pretty $ "#[link(wasm_import_module = " ++ "\"" ++ inOutName ++ "\")]",
                        pretty "extern \"C\"",
                        braces
                          ( line
@@ -55,14 +55,10 @@ prettyFile config importName WitFile {definition_list = (transformDefinitions ->
                      ]
                        ++ map prettyDefWrap defs
                    (Instance, Export) -> map toUnsafeExtern defs
-                   (Runtime, Import) -> map (toVmWrapper importName) defs
-                   (Runtime, Export) -> map toHostFunction defs
+                   (Runtime, Import) -> map (toVmWrapper inOutName) defs
+                   (Runtime, Export) -> [pretty $ "mod " ++ inOutName, braces (vsep (witObject inOutName defs : pretty "use wasmedge_sdk::Caller;" : pretty "use super::*;" : map toHostFunction defs))]
                )
         )
-        <+> ( case (config.side, config.direction) of
-                (Runtime, Export) -> witObject defs
-                _ -> mempty
-            )
 
 isTypeDef :: Definition -> Bool
 isTypeDef (SrcPos _ d) = isTypeDef d
