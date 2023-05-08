@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "invoke-witc"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "syn",
 ]
@@ -615,7 +615,7 @@ checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
 
 [[package]]
 name = "witc-abi"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "once_cell",
  "wasmedge-sdk",

@@ -31,7 +31,7 @@ main = do
       )
   where
     versionOption :: Parser (a -> a)
-    versionOption = infoOption "0.2.0" (long "version" <> help "Show version")
+    versionOption = infoOption "0.2.1" (long "version" <> help "Show version")
     programOptions :: Parser (IO ())
     programOptions =
       subparser
@@ -57,7 +57,10 @@ main = do
                           <> command
                             "export"
                             ( info
-                                (flip (codegen Export Instance) "wasmedge" <$> strArgument (metavar "FILE" <> help "Wit file"))
+                                ( codegen Export Instance
+                                    <$> strArgument (metavar "FILE" <> help "Wit file")
+                                    <*> strArgument (value "wasmedge" <> help "Name of export")
+                                )
                                 (progDesc "Generate export code for instance (wasm)")
                             )
                       )
@@ -80,7 +83,10 @@ main = do
                           <> command
                             "export"
                             ( info
-                                (flip (codegen Export Runtime) "wasmedge" <$> strArgument (metavar "FILE" <> help "Wit file"))
+                                ( codegen Export Runtime
+                                    <$> strArgument (metavar "FILE" <> help "Wit file")
+                                    <*> strArgument (value "wasmedge" <> help "Name of export")
+                                )
                                 (progDesc "Generate export code for runtime (WasmEdge)")
                             )
                       )

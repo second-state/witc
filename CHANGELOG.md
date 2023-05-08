@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.2.1
+
+- export multiple component in runtime
+
 ## 0.2.0.0
 
 - performance improvement: memory queue of call
