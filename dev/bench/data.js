@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1683187886937,
+  "lastUpdate": 1683533710035,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -2867,6 +2867,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_instance_invokes_runtime",
             "value": 13271,
             "range": "± 205",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 204,
+            "range": "± 0",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dannypsnl@secondstate.io",
+            "name": "Lîm Tsú-thuàn",
+            "username": "dannypsnl"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8fed541a43e985b249498cfbd5700c7dd3f32e50",
+          "message": "release v0.2.1: allow export multiple components in runtime now (#85)\n\n- fix bug: allow export multiple components in runtime now\r\n- add integration test\r\n- witc can work with stable rust now!\r\n\r\nresolve #83",
+          "timestamp": "2023-05-08T16:11:47+08:00",
+          "tree_id": "f80a7487b3f74728871f58769d72c1fb69521974",
+          "url": "https://github.com/second-state/witc/commit/8fed541a43e985b249498cfbd5700c7dd3f32e50"
+        },
+        "date": 1683533709508,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 118113,
+            "range": "± 3316",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 63883,
+            "range": "± 629",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 56956,
+            "range": "± 446",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1947,
+            "range": "± 10",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 13246,
+            "range": "± 98",
             "unit": "ns/iter"
           },
           {
