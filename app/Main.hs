@@ -123,7 +123,9 @@ checkFileWithDoneHint file = do
     (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
 
 printCheckError :: CheckError -> IO ()
-printCheckError e = do print e; return ()
+printCheckError e = do
+  putDoc $ pretty e
+  return ()
 
 codegen :: Direction -> Side -> FilePath -> String -> IO ()
 codegen d s file importName = do
@@ -131,7 +133,7 @@ codegen d s file importName = do
   (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
 
 runExit :: ExceptT CheckError IO a -> IO a
-runExit act = runWithErrorHandler act (\e -> print e *> exitSuccess) pure
+runExit act = runWithErrorHandler act (\e -> (putDoc $ pretty e) *> exitSuccess) pure
 
 runWithErrorHandler ::  ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
 runWithErrorHandler act onErr onSuccess = do

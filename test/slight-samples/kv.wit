@@ -7,7 +7,7 @@ resource kv {
 	static open: func(name: string) -> expected<kv, error>
 
 	// get the payload for a given key.
-	get: func(key: string) -> expected<payload, error> 
+	get: func(key: string) -> expected<payload, error>
 
 	// set the payload for a given key.
 	set: func(key: string, value: payload) -> expected<unit, error>

@@ -16,15 +16,16 @@ import System.Directory
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
+import Prettyprinter
 
 data CheckError
   = CheckError String (Maybe SourcePos)
   | PErr ParserError
 
-instance Show CheckError where
-  show (PErr bundle) = errorBundlePretty bundle
-  show (CheckError msg (Just pos)) = sourcePosPretty pos ++ ": " ++ msg
-  show (CheckError msg Nothing) = msg
+instance Pretty CheckError where
+  pretty (PErr bundle) = pretty (errorBundlePretty bundle)
+  pretty (CheckError msg (Just pos)) = pretty (sourcePosPretty pos) <> colon <+> pretty msg <> line
+  pretty (CheckError msg Nothing) = pretty msg <> line
 
 report :: (MonadError CheckError m) => String -> m a
 report msg = throwError $ CheckError msg Nothing
