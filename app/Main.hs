@@ -10,7 +10,6 @@ module Main (main) where
 
 import Control.Monad
 import Control.Monad.Except
-import Data.Functor
 import Data.List (isSuffixOf)
 import Options.Applicative
 import Prettyprinter
@@ -119,8 +118,12 @@ checkDir dir = do
 
 checkFileWithDoneHint :: FilePath -> IO ()
 checkFileWithDoneHint file = do
-  runExit (checkPath file) $> ()
-  putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
+  runWithErrorHandler (checkPath file)
+    printCheckError
+    (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
+
+printCheckError :: CheckError -> IO ()
+printCheckError e = do print e; return ()
 
 codegen :: Direction -> Side -> FilePath -> String -> IO ()
 codegen d s file importName = do
@@ -128,11 +131,14 @@ codegen d s file importName = do
   (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
 
 runExit :: ExceptT CheckError IO a -> IO a
-runExit act = do
+runExit act = runWithErrorHandler act (\e -> print e *> exitSuccess) pure
+
+runWithErrorHandler ::  ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
+runWithErrorHandler act onErr onSuccess = do
   result <- runExceptT act
   case result of
-    Left e -> print e *> exitSuccess
-    Right a -> pure a
+    Left e -> onErr e
+    Right a -> onSuccess a
 
 checkPath :: FilePath -> ExceptT CheckError IO WitFile
 checkPath path = do
