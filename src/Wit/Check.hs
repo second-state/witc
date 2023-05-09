@@ -17,6 +17,7 @@ import Text.Megaparsec
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
 import Prettyprinter
+import Prettyprinter.Render.Terminal
 
 data CheckError
   = CheckError String (Maybe SourcePos)
@@ -58,10 +59,13 @@ checkFile path = do
 
 check :: (MonadIO m) => (MonadError CheckError m) => Env -> WitFile -> m WitFile
 check ctx wit_file = do
-  mapM_ checkUseFileExisted $ use_list wit_file
+  forM_ (use_list wit_file)
+    (\mod_file -> (checkUseFileExisted mod_file) `catchError` (\e -> liftIO $ putDoc $ pretty e))
   env <- introUseIdentifiers ctx $ use_list wit_file
   newEnv <- foldM addTypeDef env $ definition_list wit_file
-  forM_ (definition_list wit_file) (checkDef newEnv)
+  forM_ (definition_list wit_file)
+    $ (\def -> (checkDef newEnv def)
+        `catchError` (\e -> liftIO $ putDoc $ pretty e))
   return wit_file
 
 introUseIdentifiers :: (MonadError CheckError m) => Env -> [Use] -> m Env
@@ -76,8 +80,7 @@ introUseIdentifiers env = \case
       (UseAll _) -> env'
 
 checkUseFileExisted :: (MonadIO m) => (MonadError CheckError m) => Use -> m ()
-checkUseFileExisted (SrcPosUse pos u) = do
-  addPos pos $ checkUseFileExisted u
+checkUseFileExisted (SrcPosUse pos u) = addPos pos $ checkUseFileExisted u
 checkUseFileExisted (Use imports mod_name) = checkModFileExisted imports mod_name
 checkUseFileExisted (UseAll mod_name) = checkModFileExisted [] mod_name
 
@@ -90,7 +93,9 @@ checkModFileExisted requires mod_name = do
     then do
       -- checking files recursively
       m <- checkFile module_file
-      forM_ requires $ ensureRequire (mapMaybe collectTypeName m.definition_list)
+      forM_ requires $
+        (\req -> (ensureRequire (mapMaybe collectTypeName m.definition_list) req)
+          `catchError` (\e -> liftIO $ putDoc $ pretty e))
     else report $ "no file " ++ module_file
   where
     -- ensure required types are defined in the imported module
@@ -98,7 +103,7 @@ checkModFileExisted requires mod_name = do
     ensureRequire types req = do
       if req `elem` types
         then return ()
-        else report $ "no type " ++ req ++ " in module " ++ mod_name
+        else report $ "no type `" ++ req ++ "` in module " ++ mod_name
 
     collectTypeName :: Definition -> Maybe String
     collectTypeName (SrcPos _ d) = collectTypeName d
