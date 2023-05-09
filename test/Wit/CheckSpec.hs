@@ -1,5 +1,6 @@
 module Wit.CheckSpec (spec) where
 
+import Control.Monad.State
 import Control.Monad.Except
 import Test.Hspec
 import Text.Megaparsec
@@ -8,8 +9,15 @@ import Wit.Check
 import Wit.Parser
 import Data.Map.Lazy qualified as Map
 
+check'' :: WitFile -> StateT [CheckError] (ExceptT CheckError IO) WitFile
+check'' = check Map.empty
+
 check' :: WitFile -> ExceptT CheckError IO WitFile
-check' = check Map.empty
+check' wit_file = do
+  (w, errors) <- (runStateT (check'' wit_file) [])
+  case errors of
+    [] -> return w
+    es -> throwError $ Bundle es
 
 spec :: Spec
 spec = describe "check wit" $ do
