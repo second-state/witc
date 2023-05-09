@@ -10,6 +10,7 @@ module Wit.Check
 where
 
 import Control.Monad
+import Control.Monad.Except
 import Data.Map.Lazy qualified as M
 import Data.Maybe
 import System.Directory
@@ -27,15 +28,15 @@ instance Show CheckError where
   show (CheckError msg (Just pos)) = sourcePosPretty pos ++ ": " ++ msg
   show (CheckError msg Nothing) = msg
 
-type M = Either CheckError
+report :: (MonadError CheckError m) => String -> m a
+report msg = throwError $ CheckError msg Nothing
 
-report :: String -> M a
-report msg = Left $ CheckError msg Nothing
-
-addPos :: SourcePos -> M a -> M a
-addPos pos ma = case ma of
-  Left (CheckError msg Nothing) -> Left (CheckError msg (Just pos))
-  ma' -> ma'
+addPos :: (MonadError CheckError m) => SourcePos -> m a -> m a
+addPos pos = withError updatePos
+  where
+    updatePos :: CheckError -> CheckError
+    updatePos (CheckError msg Nothing) = CheckError msg (Just pos)
+    updatePos e = e
 
 type Name = String
 
@@ -59,24 +60,18 @@ eitherIO f = \case
   Left e -> print e *> exitSuccess
   Right a -> f a
 
-check0 :: WitFile -> IO (M WitFile)
-check0 = check M.empty
+check0 :: WitFile -> IO (Either CheckError WitFile)
+check0 = runExceptT . check M.empty
 
-check :: Env -> WitFile -> IO (M WitFile)
+check :: Env -> WitFile -> ExceptT CheckError IO WitFile
 check ctx wit_file = do
-  results <- mapM checkUseFileExisted $ use_list wit_file
-  case sequence results of
-    Left e -> return $ Left e
-    Right _ ->
-      case introUseIdentifiers ctx $ use_list wit_file of
-        Left e -> return $ Left e
-        Right env -> do
-          newEnv <- foldM addTypeDef env $ definition_list wit_file
-          case forM (definition_list wit_file) (checkDef newEnv) of
-            Left err -> return $ Left err
-            Right _ -> return $ Right wit_file
+  mapM_ checkUseFileExisted $ use_list wit_file
+  env <- introUseIdentifiers ctx $ use_list wit_file
+  newEnv <- foldM addTypeDef env $ definition_list wit_file
+  forM_ (definition_list wit_file) (checkDef newEnv)
+  return wit_file
 
-introUseIdentifiers :: Env -> [Use] -> M Env
+introUseIdentifiers :: (MonadError CheckError m) => Env -> [Use] -> m Env
 introUseIdentifiers env = \case
   [] -> return env
   (u : us) -> introUseIdentifiers (env `extend` u) us
@@ -87,34 +82,30 @@ introUseIdentifiers env = \case
       (Use imports _) -> foldl (\env'' name -> M.insert name (User name) env'') env' imports
       (UseAll _) -> env'
 
-checkUseFileExisted :: Use -> IO (M ())
+checkUseFileExisted :: (MonadIO m) => (MonadError CheckError m) => Use -> m ()
 checkUseFileExisted (SrcPosUse pos u) = do
-  a <- checkUseFileExisted u
-  return $ addPos pos a
+  addPos pos $ checkUseFileExisted u
 checkUseFileExisted (Use imports mod_name) = checkModFileExisted imports mod_name
 checkUseFileExisted (UseAll mod_name) = checkModFileExisted [] mod_name
 
-checkModFileExisted :: [String] -> String -> IO (M ())
+checkModFileExisted :: (MonadIO m) => (MonadError CheckError m) => [String] -> String -> m ()
 checkModFileExisted requires mod_name = do
   let module_file = mod_name ++ ".wit"
   -- first ensure file exist
-  existed <- doesFileExist module_file
+  existed <- liftIO $ doesFileExist module_file
   if existed
     then do
       -- checking files recursively
-      m <- checkFile module_file
-      results <- forM requires $ ensureRequire (mapMaybe collectTypeName m.definition_list)
-      case sequence results of
-        Left e -> return $ Left e
-        Right _ -> return $ Right ()
-    else return $ report $ "no file " ++ module_file
+      m <- liftIO $ checkFile module_file
+      forM_ requires $ ensureRequire (mapMaybe collectTypeName m.definition_list)
+    else report $ "no file " ++ module_file
   where
     -- ensure required types are defined in the imported module
-    ensureRequire :: [String] -> String -> IO (M ())
+    ensureRequire :: (MonadError CheckError m) => [String] -> String -> m ()
     ensureRequire types req = do
       if req `elem` types
-        then return $ Right ()
-        else return $ report $ "no type " ++ req ++ " in module " ++ mod_name
+        then return ()
+        else report $ "no type " ++ req ++ " in module " ++ mod_name
 
     collectTypeName :: Definition -> Maybe String
     collectTypeName (SrcPos _ d) = collectTypeName d
@@ -125,7 +116,7 @@ checkModFileExisted requires mod_name = do
     collectTypeName (Variant name _) = Just name
     collectTypeName (Func _) = Nothing
 
-addTypeDef :: Env -> Definition -> IO Env
+addTypeDef :: (MonadError CheckError m) => Env -> Definition -> m Env
 addTypeDef env = \case
   SrcPos _ def -> addTypeDef env def
   Func _ -> return env
@@ -141,7 +132,7 @@ addTypeDef env = \case
 --   Ctx |- check `record A { ... }`
 --   -------------------------------
 --          (A, User) : Ctx
-checkDef :: Env -> Definition -> M ()
+checkDef :: (MonadError CheckError m) => Env -> Definition -> m ()
 checkDef env = \case
   SrcPos pos def -> addPos pos $ checkDef env def
   Func f -> checkFn env f
@@ -151,22 +142,30 @@ checkDef env = \case
   TypeAlias _name ty -> checkTy env ty
   Variant _name cases -> forM_ cases (checkTyList env . snd)
   where
-    checkBinders :: Env -> [(String, Type)] -> M ()
+    checkBinders :: (MonadError CheckError m) => Env -> [(String, Type)] -> m ()
     checkBinders env' = mapM_ (checkTy env' . snd)
 
-    checkTyList :: Env -> [Type] -> M ()
+    checkTyList :: (MonadError CheckError m) => Env -> [Type] -> m ()
     checkTyList env' = mapM_ (checkTy env')
 
-    checkFn :: Env -> Function -> M ()
+    checkFn :: (MonadError CheckError m) => Env -> Function -> m ()
     checkFn env' (Function _name binders result_ty) = do
       checkBinders env' binders
       checkTy env' result_ty
 
 -- check if type is valid
-checkTy :: Env -> Type -> M ()
+checkTy :: (MonadError CheckError m) => Env -> Type -> m ()
 checkTy env (SrcPosType pos ty) = addPos pos $ checkTy env ty
 -- here, only user type existed is our target to check
 checkTy env (User name) = case lookupEnv name env of
   Just _ -> return ()
   Nothing -> report $ "Type `" ++ name ++ "` not found"
 checkTy _ _ = return ()
+
+-- WARNING: port from mtl, once newer mtl is applied, we can remove this
+withError :: MonadError e m => (e -> e) -> m a -> m a
+withError f action = tryError action >>= either (throwError . f) pure
+
+-- WARNING: port from mtl, once newer mtl is applied, we can remove this
+tryError :: MonadError e m => m a -> m (Either e a)
+tryError act = (Right <$> act) `catchError` (pure . Left)
