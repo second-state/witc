@@ -9,6 +9,7 @@ module Wit.Check
 where
 
 import Control.Monad
+import Control.Monad.State
 import Control.Monad.Except
 import Data.Map.Lazy qualified as M
 import Data.Maybe
@@ -17,16 +18,20 @@ import Text.Megaparsec
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
 import Prettyprinter
-import Prettyprinter.Render.Terminal
 
 data CheckError
-  = CheckError String (Maybe SourcePos)
-  | PErr ParserError
+  = PErr ParserError
+  | CheckError String (Maybe SourcePos)
+  | Bundle [CheckError]
 
 instance Pretty CheckError where
   pretty (PErr bundle) = pretty (errorBundlePretty bundle)
-  pretty (CheckError msg (Just pos)) = pretty (sourcePosPretty pos) <> colon <+> pretty msg <> line
-  pretty (CheckError msg Nothing) = pretty msg <> line
+  pretty (CheckError msg (Just pos)) = pretty (sourcePosPretty pos) <> colon <+> pretty msg
+  pretty (CheckError msg Nothing) = pretty msg
+  pretty (Bundle es) = (vsep $ map pretty es) <> line
+
+collect :: (MonadState [CheckError] m) => (MonadError CheckError m) => m () -> m ()
+collect ma = ma `catchError` (\e -> modify (\s -> e : s))
 
 report :: (MonadError CheckError m) => String -> m a
 report msg = throwError $ CheckError msg Nothing
@@ -52,23 +57,24 @@ parseFile filepath = do
     Left e -> throwError $ PErr e
     Right ast -> return ast
 
-checkFile :: (MonadIO m) => (MonadError CheckError m) => FilePath -> m WitFile
+checkFile ::
+  (MonadIO m) => (MonadError CheckError m) => (MonadState [CheckError] m) =>
+  FilePath -> m WitFile
 checkFile path = do
   ast <- parseFile path
   check M.empty ast
 
-check :: (MonadIO m) => (MonadError CheckError m) => Env -> WitFile -> m WitFile
+check ::
+  (MonadIO m) => (MonadError CheckError m) => (MonadState [CheckError] m) =>
+  Env -> WitFile -> m WitFile
 check ctx wit_file = do
-  forM_ (use_list wit_file)
-    (\mod_file -> (checkUseFileExisted mod_file) `catchError` (\e -> liftIO $ putDoc $ pretty e))
+  forM_ (use_list wit_file) (collect . checkUseFileExisted)
   env <- introUseIdentifiers ctx $ use_list wit_file
   newEnv <- foldM addTypeDef env $ definition_list wit_file
-  forM_ (definition_list wit_file)
-    $ (\def -> (checkDef newEnv def)
-        `catchError` (\e -> liftIO $ putDoc $ pretty e))
+  forM_ (definition_list wit_file) (collect . checkDef newEnv)
   return wit_file
 
-introUseIdentifiers :: (MonadError CheckError m) => Env -> [Use] -> m Env
+introUseIdentifiers :: (MonadIO m) => (MonadError CheckError m) => Env -> [Use] -> m Env
 introUseIdentifiers env = \case
   [] -> return env
   (u : us) -> introUseIdentifiers (env `extend` u) us
@@ -79,12 +85,16 @@ introUseIdentifiers env = \case
       (Use imports _) -> foldl (\env'' name -> M.insert name (User name) env'') env' imports
       (UseAll _) -> env'
 
-checkUseFileExisted :: (MonadIO m) => (MonadError CheckError m) => Use -> m ()
+checkUseFileExisted ::
+  (MonadIO m) => (MonadError CheckError m) => (MonadState [CheckError] m) =>
+  Use -> m ()
 checkUseFileExisted (SrcPosUse pos u) = addPos pos $ checkUseFileExisted u
 checkUseFileExisted (Use imports mod_name) = checkModFileExisted imports mod_name
 checkUseFileExisted (UseAll mod_name) = checkModFileExisted [] mod_name
 
-checkModFileExisted :: (MonadIO m) => (MonadError CheckError m) => [String] -> String -> m ()
+checkModFileExisted ::
+  (MonadIO m) => (MonadError CheckError m) => (MonadState [CheckError] m) =>
+  [String] -> String -> m ()
 checkModFileExisted requires mod_name = do
   let module_file = mod_name ++ ".wit"
   -- first ensure file exist
@@ -93,9 +103,7 @@ checkModFileExisted requires mod_name = do
     then do
       -- checking files recursively
       m <- checkFile module_file
-      forM_ requires $
-        (\req -> (ensureRequire (mapMaybe collectTypeName m.definition_list) req)
-          `catchError` (\e -> liftIO $ putDoc $ pretty e))
+      forM_ requires $ ensureRequire (mapMaybe collectTypeName m.definition_list)
     else report $ "no file " ++ module_file
   where
     -- ensure required types are defined in the imported module

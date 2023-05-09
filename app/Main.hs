@@ -9,6 +9,7 @@ cli design
 module Main (main) where
 
 import Control.Monad
+import Control.Monad.State
 import Control.Monad.Except
 import Data.List (isSuffixOf)
 import Options.Applicative
@@ -145,9 +146,12 @@ runWithErrorHandler act onErr onSuccess = do
 checkPath :: FilePath -> ExceptT CheckError IO WitFile
 checkPath path = do
   ast <- parseFile' path
-  check' ast
+  (w, errors) <- (runStateT (check' ast) [])
+  case errors of
+    [] -> return w
+    es -> throwError $ Bundle es
 
-check' :: WitFile -> ExceptT CheckError IO WitFile
+check' :: WitFile -> StateT [CheckError] (ExceptT CheckError IO) WitFile
 check' = check Map.empty
 
 parseFile' :: FilePath -> ExceptT CheckError IO WitFile

@@ -1,6 +1,7 @@
 // A key-value store interface.
 use { error, payload } from types
 use { observable } from resources
+use { nothis } from types
 
 resource kv {
 	// open a key-value store
