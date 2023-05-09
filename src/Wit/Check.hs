@@ -2,8 +2,7 @@ module Wit.Check
   ( CheckError (..),
     parseFile,
     checkFile,
-    check0,
-    eitherIO,
+    check,
     Env,
     lookupEnv,
   )
@@ -14,7 +13,6 @@ import Control.Monad.Except
 import Data.Map.Lazy qualified as M
 import Data.Maybe
 import System.Directory
-import System.Exit (exitSuccess)
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
@@ -45,25 +43,19 @@ type Env = M.Map Name Type
 lookupEnv :: Name -> Env -> Maybe Type
 lookupEnv = M.lookup
 
-parseFile :: FilePath -> IO (Either CheckError WitFile)
+parseFile :: (MonadIO m) => (MonadError CheckError m) => FilePath -> m WitFile
 parseFile filepath = do
-  content <- readFile filepath
+  content <- liftIO $ readFile filepath
   case parse pWitFile filepath content of
-    Left e -> return $ Left (PErr e)
-    Right ast -> return $ Right ast
+    Left e -> throwError $ PErr e
+    Right ast -> return ast
 
-checkFile :: FilePath -> IO WitFile
-checkFile = parseFile >=> eitherIO (check0 >=> eitherIO return)
+checkFile :: (MonadIO m) => (MonadError CheckError m) => FilePath -> m WitFile
+checkFile path = do
+  ast <- parseFile path
+  check M.empty ast
 
-eitherIO :: Show e => (a -> IO b) -> Either e a -> IO b
-eitherIO f = \case
-  Left e -> print e *> exitSuccess
-  Right a -> f a
-
-check0 :: WitFile -> IO (Either CheckError WitFile)
-check0 = runExceptT . check M.empty
-
-check :: Env -> WitFile -> ExceptT CheckError IO WitFile
+check :: (MonadIO m) => (MonadError CheckError m) => Env -> WitFile -> m WitFile
 check ctx wit_file = do
   mapM_ checkUseFileExisted $ use_list wit_file
   env <- introUseIdentifiers ctx $ use_list wit_file
@@ -96,7 +88,7 @@ checkModFileExisted requires mod_name = do
   if existed
     then do
       -- checking files recursively
-      m <- liftIO $ checkFile module_file
+      m <- checkFile module_file
       forM_ requires $ ensureRequire (mapMaybe collectTypeName m.definition_list)
     else report $ "no file " ++ module_file
   where

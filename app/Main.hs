@@ -9,13 +9,16 @@ cli design
 module Main (main) where
 
 import Control.Monad
+import Control.Monad.Except
 import Data.Functor
 import Data.List (isSuffixOf)
 import Options.Applicative
 import Prettyprinter
 import Prettyprinter.Render.Terminal
 import System.Directory
+import System.Exit (exitSuccess)
 import Wit
+import Data.Map.Lazy qualified as Map
 
 main :: IO ()
 main = do
@@ -38,7 +41,7 @@ main = do
         ( command
             "check"
             ( info
-                (check <$> optional (strArgument (metavar "FILE" <> help "Name of the thing to create")))
+                (checkCmd <$> optional (strArgument (metavar "FILE" <> help "Name of the thing to create")))
                 (progDesc "Validate wit file")
             )
             <> command
@@ -95,8 +98,8 @@ main = do
               )
         )
 
-check :: Maybe FilePath -> IO ()
-check (Just file) = do
+checkCmd :: Maybe FilePath -> IO ()
+checkCmd (Just file) = do
   dirExists <- doesDirectoryExist file
   if dirExists
     then checkDir file
@@ -105,7 +108,7 @@ check (Just file) = do
       if fileExists
         then checkFileWithDoneHint file
         else putStrLn "no file or directory"
-check Nothing = do
+checkCmd Nothing = do
   dir <- getCurrentDirectory
   checkDir dir
 
@@ -116,11 +119,28 @@ checkDir dir = do
 
 checkFileWithDoneHint :: FilePath -> IO ()
 checkFileWithDoneHint file = do
-  checkFile file $> ()
+  runExit (checkPath file) $> ()
   putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
 
 codegen :: Direction -> Side -> FilePath -> String -> IO ()
-codegen d s file importName =
-  parseFile file
-    >>= eitherIO check0
-    >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName)
+codegen d s file importName = do
+  wit <- runExit $ checkPath file
+  (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
+
+runExit :: ExceptT CheckError IO a -> IO a
+runExit act = do
+  result <- runExceptT act
+  case result of
+    Left e -> print e *> exitSuccess
+    Right a -> pure a
+
+checkPath :: FilePath -> ExceptT CheckError IO WitFile
+checkPath path = do
+  ast <- parseFile' path
+  check' ast
+
+check' :: WitFile -> ExceptT CheckError IO WitFile
+check' = check Map.empty
+
+parseFile' :: FilePath -> ExceptT CheckError IO WitFile
+parseFile' = parseFile
