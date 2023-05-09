@@ -95,20 +95,16 @@ main = do
               )
         )
 
-ifM :: Monad m => m Bool -> m a -> m a -> m a
-ifM act t e = do
-  b <- act
-  if b then t else e
-
 check :: Maybe FilePath -> IO ()
-check (Just file) =
-  ifM
-    (doesDirectoryExist file)
-    (checkDir file)
-    $ ifM
-      (doesFileExist file)
-      (checkFileWithDoneHint file)
-      (putStrLn "no file or directory")
+check (Just file) = do
+  dirExists <- doesDirectoryExist file
+  if dirExists
+    then checkDir file
+    else do
+      fileExists <- doesFileExist file
+      if fileExists
+        then checkFileWithDoneHint file
+        else putStrLn "no file or directory"
 check Nothing = do
   dir <- getCurrentDirectory
   checkDir dir
