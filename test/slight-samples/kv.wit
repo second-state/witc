@@ -1,13 +1,14 @@
 // A key-value store interface.
 use { error, payload } from types
 use { observable } from resources
+use { nothis, nothat } from types
 
 resource kv {
 	// open a key-value store
 	static open: func(name: string) -> expected<kv, error>
 
 	// get the payload for a given key.
-	get: func(key: string) -> expected<payload, error> 
+	get: func(key: string) -> expected<payload, error>
 
 	// set the payload for a given key.
 	set: func(key: string, value: payload) -> expected<unit, error>

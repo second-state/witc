@@ -47,6 +47,7 @@ ghc-options:
   - -Wredundant-constraints
 
 default-extensions:
+  - FlexibleContexts
   - ImportQualifiedPost
   - DuplicateRecordFields
   - OverloadedRecordDot

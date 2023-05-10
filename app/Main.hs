@@ -9,12 +9,15 @@ cli design
 module Main (main) where
 
 import Control.Monad
-import Data.Functor
+import Control.Monad.Except
+import Control.Monad.State
 import Data.List (isSuffixOf)
+import Data.Map.Lazy qualified as Map
 import Options.Applicative
 import Prettyprinter
 import Prettyprinter.Render.Terminal
 import System.Directory
+import System.Exit (exitSuccess)
 import Wit
 
 main :: IO ()
@@ -38,7 +41,7 @@ main = do
         ( command
             "check"
             ( info
-                (check <$> optional (strArgument (metavar "FILE" <> help "Name of the thing to create")))
+                (checkCmd <$> optional (strArgument (metavar "FILE" <> help "Name of the thing to create")))
                 (progDesc "Validate wit file")
             )
             <> command
@@ -95,21 +98,17 @@ main = do
               )
         )
 
-ifM :: Monad m => m Bool -> m a -> m a -> m a
-ifM act t e = do
-  b <- act
-  if b then t else e
-
-check :: Maybe FilePath -> IO ()
-check (Just file) =
-  ifM
-    (doesDirectoryExist file)
-    (checkDir file)
-    $ ifM
-      (doesFileExist file)
-      (checkFileWithDoneHint file)
-      (putStrLn "no file or directory")
-check Nothing = do
+checkCmd :: Maybe FilePath -> IO ()
+checkCmd (Just file) = do
+  dirExists <- doesDirectoryExist file
+  if dirExists
+    then checkDir file
+    else do
+      fileExists <- doesFileExist file
+      if fileExists
+        then checkFileWithDoneHint file
+        else putStrLn "no file or directory"
+checkCmd Nothing = do
   dir <- getCurrentDirectory
   checkDir dir
 
@@ -120,11 +119,38 @@ checkDir dir = do
 
 checkFileWithDoneHint :: FilePath -> IO ()
 checkFileWithDoneHint file = do
-  checkFile file $> ()
-  putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
+  runWithErrorHandler
+    (checkPath file)
+    printCheckError
+    (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
+
+printCheckError :: CheckError -> IO ()
+printCheckError e = do
+  putDoc $ annotate (color Red) $ pretty e
+  return ()
 
 codegen :: Direction -> Side -> FilePath -> String -> IO ()
-codegen d s file importName =
-  parseFile file
-    >>= eitherIO check0
-    >>= eitherIO (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName)
+codegen d s file importName = do
+  wit <- runExit $ checkPath file
+  (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
+
+runExit :: ExceptT CheckError IO a -> IO a
+runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitSuccess) pure
+
+runWithErrorHandler :: ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
+runWithErrorHandler act onErr onSuccess = do
+  result <- runExceptT act
+  case result of
+    Left e -> onErr e
+    Right a -> onSuccess a
+
+checkPath :: FilePath -> ExceptT CheckError IO WitFile
+checkPath path = do
+  ast <- parseFile' path
+  evalStateT (check' ast) []
+
+check' :: WitFile -> StateT [CheckError] (ExceptT CheckError IO) WitFile
+check' = check Map.empty
+
+parseFile' :: FilePath -> ExceptT CheckError IO WitFile
+parseFile' = parseFile

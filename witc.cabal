@@ -41,6 +41,7 @@ library
   hs-source-dirs:
       src
   default-extensions:
+      FlexibleContexts
       ImportQualifiedPost
       DuplicateRecordFields
       OverloadedRecordDot
@@ -69,6 +70,7 @@ executable witc-exe
   hs-source-dirs:
       app
   default-extensions:
+      FlexibleContexts
       ImportQualifiedPost
       DuplicateRecordFields
       OverloadedRecordDot
@@ -101,6 +103,7 @@ test-suite witc-test
   hs-source-dirs:
       test
   default-extensions:
+      FlexibleContexts
       ImportQualifiedPost
       DuplicateRecordFields
       OverloadedRecordDot
