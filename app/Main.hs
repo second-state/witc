@@ -9,16 +9,16 @@ cli design
 module Main (main) where
 
 import Control.Monad
-import Control.Monad.State
 import Control.Monad.Except
+import Control.Monad.State
 import Data.List (isSuffixOf)
+import Data.Map.Lazy qualified as Map
 import Options.Applicative
 import Prettyprinter
 import Prettyprinter.Render.Terminal
 import System.Directory
 import System.Exit (exitSuccess)
 import Wit
-import Data.Map.Lazy qualified as Map
 
 main :: IO ()
 main = do
@@ -119,13 +119,14 @@ checkDir dir = do
 
 checkFileWithDoneHint :: FilePath -> IO ()
 checkFileWithDoneHint file = do
-  runWithErrorHandler (checkPath file)
+  runWithErrorHandler
+    (checkPath file)
     printCheckError
     (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
 
 printCheckError :: CheckError -> IO ()
 printCheckError e = do
-  putDoc $ pretty e
+  putDoc $ annotate (color Red) $ pretty e
   return ()
 
 codegen :: Direction -> Side -> FilePath -> String -> IO ()
@@ -134,9 +135,9 @@ codegen d s file importName = do
   (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
 
 runExit :: ExceptT CheckError IO a -> IO a
-runExit act = runWithErrorHandler act (\e -> (putDoc $ pretty e) *> exitSuccess) pure
+runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitSuccess) pure
 
-runWithErrorHandler ::  ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
+runWithErrorHandler :: ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
 runWithErrorHandler act onErr onSuccess = do
   result <- runExceptT act
   case result of
@@ -146,10 +147,7 @@ runWithErrorHandler act onErr onSuccess = do
 checkPath :: FilePath -> ExceptT CheckError IO WitFile
 checkPath path = do
   ast <- parseFile' path
-  (w, errors) <- (runStateT (check' ast) [])
-  case errors of
-    [] -> return w
-    es -> throwError $ Bundle es
+  evalStateT (check' ast) []
 
 check' :: WitFile -> StateT [CheckError] (ExceptT CheckError IO) WitFile
 check' = check Map.empty
