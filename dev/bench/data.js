@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1683696999017,
+  "lastUpdate": 1683717229600,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -3373,6 +3373,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 243,
             "range": "± 23",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b109acb8eb72e1df8efc186606f7a9057866d4ad",
+          "message": "multi error & error pretty (#87)\n\n1. using transformer to avoid manually effect stacking\r\n2. using Flexible context to fuse effect\r\n3. report multiple errors (previous error shouldn't stop next check)\r\n4. misc: remove Cargo.lock for libraries\r\n\r\n### report several errors\r\n<img width=\"487\" alt=\"image\"\r\nsrc=\"https://user-images.githubusercontent.com/22004511/237012864-575d5caa-f203-44ab-9ae3-c79029b21faf.png\">\r\n\r\nresolve #53",
+          "timestamp": "2023-05-10T19:10:12+08:00",
+          "tree_id": "3a78af6d0643a0d8071eb9e0285bb31a7eed215c",
+          "url": "https://github.com/second-state/witc/commit/b109acb8eb72e1df8efc186606f7a9057866d4ad"
+        },
+        "date": 1683717229040,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 118189,
+            "range": "± 705",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 63941,
+            "range": "± 338",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 57369,
+            "range": "± 401",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 2044,
+            "range": "± 25",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 13391,
+            "range": "± 140",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 203,
+            "range": "± 1",
             "unit": "ns/iter"
           }
         ]
