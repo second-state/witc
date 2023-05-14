@@ -90,10 +90,9 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     let queue_id = input[1].to_i32();
 
     let data_buffer = unsafe { &STATE.read_buffer(queue_id) };
-    // capacity will use underlying vector's capacity
-    // potential problem is it might be bigger than exact (data) needs
-    let data_size = data_buffer.capacity() as u32;
-    // A page is 64KiB = 65,536 bytes, and the capacity of a string base on how many u8 it had,
+    // len will be underlying vector's len
+    let data_size = data_buffer.len() as u32;
+    // A page is 64KiB = 65,536 bytes, and the len of a `string` base on how many u8 its `vec` had,
     // exactly how many bytes it had
     let pages = if data_size < 65536 {
         1
@@ -139,9 +138,6 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     };
 
     mem.write(data_buffer, offset).unwrap();
-
-    let instance_ptr = offset as u32;
-    let mut struct_content = instance_ptr.to_le_bytes().to_vec();
     // This assuming that the struct `ReadBuf` in instance will have linear layout
     //
     // #[repr(C)]
@@ -149,8 +145,20 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     //     pub offset: usize,
     //     pub len: usize,
     // }
-    struct_content.extend((data_buffer.len() as u32).to_le_bytes());
-    mem.write(struct_content, read_buf_struct_ptr).unwrap();
+    mem.write(
+        [
+            (offset & 0xFF) as u8,
+            ((offset >> 8) & 0xFF) as u8,
+            ((offset >> 16) & 0xFF) as u8,
+            ((offset >> 24) & 0xFF) as u8,
+            (data_size & 0xFF) as u8,
+            ((data_size >> 8) & 0xFF) as u8,
+            ((data_size >> 16) & 0xFF) as u8,
+            ((data_size >> 24) & 0xFF) as u8,
+        ],
+        read_buf_struct_ptr,
+    )
+    .unwrap();
 
     Ok(vec![])
 }
