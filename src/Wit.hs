@@ -1,6 +1,5 @@
 module Wit
   ( parseFile,
-    checkFile,
     prettyFile,
     check,
     Env,

@@ -1,20 +1,20 @@
 module Wit.Check
   ( CheckError (..),
     parseFile,
-    checkFile,
     check,
     Env,
-    lookupEnv,
   )
 where
 
 import Control.Monad
 import Control.Monad.Except
+import Control.Monad.Reader
 import Control.Monad.State
 import Data.Map.Lazy qualified as M
 import Data.Maybe
 import Prettyprinter
 import System.Directory
+import System.FilePath
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
@@ -58,9 +58,10 @@ type Env = M.Map Name Type
 lookupEnv :: Name -> Env -> Maybe Type
 lookupEnv = M.lookup
 
-parseFile :: (MonadIO m) => (MonadError CheckError m) => FilePath -> m WitFile
+parseFile :: (MonadIO m) => (MonadError CheckError m) => (MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do
-  content <- liftIO $ readFile filepath
+  workingDir <- ask
+  content <- liftIO $ readFile $ workingDir </> filepath
   case parse pWitFile filepath content of
     Left e -> throwError $ PErr e
     Right ast -> return ast
@@ -69,6 +70,7 @@ checkFile ::
   (MonadIO m) =>
   (MonadError CheckError m) =>
   (MonadState [CheckError] m) =>
+  (MonadReader FilePath m) =>
   FilePath ->
   m WitFile
 checkFile path = do
@@ -79,6 +81,7 @@ check ::
   (MonadIO m) =>
   (MonadError CheckError m) =>
   (MonadState [CheckError] m) =>
+  (MonadReader FilePath m) =>
   Env ->
   WitFile ->
   m WitFile
@@ -106,6 +109,7 @@ checkUseFileExisted ::
   (MonadIO m) =>
   (MonadError CheckError m) =>
   (MonadState [CheckError] m) =>
+  (MonadReader FilePath m) =>
   Use ->
   m ()
 checkUseFileExisted (SrcPosUse pos u) = addPos pos $ checkUseFileExisted u
@@ -116,13 +120,15 @@ checkModFileExisted ::
   (MonadIO m) =>
   (MonadError CheckError m) =>
   (MonadState [CheckError] m) =>
+  (MonadReader FilePath m) =>
   [String] ->
   String ->
   m ()
 checkModFileExisted requires mod_name = do
   let module_file = mod_name ++ ".wit"
   -- first ensure file exist
-  existed <- liftIO $ doesFileExist module_file
+  workingDir <- ask
+  existed <- liftIO $ doesFileExist $ workingDir</>module_file
   if existed
     then do
       -- checking files recursively
