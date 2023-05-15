@@ -1,15 +1,15 @@
 module Wit.CheckSpec (spec) where
 
-import Control.Monad.Reader
 import Control.Monad.Except
+import Control.Monad.Reader
 import Control.Monad.State
 import Data.Map.Lazy qualified as Map
+import System.FilePath
 import Test.Hspec
 import Wit.Ast
 import Wit.Check
-import System.FilePath
 
-check' ::FilePath-> WitFile -> ExceptT CheckError IO WitFile
+check' :: FilePath -> WitFile -> ExceptT CheckError IO WitFile
 check' dirpath wit_file = do
   runReaderT (evalStateT (check Map.empty wit_file) []) dirpath
 
@@ -22,8 +22,8 @@ specFile :: FilePath -> IO ()
 specFile file = do
   r <- runExceptT $ checkFile (takeDirectory file) (takeFileName file)
   case r of
-        Left _ -> return ()
-        Right _ -> expectationFailure "checker should find out undefined type!"
+    Left _ -> return ()
+    Right _ -> expectationFailure "checker should find out undefined type!"
 
 spec :: Spec
 spec = describe "check wit" $ do

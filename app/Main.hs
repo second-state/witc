@@ -9,8 +9,8 @@ cli design
 module Main (main) where
 
 import Control.Monad
-import Control.Monad.Reader
 import Control.Monad.Except
+import Control.Monad.Reader
 import Control.Monad.State
 import Data.List (isSuffixOf)
 import Data.Map.Lazy qualified as Map
@@ -18,8 +18,8 @@ import Options.Applicative
 import Prettyprinter
 import Prettyprinter.Render.Terminal
 import System.Directory
-import System.FilePath
 import System.Exit (exitSuccess)
+import System.FilePath
 import Wit
 
 main :: IO ()
@@ -117,7 +117,7 @@ checkCmd Nothing = do
 checkDir :: FilePath -> IO ()
 checkDir dir = do
   witFileList <- filter (".wit" `isSuffixOf`) <$> listDirectory dir
-  forM_  witFileList $
+  forM_ witFileList $
     \f -> checkFileWithDoneHint dir f
 
 checkFileWithDoneHint :: FilePath -> FilePath -> IO ()
@@ -150,7 +150,4 @@ runWithErrorHandler act onErr onSuccess = do
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO WitFile
 checkFile dirpath filepath = do
   ast <- runReaderT (parseFile filepath) dirpath
-  runReaderT (evalStateT (check' ast) []) dirpath
-
-check' :: WitFile -> StateT [CheckError] (ReaderT FilePath(ExceptT CheckError IO)) WitFile
-check' = check Map.empty
+  runReaderT (evalStateT (check Map.empty ast) []) dirpath

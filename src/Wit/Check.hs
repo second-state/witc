@@ -126,9 +126,13 @@ checkModFileExisted ::
   m ()
 checkModFileExisted requires mod_name = do
   let module_file = mod_name ++ ".wit"
-  -- first ensure file exist
+  -- working directory concept
+  -- 1. for file checking, the locaiton directory of file is the working directory
+  --    e.g. a/b/c/xxx.wit, then working directory is a/b/c
+  -- 2. for directory checking, the directory is the working directory
   workingDir <- ask
-  existed <- liftIO $ doesFileExist $ workingDir</>module_file
+  -- ensure file exist in working directory
+  existed <- liftIO $ doesFileExist $ workingDir </> module_file
   if existed
     then do
       -- checking files recursively
@@ -139,10 +143,9 @@ checkModFileExisted requires mod_name = do
   where
     -- ensure required types are defined in the imported module
     ensureRequire :: (MonadError CheckError m) => [String] -> String -> m ()
-    ensureRequire types req = do
-      if req `elem` types
-        then return ()
-        else report $ "no type `" ++ req ++ "` in module " ++ mod_name
+    ensureRequire types req =
+      unless (req `elem` types) $
+        report ("no type `" ++ req ++ "` in module " ++ mod_name)
 
     collectTypeName :: Definition -> Maybe String
     collectTypeName (SrcPos _ d) = collectTypeName d
