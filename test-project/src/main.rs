@@ -1,6 +1,6 @@
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
-    Vm, WasmEdgeResult,
+    Vm, VmBuilder, WasmEdgeResult,
 };
 invoke_witc::wit_runtime!(export(export1 = "export1.wit"));
 invoke_witc::wit_runtime!(export(export2 = "export2.wit"));
@@ -31,7 +31,9 @@ fn build_vm() -> WasmEdgeResult<Vm> {
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
         .build()?;
 
-    Vm::new(Some(config))?
+    VmBuilder::new()
+        .with_config(config)
+        .build()?
         .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
         .register_import_module(export1::wit_import_object()?)?
         .register_import_module(export2::wit_import_object()?)?
