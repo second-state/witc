@@ -32,7 +32,7 @@ mod tests {
     use test::Bencher;
     use wasmedge_sdk::{
         config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
-        ImportObjectBuilder, Vm,
+        ImportObjectBuilder, Vm, VmBuilder,
     };
 
     fn test_vm() -> Vm {
@@ -41,7 +41,9 @@ mod tests {
             .build()
             .unwrap();
 
-        Vm::new(Some(config))
+        VmBuilder::new()
+            .with_config(config)
+            .build()
             .unwrap()
             .register_import_module(witc_abi::runtime::component_model_wit_object().unwrap())
             .unwrap()
