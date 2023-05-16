@@ -2,7 +2,7 @@ use anyhow::Error;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
     error::HostFuncError,
-    host_function, Caller, ImportObjectBuilder, Vm, WasmValue,
+    host_function, Caller, ImportObjectBuilder, VmBuilder, WasmValue,
 };
 
 fn load_string(caller: &Caller, addr: u32, size: u32) -> String {
@@ -22,7 +22,9 @@ fn main() -> Result<(), Error> {
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
         .build()?;
 
-    let vm = Vm::new(Some(config))?
+    let vm = VmBuilder::new()
+        .with_config(config)
+        .build()?
         .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
         .register_import_module(
             ImportObjectBuilder::new()

@@ -107,7 +107,7 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     let offset = match unsafe { STATE.get_cache(&instance_name) } {
         // 1. cache missing than grow 50
         None => {
-            let current_tail = mem.size();
+            let current_tail = mem.size() as u32;
             let offset = current_tail + 1;
 
             mem.grow(pages).unwrap();

@@ -2,7 +2,7 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
-    Vm,
+    VmBuilder,
 };
 invoke_witc::wit_runtime!(export("./keyvalue.wit"));
 
@@ -61,7 +61,9 @@ fn main() -> Result<(), Error> {
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
         .build()?;
 
-    let vm = Vm::new(Some(config))?
+    let vm = VmBuilder::new()
+        .with_config(config)
+        .build()?
         .register_import_module(witc_abi::runtime::component_model_wit_object()?)?
         .register_import_module(wasmedge::wit_import_object()?)?
         .register_module_from_file(
