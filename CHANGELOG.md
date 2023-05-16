@@ -8,6 +8,13 @@ and this project adheres to the
 
 ## Unreleased
 
+- correct dependencies lookup
+
+  introduce working directory concept
+
+  1. for file checking, the locaiton directory of file is the working directory
+  2. for directory checking, the directory is the working directory
+
 ## 0.2.1
 
 - export multiple component in runtime
@@ -22,13 +29,13 @@ and this project adheres to the
 ## 0.1.0.0
 
 - wasm interface types supporting
-    - `func`
-    - `record`
-    - `variant`
-    - `enum`
-    - `resource`
+  - `func`
+  - `record`
+  - `variant`
+  - `enum`
+  - `resource`
 - backend: code generation
-    - rust
-      - runtime import/export
-      - instance import/export
+  - rust
+    - runtime import/export
+    - instance import/export
 - check command

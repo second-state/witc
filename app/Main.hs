@@ -10,6 +10,7 @@ module Main (main) where
 
 import Control.Monad
 import Control.Monad.Except
+import Control.Monad.Reader
 import Control.Monad.State
 import Data.List (isSuffixOf)
 import Data.Map.Lazy qualified as Map
@@ -18,6 +19,7 @@ import Prettyprinter
 import Prettyprinter.Render.Terminal
 import System.Directory
 import System.Exit (exitSuccess)
+import System.FilePath
 import Wit
 
 main :: IO ()
@@ -51,7 +53,7 @@ main = do
                       ( command
                           "import"
                           ( info
-                              ( codegen Import Instance
+                              ( codegenCmd Import Instance
                                   <$> strArgument (metavar "FILE" <> help "Wit file")
                                   <*> strArgument (value "wasmedge" <> help "Name of import")
                               )
@@ -60,7 +62,7 @@ main = do
                           <> command
                             "export"
                             ( info
-                                ( codegen Export Instance
+                                ( codegenCmd Export Instance
                                     <$> strArgument (metavar "FILE" <> help "Wit file")
                                     <*> strArgument (value "wasmedge" <> help "Name of export")
                                 )
@@ -77,7 +79,7 @@ main = do
                       ( command
                           "import"
                           ( info
-                              ( codegen Import Runtime
+                              ( codegenCmd Import Runtime
                                   <$> strArgument (metavar "FILE" <> help "Wit file")
                                   <*> strArgument (value "wasmedge" <> help "Name of import")
                               )
@@ -86,7 +88,7 @@ main = do
                           <> command
                             "export"
                             ( info
-                                ( codegen Export Runtime
+                                ( codegenCmd Export Runtime
                                     <$> strArgument (metavar "FILE" <> help "Wit file")
                                     <*> strArgument (value "wasmedge" <> help "Name of export")
                                 )
@@ -106,7 +108,7 @@ checkCmd (Just file) = do
     else do
       fileExists <- doesFileExist file
       if fileExists
-        then checkFileWithDoneHint file
+        then checkFileWithDoneHint (takeDirectory file) (takeFileName file)
         else putStrLn "no file or directory"
 checkCmd Nothing = do
   dir <- getCurrentDirectory
@@ -115,12 +117,13 @@ checkCmd Nothing = do
 checkDir :: FilePath -> IO ()
 checkDir dir = do
   witFileList <- filter (".wit" `isSuffixOf`) <$> listDirectory dir
-  mapM_ (\f -> checkFileWithDoneHint (dir ++ "/" ++ f)) witFileList
+  forM_ witFileList $
+    \f -> checkFileWithDoneHint dir f
 
-checkFileWithDoneHint :: FilePath -> IO ()
-checkFileWithDoneHint file = do
+checkFileWithDoneHint :: FilePath -> FilePath -> IO ()
+checkFileWithDoneHint dir file = do
   runWithErrorHandler
-    (checkPath file)
+    (checkFile dir file)
     printCheckError
     (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
 
@@ -129,9 +132,9 @@ printCheckError e = do
   putDoc $ annotate (color Red) $ pretty e
   return ()
 
-codegen :: Direction -> Side -> FilePath -> String -> IO ()
-codegen d s file importName = do
-  wit <- runExit $ checkPath file
+codegenCmd :: Direction -> Side -> FilePath -> String -> IO ()
+codegenCmd d s file importName = do
+  wit <- runExit $ checkFile (takeDirectory file) (takeFileName file)
   (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
 
 runExit :: ExceptT CheckError IO a -> IO a
@@ -144,13 +147,7 @@ runWithErrorHandler act onErr onSuccess = do
     Left e -> onErr e
     Right a -> onSuccess a
 
-checkPath :: FilePath -> ExceptT CheckError IO WitFile
-checkPath path = do
-  ast <- parseFile' path
-  evalStateT (check' ast) []
-
-check' :: WitFile -> StateT [CheckError] (ExceptT CheckError IO) WitFile
-check' = check Map.empty
-
-parseFile' :: FilePath -> ExceptT CheckError IO WitFile
-parseFile' = parseFile
+checkFile :: FilePath -> FilePath -> ExceptT CheckError IO WitFile
+checkFile dirpath filepath = do
+  ast <- runReaderT (parseFile filepath) dirpath
+  runReaderT (evalStateT (check Map.empty ast) []) dirpath
