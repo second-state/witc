@@ -8,14 +8,8 @@ use wasmedge_sdk::{
     WasmValue,
 };
 
-struct GrowCache {
-    offset: u32,
-    pages: u32,
-}
-
 pub struct GlobalState {
     counter: AtomicI32,
-    grow_cache: HashMap<String, GrowCache>,
     queue_pool: HashMap<i32, VecDeque<String>>,
 }
 
@@ -24,7 +18,6 @@ impl GlobalState {
         Self {
             counter: AtomicI32::new(0),
             queue_pool: HashMap::new(),
-            grow_cache: HashMap::new(),
         }
     }
 
@@ -47,15 +40,6 @@ impl GlobalState {
             .unwrap()
             .pop_front()
             .unwrap()
-    }
-
-    fn get_cache(&self, instance_name: &String) -> Option<&GrowCache> {
-        self.grow_cache.get(instance_name)
-    }
-
-    fn update_cache(&mut self, instance_name: String, offset: u32, pages: u32) {
-        self.grow_cache
-            .insert(instance_name, GrowCache { offset, pages });
     }
 }
 
@@ -93,51 +77,9 @@ fn read_buffer(caller: Caller, input: Vec<WasmValue>) -> Result<Vec<WasmValue>, 
     // capacity will use underlying vector's capacity
     // potential problem is it might be bigger than exact (data) needs
     let data_size = data_buffer.capacity() as u32;
-    // A page is 64KiB = 65,536 bytes, and the capacity of a string base on how many u8 it had,
-    // exactly how many bytes it had
-    let pages = if data_size < 65536 {
-        1
-    } else {
-        data_size / 65536 + 1
-    };
-
+    // The idea here is putting data from backward of memory, and hopes it would not overlap with program usage
     let mut mem = caller.memory(0).unwrap();
-
-    let instance_name = caller.instance().unwrap().name().unwrap();
-    let offset = match unsafe { STATE.get_cache(&instance_name) } {
-        // 1. cache missing than grow 50
-        None => {
-            let current_tail = mem.size() as u32;
-            let offset = current_tail + 1;
-
-            mem.grow(pages).unwrap();
-            // 1. memory the `current_tail+1` as `offset`
-            // 2. memory the `pages` we just grow
-            unsafe {
-                STATE.update_cache(instance_name, offset, pages);
-            }
-
-            offset
-        }
-        // 2. cache existed, than reuse `offset` in cache
-        Some(cache) => {
-            let offset = cache.offset;
-            // the size we already have
-            let grew_pages = cache.pages;
-
-            // if `grew_pages` isn't big enough then grow more to reach the needed
-            if grew_pages < pages {
-                mem.grow(pages - grew_pages).unwrap();
-                unsafe {
-                    // and update the cache
-                    STATE.update_cache(instance_name, offset, pages);
-                }
-            }
-
-            offset
-        }
-    };
-
+    let offset = (mem.size() as u32) - data_size;
     mem.write(data_buffer, offset).unwrap();
 
     let instance_ptr = offset as u32;
