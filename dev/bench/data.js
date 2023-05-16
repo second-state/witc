@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1684212164439,
+  "lastUpdate": 1684225520974,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -3779,6 +3779,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 203,
             "range": "± 0",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "z54981220@gmail.com",
+            "name": "hydai",
+            "username": "hydai"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "03a761106cee42fab7db3093ec9bd37f4b26b1ed",
+          "message": "upgrade wasmedge-sdk to 0.8.1 (#93)\n\n* update example\r\n* update integration test\r\n\r\nresolve #92",
+          "timestamp": "2023-05-16T16:20:15+08:00",
+          "tree_id": "324e064a2da2129046654c9ea5199d158f23c1d1",
+          "url": "https://github.com/second-state/witc/commit/03a761106cee42fab7db3093ec9bd37f4b26b1ed"
+        },
+        "date": 1684225519990,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 97576,
+            "range": "± 8704",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 48216,
+            "range": "± 9480",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 44576,
+            "range": "± 6200",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1726,
+            "range": "± 179",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 10840,
+            "range": "± 1360",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 202,
+            "range": "± 23",
             "unit": "ns/iter"
           }
         ]
