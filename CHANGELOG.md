@@ -8,6 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.3.1
+
+- any error should lead process error
+
 ## 0.3
 
 - upgrade to wasmedge 0.12.1 (sdk 0.8.1)
