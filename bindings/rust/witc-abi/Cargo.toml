@@ -1,6 +1,6 @@
 [package]
 name = "witc-abi"
-version = "0.3"
+version = "0.3.0"
 edition = "2021"
 description = "rust supplment for witc"
 license = "Apache-2.0"
