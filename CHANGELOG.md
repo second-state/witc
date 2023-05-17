@@ -8,6 +8,9 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.3
+
+- upgrade to wasmedge 0.12.1 (sdk 0.8.1)
 - correct dependencies lookup
 
   introduce working directory concept
@@ -19,14 +22,14 @@ and this project adheres to the
 
 - export multiple component in runtime
 
-## 0.2.0.0
+## 0.2
 
 - performance improvement: memory queue of call
 - validation: check directory
 - CLI: add `--help` and subcommand
 - validation: check imports existed, e.g. `use {a, b, c} from m` will ensure `m` does have type definition `a`, `b`, and `c`
 
-## 0.1.0.0
+## 0.1
 
 - wasm interface types supporting
   - `func`

@@ -36,7 +36,7 @@ main = do
       )
   where
     versionOption :: Parser (a -> a)
-    versionOption = infoOption "0.2.1" (long "version" <> help "Show version")
+    versionOption = infoOption "0.3" (long "version" <> help "Show version")
     programOptions :: Parser (IO ())
     programOptions =
       subparser
