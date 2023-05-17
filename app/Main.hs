@@ -18,7 +18,7 @@ import Options.Applicative
 import Prettyprinter
 import Prettyprinter.Render.Terminal
 import System.Directory
-import System.Exit (exitSuccess)
+import System.Exit
 import System.FilePath
 import Wit
 
@@ -36,7 +36,7 @@ main = do
       )
   where
     versionOption :: Parser (a -> a)
-    versionOption = infoOption "0.3" (long "version" <> help "Show version")
+    versionOption = infoOption "0.3.1" (long "version" <> help "Show version")
     programOptions :: Parser (IO ())
     programOptions =
       subparser
@@ -138,7 +138,7 @@ codegenCmd d s file importName = do
   (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
 
 runExit :: ExceptT CheckError IO a -> IO a
-runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitSuccess) pure
+runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure) pure
 
 runWithErrorHandler :: ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
 runWithErrorHandler act onErr onSuccess = do
