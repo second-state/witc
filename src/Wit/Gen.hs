@@ -39,7 +39,7 @@ prettyFile config inOutName WitFile {definition_list = (transformDefinitions -> 
   let (ty_defs, defs) = partition isTypeDef def_list
    in vsep
         ( map prettyTypeDef ty_defs
-            ++ ( case (config.side, config.direction) of
+            ++ ( case (config . side, config . direction) of
                    (Instance, Import) ->
                      [ pretty $ "#[link(wasm_import_module = " ++ "\"" ++ inOutName ++ "\")]",
                        pretty "extern \"C\"",

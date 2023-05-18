@@ -40,11 +40,17 @@ main = do
     programOptions =
       subparser
         ( command
-            "check"
+            "plugin"
             ( info
-                (checkCmd <$> optional (strArgument (metavar "FILE" <> help "Name of the thing to create")))
-                (progDesc "Validate wit file")
+                (codegenPluginCmd <$> strArgument (metavar "FILE" <> help "Wit file"))
+                (progDesc "Generate plugin import code for wasm module")
             )
+            <> command
+              "check"
+              ( info
+                  (checkCmd <$> optional (strArgument (metavar "FILE" <> help "Name of the thing to create")))
+                  (progDesc "Validate wit file")
+              )
             <> command
               "instance"
               ( info
@@ -130,6 +136,9 @@ printCheckError :: CheckError -> IO ()
 printCheckError e = do
   putDoc $ annotate (color Red) $ pretty e
   return ()
+
+codegenPluginCmd :: FilePath -> IO ()
+codegenPluginCmd file = error "not implemented"
 
 codegenCmd :: Direction -> Side -> FilePath -> String -> IO ()
 codegenCmd d s file importName = do
