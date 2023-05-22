@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1684729330751,
+  "lastUpdate": 1684739120633,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -4163,6 +4163,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 213,
             "range": "± 27",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5e59565c997723c8cf263087cb6af1953d41c115",
+          "message": "fuse checking state to a big type (#97)\n\nThe biggest changes is the title, the checking algorithm are now working\r\nlike a stateful language, and it's good for our purpose.\r\n\r\nmisc\r\n* improve error reporting\r\n* add more bad data for testing\r\n* remove test/slight-samples",
+          "timestamp": "2023-05-22T15:00:39+08:00",
+          "tree_id": "e9854421af4239c8461a676d550e60aab8ad30f3",
+          "url": "https://github.com/second-state/witc/commit/5e59565c997723c8cf263087cb6af1953d41c115"
+        },
+        "date": 1684739119396,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 78338,
+            "range": "± 9611",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 43711,
+            "range": "± 5279",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 37079,
+            "range": "± 5845",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1516,
+            "range": "± 189",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 9791,
+            "range": "± 1816",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 210,
+            "range": "± 36",
             "unit": "ns/iter"
           }
         ]
