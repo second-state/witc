@@ -1,1 +1,1 @@
-use { abc } from good
+use { abc, def } from good

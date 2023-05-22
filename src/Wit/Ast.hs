@@ -19,7 +19,7 @@ data WitFile = WitFile
 data Use
   = SrcPosUse SourcePos Use
   | -- use { a, b, c } from mod
-    Use [String] String
+    Use [(SourcePos, String)] String
   | -- use * from mod
     UseAll String
   deriving (Show, Eq)

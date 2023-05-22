@@ -2,7 +2,7 @@ module Wit
   ( parseFile,
     prettyFile,
     check,
-    Env,
+    emptyCheckState,
     Config (..),
     SupportedLanguage (..),
     Direction (..),

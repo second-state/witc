@@ -3,7 +3,6 @@ module Wit.CheckSpec (spec) where
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.Map.Lazy qualified as Map
 import System.FilePath
 import Test.Hspec
 import Wit.Ast
@@ -11,7 +10,7 @@ import Wit.Check
 
 check' :: FilePath -> WitFile -> ExceptT CheckError IO WitFile
 check' dirpath wit_file = do
-  runReaderT (evalStateT (check Map.empty wit_file) []) dirpath
+  runReaderT (evalStateT (check wit_file) emptyCheckState) dirpath
 
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO WitFile
 checkFile dirpath filepath = do
