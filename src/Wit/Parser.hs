@@ -48,9 +48,14 @@ pUse = do
       keyword "from"
       UseAll <$> identifier
     Nothing -> do
-      id_list <- braces $ sepEndBy identifier (symbol ",")
+      id_list <- braces $ sepEndBy sourceId (symbol ",")
       keyword "from"
       Use id_list <$> identifier
+  where
+    sourceId = do
+      pos <- getSourcePos
+      name <- identifier
+      return (pos, name)
 
 pDefinition :: Parser Definition
 pDefinition =

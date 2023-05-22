@@ -13,7 +13,6 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.List (isSuffixOf)
-import Data.Map.Lazy qualified as Map
 import Options.Applicative
 import Prettyprinter
 import Prettyprinter.Render.Terminal
@@ -150,4 +149,4 @@ runWithErrorHandler act onErr onSuccess = do
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO WitFile
 checkFile dirpath filepath = do
   ast <- runReaderT (parseFile filepath) dirpath
-  runReaderT (evalStateT (check Map.empty ast) []) dirpath
+  runReaderT (evalStateT (check ast) emptyCheckState) dirpath

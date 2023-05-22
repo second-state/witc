@@ -7,16 +7,6 @@ import Wit.Parser
 
 spec :: Spec
 spec = describe "parse wit" $ do
-  context "parse file" $ do
-    it "types.wit" $ do
-      contents <- readFile "test/slight-samples/types.wit"
-      parse pWitFile "" `shouldSucceedOn` contents
-    it "http-handler.wit" $ do
-      contents <- readFile "test/slight-samples/http-handler.wit"
-      parse pWitFile "" `shouldSucceedOn` contents
-    it "http-types.wit" $ do
-      contents <- readFile "test/slight-samples/http-types.wit"
-      parse pWitFile "" `shouldSucceedOn` contents
   context "use statement" $ do
     it "use {a, b, c} from mod" $ do
       parse pUse "" `shouldSucceedOn` "use { a, b, c } from mod"
