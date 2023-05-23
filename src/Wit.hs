@@ -1,6 +1,7 @@
 module Wit
   ( parseFile,
     prettyFile,
+    genPluginRust,
     check,
     emptyCheckState,
     Config (..),

@@ -33,6 +33,7 @@ library
       Wit.Gen.Export
       Wit.Gen.Import
       Wit.Gen.Normalization
+      Wit.Gen.Plugin
       Wit.Gen.Type
       Wit.Parser
       Wit.Transform
