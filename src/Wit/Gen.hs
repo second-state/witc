@@ -2,6 +2,7 @@
 
 module Wit.Gen
   ( prettyFile,
+    genPluginRust,
     Config (..),
     SupportedLanguage (..),
     Direction (..),
@@ -14,6 +15,7 @@ import Prettyprinter
 import Wit.Ast
 import Wit.Gen.Export
 import Wit.Gen.Import
+import Wit.Gen.Plugin
 import Wit.Gen.Type
 import Wit.Transform
 

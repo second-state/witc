@@ -138,7 +138,10 @@ printCheckError e = do
   return ()
 
 codegenPluginCmd :: FilePath -> IO ()
-codegenPluginCmd file = error "not implemented"
+codegenPluginCmd file = do
+  let pluginName = takeBaseName file
+  wit <- runExit $ checkFile (takeDirectory file) (takeFileName file)
+  putDoc $ genPluginRust pluginName wit
 
 codegenCmd :: Direction -> Side -> FilePath -> String -> IO ()
 codegenCmd d s file importName = do
