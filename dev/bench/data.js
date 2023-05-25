@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1685004321744,
+  "lastUpdate": 1685004772053,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -4419,6 +4419,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 175,
             "range": "± 19",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dannypsnl@secondstate.io",
+            "name": "Lîm Tsú-thuàn",
+            "username": "dannypsnl"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "92d3954260ded4095889b0536960346b1fc44f49",
+          "message": "document the plugin changes (#99)\n\n* update change log\r\n* introduce plugin header generating in README\r\n* eliminated unwanted `-exe` suffix\r\n\r\nSigned-off-by: Lîm Tsú-thuàn <dannypsnl@secondstate.io>",
+          "timestamp": "2023-05-25T16:47:56+08:00",
+          "tree_id": "64d19af13bc3427adaf36cce38e9834cdd840bd2",
+          "url": "https://github.com/second-state/witc/commit/92d3954260ded4095889b0536960346b1fc44f49"
+        },
+        "date": 1685004771440,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 77440,
+            "range": "± 893",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 42247,
+            "range": "± 350",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 37113,
+            "range": "± 409",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1351,
+            "range": "± 10",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 9084,
+            "range": "± 336",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 187,
+            "range": "± 1",
             "unit": "ns/iter"
           }
         ]
