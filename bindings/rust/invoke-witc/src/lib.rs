@@ -19,13 +19,10 @@ fn name_value_meta(meta: &Meta) -> (String, String) {
 }
 
 fn check_version() {
-    let ver_output = Command::new("witc-exe")
-        .args(["--version"])
-        .output()
-        .unwrap();
+    let ver_output = Command::new("witc").args(["--version"]).output().unwrap();
     let ver = String::from_utf8(ver_output.stdout).unwrap();
     if ver != "0.3.1\n" {
-        panic!("witc-exe version mismatch: expected 0.3.1, got {}", ver);
+        panic!("witc version mismatch: expected 0.3.1, got {}", ver);
     }
 }
 
@@ -37,14 +34,14 @@ pub fn wit_instance(input: TokenStream) -> TokenStream {
     let r: Output = match &nested[0] {
         NestedMeta::Lit(lit) => {
             let wit_file = lit_as_str(lit);
-            Command::new("witc-exe")
+            Command::new("witc")
                 .args(["instance", &mode, &wit_file])
                 .output()
                 .unwrap()
         }
         NestedMeta::Meta(meta) => {
             let (in_out_name, wit_file) = name_value_meta(meta);
-            Command::new("witc-exe")
+            Command::new("witc")
                 .args(["instance", &mode, &wit_file, &in_out_name])
                 .output()
                 .unwrap()
@@ -61,14 +58,14 @@ pub fn wit_runtime(input: TokenStream) -> TokenStream {
     let r: Output = match &nested[0] {
         NestedMeta::Lit(lit) => {
             let wit_file = lit_as_str(lit);
-            Command::new("witc-exe")
+            Command::new("witc")
                 .args(["runtime", &mode, &wit_file])
                 .output()
                 .unwrap()
         }
         NestedMeta::Meta(meta) => {
             let (in_out_name, wit_file) = name_value_meta(meta);
-            Command::new("witc-exe")
+            Command::new("witc")
                 .args(["runtime", &mode, &wit_file, &in_out_name])
                 .output()
                 .unwrap()

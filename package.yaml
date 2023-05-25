@@ -59,7 +59,7 @@ library:
   source-dirs: src
 
 executables:
-  witc-exe:
+  witc:
     main: Main.hs
     source-dirs: app
     ghc-options:

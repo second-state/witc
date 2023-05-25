@@ -52,6 +52,24 @@ cargo run --release
 - [demo: logging](./example/logging-demo/): instance invokes instance
 - [demo: traffic lights](./example/traffic-lights/): runtime invokes instance
 
+#### Generate Plugin header
+
+This is new experiment we are doing, this ability will relief wasmedge plugin users from manually management for the standard API, there will have `*.wit` definitions for these plugins. All you need to is using witc to manage it, here is an example:
+
+```shell
+$ witc plugin ./example/wasmedge_opencvmini.wit
+
+#[link(wasm_import_module = "wasmedge_opencvmini")]
+extern "C" {
+    #[link_name = "wasmedge_opencvmini_imdecode"]
+    pub fn imdecode(buf_ptr: *const u8, buf_len: usize) -> u32;
+    #[link_name = "wasmedge_opencvmini_imshow"]
+    pub fn imshow(window_name_ptr: *const u8, window_name_len: usize, mat_key: u32) -> ();
+    #[link_name = "wasmedge_opencvmini_waitkey"]
+    pub fn waitkey(delay: u32) -> ();
+}
+```
+
 #### CLI
 
 You can also use following commands to let compiler output to stdout
