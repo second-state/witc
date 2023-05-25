@@ -65,7 +65,7 @@ library
     , transformers >=0.5
   default-language: Haskell2010
 
-executable witc-exe
+executable witc
   main-is: Main.hs
   other-modules:
       Paths_witc

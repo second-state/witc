@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- codegen rust FFI for plugin
+
 ## 0.3.1
 
 - any error should lead process error
