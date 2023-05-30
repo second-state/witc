@@ -25,6 +25,6 @@ expandResource (Resource name funcs : rest) =
     -- `get: func(key: string) -> expected<list<u8>, keyvalue-error> `
     -- ~> out of resource
     -- `get: func(handle: keyvalue, key: string) -> expected<list<u8>, keyvalue-error> `
-    convF (Member, Function (rename -> n) ps rt) = Func $ Function n (("handle", User name) : ps) rt
+    convF (Member, Function (rename -> n) ps rt) = Func $ Function n (("handle", Defined name) : ps) rt
 expandResource (def : rest) = def : expandResource rest
 expandResource [] = []

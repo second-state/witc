@@ -35,7 +35,7 @@ instance Pretty CheckError where
 
 data CheckState = CheckState
   { errors :: [CheckError],
-    context :: M.Map Name Type
+    environment :: M.Map Name Type
   }
 
 emptyCheckState :: CheckState
@@ -66,15 +66,15 @@ addPos pos = withError updatePos
 
 type Name = String
 
-lookupContext :: (MonadState CheckState m) => Name -> m (Maybe Type)
-lookupContext name = do
-  ctx <- gets context
+lookupEnvironment :: (MonadState CheckState m) => Name -> m (Maybe Type)
+lookupEnvironment name = do
+  ctx <- gets environment
   return $ M.lookup name ctx
 
-updateContext :: (MonadState CheckState m) => Name -> Type -> m ()
-updateContext name ty = do
+updateEnvironment :: (MonadState CheckState m) => Name -> Type -> m ()
+updateEnvironment name ty = do
   s <- get
-  put $ s {context = M.insert name ty $ context s}
+  put $ s {environment = M.insert name ty $ environment s}
 
 parseFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do
@@ -123,7 +123,7 @@ introUseIdentifiers us = do
     extend (SrcPosUse _pos u) = extend u
     extend (Use imports _) = do
       forM_ imports $ \(_, name) -> do
-        updateContext name (User name)
+        updateEnvironment name (Defined name)
     extend (UseAll _) = return ()
 
 checkUseFileExisted ::
@@ -164,19 +164,19 @@ checkModFileExisted requires mod_name = do
 
 addTypeDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
 addTypeDef (SrcPos _ def) = addTypeDef def
-addTypeDef (Resource name _) = updateContext name (User name)
-addTypeDef (Enum name _) = updateContext name PrimU32
-addTypeDef (Record name fields) = updateContext name (TupleTy $ map snd fields)
-addTypeDef (TypeAlias name ty) = updateContext name ty
+addTypeDef (Resource name _) = updateEnvironment name (Defined name)
+addTypeDef (Enum name _) = updateEnvironment name PrimU32
+addTypeDef (Record name fields) = updateEnvironment name (TupleTy $ map snd fields)
+addTypeDef (TypeAlias name ty) = updateEnvironment name ty
 -- as a sum of product, it's ok to be defined recursively
-addTypeDef (Variant name cases) = updateContext name (VSum name $ map (TupleTy . snd) cases)
+addTypeDef (Variant name cases) = updateEnvironment name (VSum name $ map (TupleTy . snd) cases)
 addTypeDef (Func _) = return ()
 
 -- insert type definition into Env
 -- e.g.
---   Ctx |- check `record A { ... }`
---   -------------------------------
---          (A, User) : Ctx
+--            A : Type
+--   --------------------------
+--          Env, A = Defined
 checkDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
 checkDef (SrcPos pos def) = addPos pos $ checkDef def
 checkDef (Func f) = checkFn f
@@ -201,8 +201,8 @@ checkFn (Function _name binders result_ty) = do
 checkTy :: (MonadError CheckError m, MonadState CheckState m) => Type -> m ()
 checkTy (SrcPosType pos ty) = addPos pos $ checkTy ty
 -- here, only user type existed is our target to check
-checkTy (User name) = do
-  r <- lookupContext name
+checkTy (Defined name) = do
+  r <- lookupEnvironment name
   case r of
     Just _ -> return ()
     Nothing -> report $ "Type `" ++ name ++ "` not found"

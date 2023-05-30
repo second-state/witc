@@ -35,7 +35,7 @@ prettyTypeDef (Variant (normalizeIdentifier -> name) cases) =
     prettyCase (normalizeIdentifier -> n, tys) = pretty n <+> parens (hsep (punctuate comma (map boxType tys)))
     boxType :: Type -> Doc a
     boxType (SrcPosType _ t) = boxType t
-    boxType (User n) | n == name = pretty $ "Box<" ++ n ++ ">"
+    boxType (Defined n) | n == name = pretty $ "Box<" ++ n ++ ">"
     boxType t = prettyType t
 prettyTypeDef (Enum (normalizeIdentifier -> name) cases) =
   (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
@@ -68,5 +68,5 @@ prettyType (ListTy ty) = hsep [pretty "Vec<", prettyType ty, pretty ">"]
 prettyType (ExpectedTy ty ety) =
   hsep [pretty "Result<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
 prettyType (TupleTy ty_list) = parens (hsep $ punctuate comma (map prettyType ty_list))
-prettyType (User (normalizeIdentifier -> name)) = pretty name
+prettyType (Defined (normalizeIdentifier -> name)) = pretty name
 prettyType _ = error "impossible"

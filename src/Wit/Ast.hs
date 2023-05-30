@@ -61,7 +61,7 @@ data Type
   | ListTy Type
   | ExpectedTy Type Type
   | TupleTy [Type]
-  | User String -- user defined types
+  | Defined String -- user defined types
   -- in execution only
   | VSum String [Type]
   deriving (Show)
@@ -85,5 +85,5 @@ instance Eq Type where
   ListTy a == ListTy b = a == b
   ExpectedTy a1 b1 == ExpectedTy a2 b2 = a1 == a2 && b1 == b2
   TupleTy as == TupleTy bs = as == bs
-  User a == User b = a == b
+  Defined a == Defined b = a == b
   _ == _ = False
