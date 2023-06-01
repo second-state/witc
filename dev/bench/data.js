@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1685427528766,
+  "lastUpdate": 1685632669621,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -4609,6 +4609,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 198,
             "range": "± 33",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c12893f9d7f152021c7b66645697956ff99463bc",
+          "message": "merge plugin as a codegen mode into config (#101)",
+          "timestamp": "2023-06-01T23:14:12+08:00",
+          "tree_id": "9e622b4d91a1e6574b9f14cc7f35025920c8c487",
+          "url": "https://github.com/second-state/witc/commit/c12893f9d7f152021c7b66645697956ff99463bc"
+        },
+        "date": 1685632669087,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 70157,
+            "range": "± 860",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 38373,
+            "range": "± 239",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 34173,
+            "range": "± 342",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1448,
+            "range": "± 12",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 9137,
+            "range": "± 99",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 203,
+            "range": "± 0",
             "unit": "ns/iter"
           }
         ]
