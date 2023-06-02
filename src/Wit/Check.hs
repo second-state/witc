@@ -218,8 +218,10 @@ checkDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> 
 checkDef (SrcPos pos def) = addPos pos $ checkDef def
 checkDef (Func f) = checkFn f
 checkDef (Resource _name func_list) = forM_ func_list (checkFn . snd)
--- when we adding type definition, we already evaluate the type, and hence they must be valid definition
-checkDef _ = return ()
+checkDef (Enum _name _) = return ()
+checkDef (Record _name fields) = checkBinders fields
+checkDef (TypeAlias _name ty) = checkTy ty
+checkDef (Variant _name cases) = forM_ cases (mapM_ checkTy . snd)
 
 checkBinders :: (MonadError CheckError m, MonadState CheckState m) => [(String, Type)] -> m ()
 checkBinders = mapM_ (checkTy . snd)
