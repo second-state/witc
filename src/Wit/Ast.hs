@@ -28,8 +28,10 @@ data Definition
   = SrcPos SourcePos Definition
   | Resource String [(Attr, Function)]
   | Func Function
-  | Record String [(String, Type)] -- record event { specversion: string, ty: string }
-  | TypeAlias String Type -- type payload = list<u8>
+  | -- record event { specversion: string, ty: string }
+    Record String [(String, Type)]
+  | -- type payload = list<u8>
+    TypeAlias String Type
   | Variant String [(String, [Type])]
   | Enum String [String]
   deriving (Show, Eq)
@@ -61,9 +63,9 @@ data Type
   | ListTy Type
   | ExpectedTy Type Type
   | TupleTy [Type]
-  | User String -- user defined types
-  -- in execution only
-  | VSum String [Type]
+  | -- If we parsed something unknown, it probably is a user defined type
+    -- and hence, we will use checker to reject undefined type errors
+    Defined String
   deriving (Show)
 
 instance Eq Type where
@@ -85,5 +87,5 @@ instance Eq Type where
   ListTy a == ListTy b = a == b
   ExpectedTy a1 b1 == ExpectedTy a2 b2 = a1 == a2 && b1 == b2
   TupleTy as == TupleTy bs = as == bs
-  User a == User b = a == b
+  Defined a == Defined b = a == b
   _ == _ = False

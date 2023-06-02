@@ -165,7 +165,7 @@ pType =
         "char" -> return PrimChar
         "f32" -> return PrimF32
         "f64" -> return PrimF64
-        name' -> return $ User name'
+        name' -> return $ Defined name'
 
 ------------
 -- helper --

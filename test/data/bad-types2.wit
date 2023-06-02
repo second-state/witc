@@ -1,0 +1,4 @@
+variant nat {
+  zero,
+  suc(nat2)
+}

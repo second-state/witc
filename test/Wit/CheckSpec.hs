@@ -29,6 +29,10 @@ spec = describe "check wit" $ do
   context "check definition" $ do
     it "should report undefined type" $ do
       specFile "test/data/bad-types.wit"
+    it "should report undefined type" $ do
+      specFile "test/data/bad-types2.wit"
+    it "should report undefined type" $ do
+      specFile "test/data/func-using-missing-type.wit"
   context "check dependencies" $ do
     it "should report no such file" $ do
       specFile "test/data/bad-import.wit"
