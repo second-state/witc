@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1685693473044,
+  "lastUpdate": 1685696702263,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -5171,6 +5171,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 210,
             "range": "± 5",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dm4@secondstate.io",
+            "name": "dm4",
+            "username": "dm4"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f1e113b26ecdbb9114a26db6ee45c9edef96c471",
+          "message": "rename context to environment (#102)\n\nThe concept is like this: If I have a type definition like\r\n\r\n```\r\nrecord A { ... }\r\n```\r\n\r\nI should have the following rules\r\n\r\n1. context bind `A : Type`\r\n2. check type value `record { ... }` is a type\r\n3. environment bind `A = record { ... }`\r\n\r\nThe problem is, we have only type definition, and no term definition,\r\nand after check we didn't reuse the result. For example,\r\n\r\n```\r\nfoo: func(x_i: A_i) -> B\r\n```\r\n\r\nwe only check each `A_i` and `B` existed in environment, and no nothing\r\nmore. To fix them all, and ensure later advanced plugin generator can\r\nwork, we will have to introduce concept about **type value**. An\r\nevaluation function that reduce reference of type to a **type value**,\r\nand allow neutral value or not is another problem need to consider,\r\nshould we assume each type can be expanded properly?",
+          "timestamp": "2023-06-02T17:01:27+08:00",
+          "tree_id": "9686e7c25b4b8eed74b52598f83c5017458ab7ff",
+          "url": "https://github.com/second-state/witc/commit/f1e113b26ecdbb9114a26db6ee45c9edef96c471"
+        },
+        "date": 1685696701476,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 79206,
+            "range": "± 630",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 42999,
+            "range": "± 383",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 38384,
+            "range": "± 338",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1367,
+            "range": "± 169",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 8952,
+            "range": "± 230",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 198,
+            "range": "± 0",
             "unit": "ns/iter"
           }
         ]
