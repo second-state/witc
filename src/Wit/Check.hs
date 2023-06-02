@@ -18,6 +18,7 @@ import System.FilePath
 import Text.Megaparsec
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
+import Wit.TypeValue
 
 data CheckError
   = PErr ParserError
@@ -35,7 +36,7 @@ instance Pretty CheckError where
 
 data CheckState = CheckState
   { errors :: [CheckError],
-    environment :: M.Map Name Type
+    environment :: M.Map Name TypeVal
   }
 
 emptyCheckState :: CheckState
@@ -66,15 +67,38 @@ addPos pos = withError updatePos
 
 type Name = String
 
-lookupEnvironment :: (MonadState CheckState m) => Name -> m (Maybe Type)
+lookupEnvironment :: (MonadState CheckState m, MonadError CheckError m) => Name -> m TypeVal
 lookupEnvironment name = do
   ctx <- gets environment
-  return $ M.lookup name ctx
+  case M.lookup name ctx of
+    Just ty -> return ty
+    Nothing -> report $ "Type `" <> name <> "` not found"
 
-updateEnvironment :: (MonadState CheckState m) => Name -> Type -> m ()
+updateEnvironment :: (MonadState CheckState m) => Name -> TypeVal -> m ()
 updateEnvironment name ty = do
   s <- get
   put $ s {environment = M.insert name ty $ environment s}
+
+evaluateType :: (MonadState CheckState m, MonadError CheckError m) => Type -> m TypeVal
+evaluateType (SrcPosType pos ty) = addPos pos $ evaluateType ty
+evaluateType PrimString = return TyString
+evaluateType PrimUnit = return TyUnit
+evaluateType PrimU8 = return TyU8
+evaluateType PrimU16 = return TyU16
+evaluateType PrimU32 = return TyU32
+evaluateType PrimU64 = return TyU64
+evaluateType PrimI8 = return TyI8
+evaluateType PrimI16 = return TyI16
+evaluateType PrimI32 = return TyI32
+evaluateType PrimI64 = return TyI64
+evaluateType PrimChar = return TyChar
+evaluateType PrimF32 = return TyF32
+evaluateType PrimF64 = return TyF64
+evaluateType (Optional ty) = TyOptional <$> evaluateType ty
+evaluateType (ListTy ty) = TyList <$> evaluateType ty
+evaluateType (ExpectedTy ty1 ty2) = TyExpected <$> evaluateType ty1 <*> evaluateType ty2
+evaluateType (TupleTy tys) = TyTuple <$> mapM evaluateType tys
+evaluateType (Defined name) = lookupEnvironment name
 
 parseFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do
@@ -123,7 +147,7 @@ introUseIdentifiers us = do
     extend (SrcPosUse _pos u) = extend u
     extend (Use imports _) = do
       forM_ imports $ \(_, name) -> do
-        updateEnvironment name (Defined name)
+        updateEnvironment name (TyRef name)
     extend (UseAll _) = return ()
 
 checkUseFileExisted ::
@@ -162,14 +186,26 @@ checkModFileExisted requires mod_name = do
     collectTypeName (Variant name _) = Just name
     collectTypeName (Func _) = Nothing
 
+toTuple :: (MonadError CheckError m, MonadState CheckState m) => [Type] -> m TypeVal
+toTuple ts = do
+  vs <- forM ts evaluateType
+  return $ TyTuple vs
+
 addTypeDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
 addTypeDef (SrcPos _ def) = addTypeDef def
-addTypeDef (Resource name _) = updateEnvironment name (Defined name)
-addTypeDef (Enum name _) = updateEnvironment name PrimU32
-addTypeDef (Record name fields) = updateEnvironment name (TupleTy $ map snd fields)
-addTypeDef (TypeAlias name ty) = updateEnvironment name ty
+addTypeDef (Resource name _) = updateEnvironment name (TyRef name)
+addTypeDef (Enum name _) = updateEnvironment name TyU32
+addTypeDef (Record name fields) = do
+  t <- toTuple (map snd fields)
+  updateEnvironment name t
+addTypeDef (TypeAlias name ty) = do
+  tyv <- evaluateType ty
+  updateEnvironment name tyv
 -- as a sum of product, it's ok to be defined recursively
-addTypeDef (Variant name cases) = updateEnvironment name (VSum name $ map (TupleTy . snd) cases)
+addTypeDef (Variant name cases) = do
+  cs <- forM cases $ do
+    toTuple . snd
+  updateEnvironment name (TySum name cs)
 addTypeDef (Func _) = return ()
 
 -- insert type definition into Env
@@ -181,31 +217,24 @@ checkDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> 
 checkDef (SrcPos pos def) = addPos pos $ checkDef def
 checkDef (Func f) = checkFn f
 checkDef (Resource _name func_list) = forM_ func_list (checkFn . snd)
-checkDef (Enum _name _) = return ()
-checkDef (Record _name fields) = checkBinders fields
-checkDef (TypeAlias _name ty) = checkTy ty
-checkDef (Variant _name cases) = forM_ cases (checkTyList . snd)
+-- when we adding type definition, we already evaluate the type, and hence they must be valid definition
+checkDef _ = return ()
 
 checkBinders :: (MonadError CheckError m, MonadState CheckState m) => [(String, Type)] -> m ()
 checkBinders = mapM_ (checkTy . snd)
-
-checkTyList :: (MonadError CheckError m, MonadState CheckState m) => [Type] -> m ()
-checkTyList = mapM_ checkTy
 
 checkFn :: (MonadError CheckError m, MonadState CheckState m) => Function -> m ()
 checkFn (Function _name binders result_ty) = do
   checkBinders binders
   checkTy result_ty
 
--- check if type is valid
+-- check in-use type existed
 checkTy :: (MonadError CheckError m, MonadState CheckState m) => Type -> m ()
 checkTy (SrcPosType pos ty) = addPos pos $ checkTy ty
 -- here, only user type existed is our target to check
 checkTy (Defined name) = do
-  r <- lookupEnvironment name
-  case r of
-    Just _ -> return ()
-    Nothing -> report $ "Type `" ++ name ++ "` not found"
+  _ <- lookupEnvironment name
+  return ()
 checkTy _ = return ()
 
 -- WARNING: port from mtl, once newer mtl is applied, we can remove this

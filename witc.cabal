@@ -37,6 +37,7 @@ library
       Wit.Gen.Type
       Wit.Parser
       Wit.Transform
+      Wit.TypeValue
   other-modules:
       Paths_witc
   hs-source-dirs:

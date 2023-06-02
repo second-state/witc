@@ -28,8 +28,10 @@ data Definition
   = SrcPos SourcePos Definition
   | Resource String [(Attr, Function)]
   | Func Function
-  | Record String [(String, Type)] -- record event { specversion: string, ty: string }
-  | TypeAlias String Type -- type payload = list<u8>
+  | -- record event { specversion: string, ty: string }
+    Record String [(String, Type)]
+  | -- type payload = list<u8>
+    TypeAlias String Type
   | Variant String [(String, [Type])]
   | Enum String [String]
   deriving (Show, Eq)
@@ -62,8 +64,6 @@ data Type
   | ExpectedTy Type Type
   | TupleTy [Type]
   | Defined String -- user defined types
-  -- in execution only
-  | VSum String [Type]
   deriving (Show)
 
 instance Eq Type where
