@@ -225,8 +225,9 @@ checkBinders = mapM_ (checkTy . snd)
 
 checkFn :: (MonadError CheckError m, MonadState CheckState m) => Function -> m ()
 checkFn (Function _name binders result_ty) = do
-  checkBinders binders
-  checkTy result_ty
+  collect $ checkBinders binders
+  collect $ checkTy result_ty
+  bundle
 
 -- check in-use type existed
 checkTy :: (MonadError CheckError m, MonadState CheckState m) => Type -> m ()
