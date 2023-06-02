@@ -98,7 +98,7 @@ evaluateType (Optional ty) = TyOptional <$> evaluateType ty
 evaluateType (ListTy ty) = TyList <$> evaluateType ty
 evaluateType (ExpectedTy ty1 ty2) = TyExpected <$> evaluateType ty1 <*> evaluateType ty2
 evaluateType (TupleTy tys) = TyTuple <$> mapM evaluateType tys
-evaluateType (Defined name) = lookupEnvironment name
+evaluateType (Defined name) = return $ TyRef name
 
 parseFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do
