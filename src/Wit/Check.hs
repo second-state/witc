@@ -98,7 +98,7 @@ evaluateType (Optional ty) = TyOptional <$> evaluateType ty
 evaluateType (ListTy ty) = TyList <$> evaluateType ty
 evaluateType (ExpectedTy ty1 ty2) = TyExpected <$> evaluateType ty1 <*> evaluateType ty2
 evaluateType (TupleTy tys) = TyTuple <$> mapM evaluateType tys
-evaluateType (Defined name) = return $ TyRef name
+evaluateType (Defined name) = lookupEnvironment name
 
 parseFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do
@@ -195,33 +195,36 @@ defineType :: (MonadError CheckError m, MonadState CheckState m) => Definition -
 defineType (SrcPos _ def) = defineType def
 defineType (Enum name _) = updateEnvironment name TyU32
 defineType (Record name fields) = do
+  updateEnvironment name (TyRef name)
   t <- toTuple (map snd fields)
   updateEnvironment name t
-defineType (TypeAlias name ty) = do
-  tyv <- evaluateType ty
-  updateEnvironment name tyv
+
 -- as a sum of product, it's ok to be defined recursively
 defineType (Variant name cases) = do
+  updateEnvironment name (TyRef name)
   cs <- forM cases $ do
     toTuple . snd
   updateEnvironment name (TySum name cs)
+-- Notice that, type alias though can have recursive definition, but it should be invalid
+-- Since we will have no idea how to deal with `type A = A`
+--
+-- Due to linear check, we also avoid circular definition like `type A = B; type B = A`
+-- The first definition will failed
+--
+-- Of course, we can have more complicated definition `type A = C A` might be valid in some languages
+-- but that is also a thing we would like to avoid
+defineType (TypeAlias name ty) = do
+  tyv <- evaluateType ty
+  updateEnvironment name tyv
 -- resource is not only a term definer, but also a type definer
 defineType (Resource name _) = updateEnvironment name (TyRef name)
 defineType (Func _) = return ()
 
--- insert type definition into Env
--- e.g.
---            A : Type
---   --------------------------
---          Env, A = Defined
 checkDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
 checkDef (SrcPos pos def) = addPos pos $ checkDef def
 checkDef (Func f) = checkFn f
 checkDef (Resource _name func_list) = forM_ func_list (checkFn . snd)
-checkDef (Enum _name _) = return ()
-checkDef (Record _name fields) = checkBinders fields
-checkDef (TypeAlias _name ty) = checkTy ty
-checkDef (Variant _name cases) = forM_ cases (mapM_ checkTy . snd)
+checkDef _ = return ()
 
 checkBinders :: (MonadError CheckError m, MonadState CheckState m) => [(String, Type)] -> m ()
 checkBinders = mapM_ (checkTy . snd)
