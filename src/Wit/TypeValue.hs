@@ -33,3 +33,5 @@ data TypeVal
     --
     -- flatten type disallowed recursive, and hence we cannot resolve type reference directly, so we need this
     TyRef String
+  | -- This is double level reference, it refers to module and the type name
+    TyExternRef String String

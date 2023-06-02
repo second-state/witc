@@ -125,7 +125,7 @@ checkFile path = do
       -- checking files recursively
       ast <- parseFile path
       check ast
-    else report $ "no file `" ++ path ++ "` in `" ++ normalise workingDir ++ "`"
+    else report $ "no file `" <> path <> "` in `" <> normalise workingDir <> "`"
 
 check ::
   (MonadIO m, MonadError CheckError m, MonadState CheckState m, MonadReader FilePath m) =>
@@ -135,20 +135,20 @@ check wit_file = do
   forM_ (use_list wit_file) (collect . checkUseFileExisted)
   bundle
   introUseIdentifiers $ use_list wit_file
-  forM_ wit_file.definition_list addTypeDef
+  forM_ wit_file.definition_list defineType
   forM_ (definition_list wit_file) (collect . checkDef)
   bundle
   return wit_file
-
-introUseIdentifiers :: (MonadState CheckState m) => [Use] -> m ()
-introUseIdentifiers us = do
-  forM_ us extend
   where
-    extend (SrcPosUse _pos u) = extend u
-    extend (Use imports _) = do
-      forM_ imports $ \(_, name) -> do
-        updateEnvironment name (TyRef name)
-    extend (UseAll _) = return ()
+    introUseIdentifiers :: (MonadState CheckState m) => [Use] -> m ()
+    introUseIdentifiers us = do
+      forM_ us extend
+      where
+        extend (SrcPosUse _pos u) = extend u
+        extend (Use imports moduleName) = do
+          forM_ imports $ \(_, name) -> do
+            updateEnvironment name (TyExternRef moduleName name)
+        extend (UseAll _) = return ()
 
 checkUseFileExisted ::
   (MonadIO m, MonadError CheckError m, MonadState CheckState m, MonadReader FilePath m) =>
@@ -191,22 +191,23 @@ toTuple ts = do
   vs <- forM ts evaluateType
   return $ TyTuple vs
 
-addTypeDef :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
-addTypeDef (SrcPos _ def) = addTypeDef def
-addTypeDef (Resource name _) = updateEnvironment name (TyRef name)
-addTypeDef (Enum name _) = updateEnvironment name TyU32
-addTypeDef (Record name fields) = do
+defineType :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
+defineType (SrcPos _ def) = defineType def
+defineType (Enum name _) = updateEnvironment name TyU32
+defineType (Record name fields) = do
   t <- toTuple (map snd fields)
   updateEnvironment name t
-addTypeDef (TypeAlias name ty) = do
+defineType (TypeAlias name ty) = do
   tyv <- evaluateType ty
   updateEnvironment name tyv
 -- as a sum of product, it's ok to be defined recursively
-addTypeDef (Variant name cases) = do
+defineType (Variant name cases) = do
   cs <- forM cases $ do
     toTuple . snd
   updateEnvironment name (TySum name cs)
-addTypeDef (Func _) = return ()
+-- resource is not only a term definer, but also a type definer
+defineType (Resource name _) = updateEnvironment name (TyRef name)
+defineType (Func _) = return ()
 
 -- insert type definition into Env
 -- e.g.
