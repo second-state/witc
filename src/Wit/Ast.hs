@@ -63,7 +63,9 @@ data Type
   | ListTy Type
   | ExpectedTy Type Type
   | TupleTy [Type]
-  | Defined String -- user defined types
+  | -- If we parsed something unknown, it probably is a user defined type
+    -- and hence, we will use checker to reject undefined type errors
+    Defined String
   deriving (Show)
 
 instance Eq Type where
