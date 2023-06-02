@@ -26,9 +26,9 @@ source-repository head
 
 library
   exposed-modules:
-      Wit
       Wit.Ast
       Wit.Check
+      Wit.Config
       Wit.Gen
       Wit.Gen.Export
       Wit.Gen.Import

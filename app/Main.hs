@@ -19,7 +19,10 @@ import Prettyprinter.Render.Terminal
 import System.Directory
 import System.Exit
 import System.FilePath
-import Wit
+import Wit.Ast
+import Wit.Check
+import Wit.Config
+import Wit.Gen
 
 main :: IO ()
 main = do
@@ -58,7 +61,7 @@ main = do
                       ( command
                           "import"
                           ( info
-                              ( codegenCmd Import Instance
+                              ( codegenCmd (Instance Import)
                                   <$> strArgument (metavar "FILE" <> help "Wit file")
                                   <*> strArgument (value "wasmedge" <> help "Name of import")
                               )
@@ -67,7 +70,7 @@ main = do
                           <> command
                             "export"
                             ( info
-                                ( codegenCmd Export Instance
+                                ( codegenCmd (Instance Export)
                                     <$> strArgument (metavar "FILE" <> help "Wit file")
                                     <*> strArgument (value "wasmedge" <> help "Name of export")
                                 )
@@ -84,7 +87,7 @@ main = do
                       ( command
                           "import"
                           ( info
-                              ( codegenCmd Import Runtime
+                              ( codegenCmd (Runtime Import)
                                   <$> strArgument (metavar "FILE" <> help "Wit file")
                                   <*> strArgument (value "wasmedge" <> help "Name of import")
                               )
@@ -93,7 +96,7 @@ main = do
                           <> command
                             "export"
                             ( info
-                                ( codegenCmd Export Runtime
+                                ( codegenCmd (Runtime Export)
                                     <$> strArgument (metavar "FILE" <> help "Wit file")
                                     <*> strArgument (value "wasmedge" <> help "Name of export")
                                 )
@@ -140,13 +143,12 @@ printCheckError e = do
 codegenPluginCmd :: FilePath -> IO ()
 codegenPluginCmd file = do
   let pluginName = takeBaseName file
-  wit <- runExit $ checkFile (takeDirectory file) (takeFileName file)
-  putDoc $ genPluginRust pluginName wit
+  codegenCmd (Plugin pluginName) file pluginName
 
-codegenCmd :: Direction -> Side -> FilePath -> String -> IO ()
-codegenCmd d s file importName = do
+codegenCmd :: Mode -> FilePath -> String -> IO ()
+codegenCmd mode file importName = do
   wit <- runExit $ checkFile (takeDirectory file) (takeFileName file)
-  (putDoc . prettyFile Config {language = Rust, direction = d, side = s} importName) wit
+  (putDoc . prettyFile Config {language = Rust, codegenMode = mode} importName) wit
 
 runExit :: ExceptT CheckError IO a -> IO a
 runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure) pure

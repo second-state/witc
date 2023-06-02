@@ -1,29 +1,11 @@
 module Wit.Gen.Plugin
-  ( genPluginRust,
+  ( convertFuncRust,
   )
 where
 
--- idea: only generate func definition
--- the type definition should be dropped
-import Data.List (partition)
 import Prettyprinter
 import Wit.Ast
 import Wit.Gen.Normalization
-
-genPluginRust :: String -> WitFile -> Doc a
-genPluginRust pluginName wit_file =
-  let (_, defs) = partition isTypeDef wit_file.definition_list
-   in let definitions = vsep (map (convertFuncRust pluginName) defs)
-       in vsep
-            [ pretty "#[link(wasm_import_module ="
-                <+> dquotes (pretty pluginName)
-                  <> pretty
-                    ")]",
-              pretty
-                "extern \"C\" {",
-              indent 4 definitions,
-              pretty "}"
-            ]
 
 convertFuncRust :: String -> Definition -> Doc a
 convertFuncRust pluginName = \case
@@ -78,8 +60,3 @@ convertTyRust PrimChar = pretty "char"
 convertTyRust PrimF32 = pretty "f32"
 convertTyRust PrimF64 = pretty "f64"
 convertTyRust ty = error $ "no support " ++ show ty ++ " when generating plugin"
-
-isTypeDef :: Definition -> Bool
-isTypeDef (SrcPos _ d) = isTypeDef d
-isTypeDef (Func _) = False
-isTypeDef _ = True
