@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1685959721255,
+  "lastUpdate": 1685966864730,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -5547,6 +5547,68 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 212,
             "range": "± 19",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "second-state",
+            "username": "second-state"
+          },
+          "committer": {
+            "name": "second-state",
+            "username": "second-state"
+          },
+          "id": "3a10bfb758ec07cfb8d137c2ad26f499800bfaba",
+          "message": "New codegen",
+          "timestamp": "2023-05-23T15:01:43Z",
+          "url": "https://github.com/second-state/witc/pull/104/commits/3a10bfb758ec07cfb8d137c2ad26f499800bfaba"
+        },
+        "date": 1685966863806,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 78955,
+            "range": "± 824",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 42852,
+            "range": "± 447",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 38632,
+            "range": "± 398",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1389,
+            "range": "± 12",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 8783,
+            "range": "± 239",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 186,
+            "range": "± 0",
             "unit": "ns/iter"
           }
         ]
