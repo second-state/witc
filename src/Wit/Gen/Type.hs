@@ -45,7 +45,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
       <+> braces (line <+> indent 4 (vsep $ punctuate comma (map genCase cases)) <+> line)
     where
       genCase :: (String, TypeVal) -> Doc a
-      genCase (n, ty) = pretty n <> genTypeRust ty
+      genCase (normalizeIdentifier -> n, ty) = pretty n <> genTypeRust ty
   TyEnum cases ->
     pretty "#[derive(Serialize, Deserialize, Debug)]"
       <> line
@@ -53,7 +53,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
       <+> pretty name
       <+> braces
         ( line
-            <+> indent 4 (vsep $ punctuate comma (map pretty cases))
+            <+> indent 4 (vsep $ punctuate comma (map (pretty . normalizeIdentifier) cases))
             <+> line
         )
   ty -> pretty "type" <+> pretty name <+> pretty "=" <+> genTypeRust ty <> pretty ";"
@@ -77,5 +77,5 @@ genTypeRust = \case
   (TyList ty) -> pretty "Vec<" <> genTypeRust ty <> pretty ">"
   (TyExpected a b) -> pretty "Result" <> pretty "<" <> genTypeRust a <> pretty "," <> genTypeRust b <> pretty ">"
   (TyTuple ty_list) -> parens (hsep $ punctuate comma (map genTypeRust ty_list))
-  (TyRef name) -> pretty name
+  (TyRef (normalizeIdentifier -> name)) -> pretty name
   _ -> error "crash type"

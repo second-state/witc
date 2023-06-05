@@ -254,7 +254,7 @@ defineType (TypeAlias name ty) = do
   updateEnvironment name tyv
 -- resource is not only a term definer, but also a type definer
 -- it will have a handle i32 as type value
-defineType (Resource name _) = updateEnvironment name TyI32
+defineType (Resource name _) = updateEnvironment name TyU32
 defineType (Func _) = return ()
 
 defineTerm :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
@@ -270,12 +270,12 @@ defineTerm (Resource resource_name func_list) =
                   -- `static open: func(name: string) -> expected<keyvalue, keyvalue-error>`
                   -- ~> out of resource
                   -- `keyvalue_open: func(name: string) -> expected<keyvalue, keyvalue-error>`
-                  Static -> Function (resource_name <> name) binders retTyp
+                  Static -> Function (resource_name <> "_" <> name) binders retTyp
                   -- e.g.
                   -- `get: func(key: string) -> expected<list<u8>, keyvalue-error> `
                   -- ~> out of resource
                   -- `keyvalue_get: func(handle: keyvalue, key: string) -> expected<list<u8>, keyvalue-error> `
-                  Member -> Function (resource_name <> name) (("handle", Defined resource_name) : binders) retTyp
+                  Member -> Function (resource_name <> "_" <> name) (("handle", Defined resource_name) : binders) retTyp
               )
         defineFn fn
     )

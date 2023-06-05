@@ -60,21 +60,23 @@ toHostFunction name (TyArrow param_list _result_ty) =
     <+> pretty "->"
     <+> pretty "Result<Vec<wasmedge_sdk::WasmValue>, wasmedge_sdk::error::HostFuncError>"
     <+> braces
-      ( indent
-          4
-          ( hsep $
-              [ pretty "let id = input[0].to_i32();"
-              ]
-                ++ map letParam param_list
-                ++ [ pretty "let r ="
-                       <+> pretty (normalizeIdentifier name)
-                       <+> tupled (map (\(x, _) -> pretty x) param_list)
-                       <+> pretty ";",
-                     pretty "let result_str = serde_json::to_string(&r).unwrap();",
-                     pretty "unsafe { witc_abi::runtime::STATE.put_buffer(id, result_str) }",
-                     pretty "Ok(vec![])"
-                   ]
-          )
+      ( line
+          <> indent
+            4
+            ( pretty "let id = input[0].to_i32();"
+                <> line
+                <> vsep (map letParam param_list)
+                <> vsep
+                  [ pretty "let r ="
+                      <+> pretty (normalizeIdentifier name)
+                      <+> tupled (map (\(x, _) -> pretty x) param_list)
+                      <+> pretty ";",
+                    pretty "let result_str = serde_json::to_string(&r).unwrap();",
+                    pretty "unsafe { witc_abi::runtime::STATE.put_buffer(id, result_str) }",
+                    pretty "Ok(vec![])"
+                  ]
+                <> line
+            )
       )
   where
     letParam :: (String, TypeVal) -> Doc a

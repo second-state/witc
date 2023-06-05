@@ -28,16 +28,16 @@ prettyFile config inOutName CheckResult {tyEnv = ty_env, ctx = context} =
                        <> dquotes (pretty inOutName)
                        <> pretty ")]"
                    )
+                     <> line'
                      <> pretty "extern \"C\""
-                     <> braces
+                     <+> braces
                        ( line
-                           <+> indent
+                           <> indent
                              4
                              (genContext context prettyDefExtern)
-                           <+> line
+                           <> line
                        )
-                     <> line'
-                     <> genContext context prettyDefWrap
+                       <> genContext context prettyDefWrap
                  )
           Instance Export ->
             prettyTyDefs
