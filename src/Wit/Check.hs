@@ -37,6 +37,8 @@ instance Pretty CheckError where
       go (CheckError msg Nothing) = pretty msg
       go (Bundle es) = vsep (map go es)
 
+type Name = String
+
 type TyEnv = M.Map Name TypeVal
 
 type Context = M.Map Name TypeSig
@@ -45,11 +47,21 @@ data CheckState = CheckState
   { errors :: [CheckError],
     -- maps type name to its type value
     -- this is created for type definition
-    tyEnv :: TyEnv,
+    typeEnvironment :: TyEnv,
     -- maps func or resource to its signature
     -- foo : func (x1 : A1, x2 : A2, ...) -> R
-    ctx :: Context
+    context :: Context
   }
+
+updateEnvironment :: (MonadState CheckState m) => Name -> TypeVal -> m ()
+updateEnvironment name ty = do
+  checkState <- get
+  put $ checkState {typeEnvironment = M.insert name ty checkState.typeEnvironment}
+
+updateContext :: (MonadState CheckState m) => Name -> TypeSig -> m ()
+updateContext name ty = do
+  checkState <- get
+  put $ checkState {context = M.insert name ty checkState.context}
 
 data CheckResult = CheckResult
   { tyEnv :: TyEnv,
@@ -82,39 +94,6 @@ addPos pos = withError updatePos
     updatePos (Bundle es) = Bundle $ map updatePos es
     updatePos e = e
 
-type Name = String
-
-lookupEnvironment :: (MonadState CheckState m, MonadError CheckError m) => Name -> m TypeVal
-lookupEnvironment name = do
-  ctx <- get
-  case M.lookup name ctx.tyEnv of
-    Just (TyRef n) -> return (TyRef n)
-    Just (TyExternRef m n) -> return (TyExternRef m n)
-    -- stuck other type value in resolving here, since expanded a ref is not wanted here
-    -- we will, however, expand a ref in codegen
-    Just _ -> return (TyRef name)
-    Nothing -> report $ "Type `" <> name <> "` not found"
-
-updateEnvironment :: (MonadState CheckState m) => Name -> TypeVal -> m ()
-updateEnvironment name ty = do
-  ctx <- get
-  put $
-    CheckState
-      { tyEnv = M.insert name ty ctx.tyEnv,
-        errors = ctx.errors,
-        ctx = ctx.ctx
-      }
-
-updateContext :: (MonadState CheckState m) => Name -> TypeSig -> m ()
-updateContext name ty = do
-  ctx <- get
-  put $
-    CheckState
-      { tyEnv = ctx.tyEnv,
-        errors = ctx.errors,
-        ctx = M.insert name ty ctx.ctx
-      }
-
 evaluateType :: (MonadState CheckState m, MonadError CheckError m) => Type -> m TypeVal
 evaluateType (SrcPosType pos ty) = addPos pos $ evaluateType ty
 evaluateType PrimString = return TyString
@@ -134,7 +113,15 @@ evaluateType (Optional ty) = TyOptional <$> evaluateType ty
 evaluateType (ListTy ty) = TyList <$> evaluateType ty
 evaluateType (ExpectedTy ty1 ty2) = TyExpected <$> evaluateType ty1 <*> evaluateType ty2
 evaluateType (TupleTy tys) = TyTuple <$> mapM evaluateType tys
-evaluateType (Defined name) = lookupEnvironment name
+evaluateType (Defined name) = do
+  checkState <- get
+  case M.lookup name checkState.typeEnvironment of
+    Just (TyRef n) -> return (TyRef n)
+    Just (TyExternRef m n) -> return (TyExternRef m n)
+    -- stuck other type value in resolving here, since expanded a ref is not wanted here
+    -- we will, however, expand a ref in codegen
+    Just _ -> return (TyRef name)
+    Nothing -> report $ "Type `" <> name <> "` not found"
 
 parseFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do
@@ -174,11 +161,11 @@ check wit_file = do
   forM_ wit_file.definition_list defineType
   forM_ (definition_list wit_file) (collect . defineTerm)
   bundle
-  ctx <- get
+  checkState <- get
   return
     CheckResult
-      { tyEnv = ctx.tyEnv,
-        ctx = ctx.ctx
+      { tyEnv = checkState.typeEnvironment,
+        ctx = checkState.context
       }
   where
     introUseIdentifiers :: (MonadState CheckState m) => [Use] -> m ()
