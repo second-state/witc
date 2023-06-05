@@ -42,10 +42,21 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
       <> line
       <> pretty "enum"
       <+> pretty name
-      <+> braces (line <+> indent 4 (vsep $ punctuate comma (map genCase cases)) <+> line)
+      <+> braces (line <> indent 4 (vsep $ punctuate comma (map genCase cases)) <> line)
     where
       genCase :: (String, TypeVal) -> Doc a
-      genCase (normalizeIdentifier -> n, ty) = pretty n <> genTypeRust ty
+      genCase (normalizeIdentifier -> n, ty) = pretty n <> boxType ty
+      boxType :: TypeVal -> Doc a
+      boxType (TyOptional ty) = pretty "Option<" <> boxType ty <> pretty ">"
+      boxType (TyList ty) = pretty "Vec<" <> boxType ty <> pretty ">"
+      boxType (TyExpected a b) = pretty "Result" <> pretty "<" <> boxType a <> pretty "," <> boxType b <> pretty ">"
+      boxType (TyTuple []) = mempty
+      boxType (TyTuple ty_list) = parens (hsep $ punctuate comma (map boxType ty_list))
+      boxType (TyRef (normalizeIdentifier -> n)) =
+        if n == name
+          then pretty "Box" <> angles (pretty n)
+          else pretty n
+      boxType ty = genTypeRust ty
   TyEnum cases ->
     pretty "#[derive(Serialize, Deserialize, Debug)]"
       <> line
@@ -53,8 +64,8 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
       <+> pretty name
       <+> braces
         ( line
-            <+> indent 4 (vsep $ punctuate comma (map (pretty . normalizeIdentifier) cases))
-            <+> line
+            <> indent 4 (vsep $ punctuate comma (map (pretty . normalizeIdentifier) cases))
+            <> line
         )
   ty -> pretty "type" <+> pretty name <+> pretty "=" <+> genTypeRust ty <> pretty ";"
 
@@ -73,9 +84,11 @@ genTypeRust = \case
   TyChar -> pretty "char"
   TyF32 -> pretty "f32"
   TyF64 -> pretty "f64"
-  (TyOptional ty) -> pretty "Option<" <> genTypeRust ty <> pretty ">"
-  (TyList ty) -> pretty "Vec<" <> genTypeRust ty <> pretty ">"
-  (TyExpected a b) -> pretty "Result" <> pretty "<" <> genTypeRust a <> pretty "," <> genTypeRust b <> pretty ">"
-  (TyTuple ty_list) -> parens (hsep $ punctuate comma (map genTypeRust ty_list))
-  (TyRef (normalizeIdentifier -> name)) -> pretty name
+  TyOptional ty -> pretty "Option<" <> genTypeRust ty <> pretty ">"
+  TyList ty -> pretty "Vec<" <> genTypeRust ty <> pretty ">"
+  TyExpected a b -> pretty "Result" <> pretty "<" <> genTypeRust a <> pretty "," <> genTypeRust b <> pretty ">"
+  TyTuple [] -> mempty
+  TyTuple ty_list -> parens (hsep $ punctuate comma (map genTypeRust ty_list))
+  TyRef (normalizeIdentifier -> name) -> pretty name
+  TyExternRef _ _ -> error "TODO: extern ref"
   _ -> error "crash type"
