@@ -1,5 +1,6 @@
 module Wit.TypeValue
   ( TypeVal (..),
+    TypeSig (..),
   )
 where
 
@@ -28,9 +29,6 @@ data TypeVal
     -- we record the name of the sum type to handle recursion in it
     TyEnum [String]
   | TySum [(String, TypeVal)]
-  | -- conceptual function type: A -> B
-    -- but we expect parameters are well named
-    TyArrow [(String, TypeVal)] TypeVal
   | -- checker should ensure reference is linked to defined type
     --
     -- we have two modes
@@ -41,3 +39,8 @@ data TypeVal
     TyRef String
   | -- This is double level reference, it refers to module and the type name
     TyExternRef String String
+
+data TypeSig
+  = -- function type: func (x : A, y : B) -> C
+    -- but we expect parameters are well named
+    TyArrow [(String, TypeVal)] TypeVal

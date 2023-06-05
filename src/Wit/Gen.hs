@@ -3,6 +3,7 @@ module Wit.Gen
   )
 where
 
+import Data.Map.Lazy qualified as M
 import Prettyprinter
 import Wit.Check
 import Wit.Config
@@ -10,43 +11,56 @@ import Wit.Gen.Export
 import Wit.Gen.Import
 import Wit.Gen.Plugin
 import Wit.Gen.Type
+import Wit.TypeValue
+
+genContext :: M.Map String TypeSig -> (String -> TypeSig -> Doc a) -> Doc a
+genContext m f =
+  M.foldl (\acc x -> acc <> line <> x) mempty (M.mapWithKey f m)
 
 prettyFile :: Config -> String -> CheckResult -> Doc a
-prettyFile config inOutName CheckResult {tyEnv = tyEnv, context = context} =
-  let prettyTyDefs = genTypeDefs tyEnv
+prettyFile config inOutName CheckResult {tyEnv = ty_env, ctx = context} =
+  let prettyTyDefs = genTypeDefs ty_env
    in ( case config.codegenMode of
           Instance Import ->
             prettyTyDefs
               <> line'
-              <> vsep
-                ( [ pretty $ "#[link(wasm_import_module = " ++ "\"" ++ inOutName ++ "\")]",
-                    pretty "extern \"C\"",
-                    braces
-                      ( line
-                          <+> indent
-                            4
-                            ( vsep
-                                (map prettyDefExtern context)
-                            )
-                          <+> line
-                      )
-                  ]
-                    ++ map prettyDefWrap context
-                )
+              <> ( ( pretty "#[link(wasm_import_module = "
+                       <> dquotes (pretty inOutName)
+                       <> pretty ")]"
+                   )
+                     <> pretty "extern \"C\""
+                     <> braces
+                       ( line
+                           <+> indent
+                             4
+                             (genContext context prettyDefExtern)
+                           <+> line
+                       )
+                     <> line'
+                     <> genContext context prettyDefWrap
+                 )
           Instance Export ->
             prettyTyDefs
               <> line'
-              <> vsep (map toUnsafeExtern context)
+              <> genContext context toUnsafeExtern
           Runtime Import ->
             prettyTyDefs
               <> line'
-              <> vsep (map (toVmWrapper inOutName) context)
+              <> genContext context (toVmWrapper inOutName)
           Runtime Export ->
             prettyTyDefs
               <> line'
               <> vsep
                 [ pretty $ "mod " ++ inOutName,
-                  braces (vsep (witObject inOutName context : pretty "use wasmedge_sdk::Caller;" : pretty "use super::*;" : map toHostFunction context))
+                  braces
+                    ( witObject inOutName (M.keys context)
+                        <> line'
+                        <> pretty "use wasmedge_sdk::Caller;"
+                        <> line'
+                        <> pretty "use super::*;"
+                        <> line'
+                        <> genContext context toHostFunction
+                    )
                 ]
           Plugin pluginName ->
             vsep
@@ -55,8 +69,7 @@ prettyFile config inOutName CheckResult {tyEnv = tyEnv, context = context} =
                     <> pretty
                       ")]",
                 pretty
-                  "extern \"C\" {",
-                indent 4 (vsep (map (convertFuncRust pluginName) context)),
-                pretty "}"
+                  "extern \"C\"",
+                braces $ indent 4 (genContext context (convertFuncRust pluginName))
               ]
       )

@@ -6,14 +6,13 @@ module Wit.Gen.Export
 where
 
 import Prettyprinter
-import Wit.Ast
 import Wit.Gen.Normalization
 import Wit.Gen.Type
+import Wit.TypeValue
 
 -- instance
-toUnsafeExtern :: Definition -> Doc a
-toUnsafeExtern (SrcPos _ d) = toUnsafeExtern d
-toUnsafeExtern (Func (Function name param_list _result_ty)) =
+toUnsafeExtern :: String -> TypeSig -> Doc a
+toUnsafeExtern name (TyArrow param_list _result_ty) =
   vsep
     [ pretty "#[no_mangle]",
       pretty "pub unsafe extern \"C\"",
@@ -38,24 +37,22 @@ toUnsafeExtern (Func (Function name param_list _result_ty)) =
         )
     ]
   where
-    getParameter :: (String, Type) -> Doc a
+    getParameter :: (String, TypeVal) -> Doc a
     getParameter (x, ty) =
       hsep
         [ pretty "let",
           pretty x,
           pretty ":",
-          prettyType ty,
+          genTypeRust ty,
           pretty "=",
           hcat
             [ pretty "serde_json::from_str(witc_abi::instance::read(id).to_string().as_str()).unwrap();"
             ]
         ]
-toUnsafeExtern d = error "should not get type definition here: " $ show d
 
 -- runtime
-toHostFunction :: Definition -> Doc a
-toHostFunction (SrcPos _ d) = toHostFunction d
-toHostFunction (Func (Function name param_list _result_ty)) =
+toHostFunction :: String -> TypeSig -> Doc a
+toHostFunction name (TyArrow param_list _result_ty) =
   pretty "#[wasmedge_sdk::host_function]"
     <+> line
     <+> hsep (map pretty ["fn", externalConvention name])
@@ -80,21 +77,20 @@ toHostFunction (Func (Function name param_list _result_ty)) =
           )
       )
   where
-    letParam :: (String, Type) -> Doc a
+    letParam :: (String, TypeVal) -> Doc a
     letParam (x, ty) =
       hsep
         [ pretty "let",
           pretty x,
           pretty ":",
-          prettyType ty,
+          genTypeRust ty,
           pretty "=",
           hcat
             [pretty "serde_json::from_str(unsafe { witc_abi::runtime::STATE.read_buffer(id).as_str() }).unwrap();"]
         ]
-toHostFunction d = error "should not get type definition here: " $ show d
 
 -- runtime wasm import object
-witObject :: String -> [Definition] -> Doc a
+witObject :: String -> [String] -> Doc a
 witObject exportName defs =
   pretty "pub fn wit_import_object() -> wasmedge_sdk::WasmEdgeResult<wasmedge_sdk::ImportObject>"
     <+> braces
@@ -102,21 +98,18 @@ witObject exportName defs =
           <+> parens
             ( pretty "wasmedge_sdk::ImportObjectBuilder::new()"
                 <+> vsep (map withFunc defs)
-                <+> ( pretty
-                        ( ".build(\""
-                            ++ exportName
-                            ++ "\")?"
-                        )
-                    )
+                <+> pretty
+                  ( ".build(\""
+                      ++ exportName
+                      ++ "\")?"
+                  )
             )
       )
   where
-    withFunc :: Definition -> Doc a
-    withFunc (SrcPos _ d) = withFunc d
-    withFunc (Func (Function (pretty . externalConvention -> name) _ _)) =
+    withFunc :: String -> Doc a
+    withFunc (pretty . externalConvention -> name) =
       -- i32: every convention function should just get the id of the queue
       -- (): returns nothing (real returns will be sent by queue)
       pretty ".with_func::<i32, ()>"
         <+> tupled [dquotes name, name]
         <+> pretty "?"
-    withFunc d = error $ "bad definition" ++ show d

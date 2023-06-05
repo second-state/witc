@@ -19,7 +19,6 @@ import Prettyprinter.Render.Terminal
 import System.Directory
 import System.Exit
 import System.FilePath
-import Wit.Ast
 import Wit.Check
 import Wit.Config
 import Wit.Gen
