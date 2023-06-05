@@ -36,7 +36,6 @@ library
       Wit.Gen.Plugin
       Wit.Gen.Type
       Wit.Parser
-      Wit.Transform
       Wit.TypeValue
   other-modules:
       Paths_witc

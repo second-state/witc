@@ -147,8 +147,8 @@ codegenPluginCmd file = do
 
 codegenCmd :: Mode -> FilePath -> String -> IO ()
 codegenCmd mode file importName = do
-  wit <- runExit $ checkFile (takeDirectory file) (takeFileName file)
-  (putDoc . prettyFile Config {language = Rust, codegenMode = mode} importName) wit
+  checkResult <- runExit $ checkFile (takeDirectory file) (takeFileName file)
+  (putDoc . prettyFile Config {language = Rust, codegenMode = mode} importName) checkResult
 
 runExit :: ExceptT CheckError IO a -> IO a
 runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure) pure
@@ -160,7 +160,7 @@ runWithErrorHandler act onErr onSuccess = do
     Left e -> onErr e
     Right a -> onSuccess a
 
-checkFile :: FilePath -> FilePath -> ExceptT CheckError IO WitFile
+checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
 checkFile dirpath filepath = do
   ast <- runReaderT (parseFile filepath) dirpath
   runReaderT (evalStateT (check ast) emptyCheckState) dirpath

@@ -80,7 +80,7 @@ prettyDefWrap (Func (Function name param_list result_ty)) =
           ]
 
     prettyBinder :: (String, Type) -> Doc a
-    prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", prettyType ty]
+    prettyBinder (field_name, ty) = hsep [pretty field_name, pretty ":", genTypeRust ty]
 prettyDefWrap d = error "should not get type definition here: " $ show d
 
 prettyDefExtern :: Definition -> Doc a

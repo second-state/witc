@@ -20,11 +20,17 @@ data TypeVal
   | TyOptional TypeVal
   | TyList TypeVal
   | TyExpected TypeVal TypeVal
-  | -- conceptual product type: A × B × C
+  | -- nameful product type
+    TyRecord [(String, TypeVal)]
+  | -- product type: A × B × C
     TyTuple [TypeVal]
-  | -- conceptual sum type: A + B + C
+  | -- sum type: A + B + C
     -- we record the name of the sum type to handle recursion in it
-    TySum String [TypeVal]
+    TyEnum [String]
+  | TySum [(String, TypeVal)]
+  | -- conceptual function type: A -> B
+    -- but we expect parameters are well named
+    TyArrow [(String, TypeVal)] TypeVal
   | -- checker should ensure reference is linked to defined type
     --
     -- we have two modes
