@@ -8,11 +8,11 @@ import Test.Hspec
 import Wit.Ast
 import Wit.Check
 
-check' :: FilePath -> WitFile -> ExceptT CheckError IO WitFile
+check' :: FilePath -> WitFile -> ExceptT CheckError IO CheckResult
 check' dirpath wit_file = do
   runReaderT (evalStateT (check wit_file) emptyCheckState) dirpath
 
-checkFile :: FilePath -> FilePath -> ExceptT CheckError IO WitFile
+checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
 checkFile dirpath filepath = do
   ast <- runReaderT (parseFile filepath) dirpath
   check' dirpath ast

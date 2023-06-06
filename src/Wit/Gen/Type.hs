@@ -1,71 +1,94 @@
 {- Type & its definition should be the same for any direction, hence, it should be independent -}
 module Wit.Gen.Type
-  ( prettyTypeDef,
-    prettyType,
+  ( genTypeDefs,
+    genTypeRust,
   )
 where
 
+import Data.Map.Lazy qualified as M
 import Prettyprinter
-import Wit.Ast
+import Wit.Check
 import Wit.Gen.Normalization
+import Wit.TypeValue
 
-prettyTypeDef :: Definition -> Doc a
-prettyTypeDef (SrcPos _ d) = prettyTypeDef d
-prettyTypeDef (Record (normalizeIdentifier -> name) fields) =
-  (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
-    <+> pretty "struct"
-    <+> pretty name
-    <+> braces
-      ( line
-          <+> indent 4 (vsep $ punctuate comma (map prettyField fields))
-          <+> line
-      )
-  where
-    prettyField :: (String, Type) -> Doc a
-    prettyField (n, ty) = hsep [pretty n, pretty ":", prettyType ty]
-prettyTypeDef (TypeAlias (normalizeIdentifier -> name) ty) = hsep [pretty "type", pretty name, pretty "=", prettyType ty, pretty ";"]
-prettyTypeDef (Variant (normalizeIdentifier -> name) cases) =
-  (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
-    <+> pretty "enum"
-    <+> pretty name
-    <+> braces (line <+> indent 4 (vsep $ punctuate comma (map prettyCase cases)) <+> line)
-  where
-    prettyCase :: (String, [Type]) -> Doc a
-    prettyCase (normalizeIdentifier -> n, []) = pretty n
-    prettyCase (normalizeIdentifier -> n, tys) = pretty n <+> parens (hsep (punctuate comma (map boxType tys)))
-    boxType :: Type -> Doc a
-    boxType (SrcPosType _ t) = boxType t
-    boxType (Defined n) | n == name = pretty $ "Box<" ++ n ++ ">"
-    boxType t = prettyType t
-prettyTypeDef (Enum (normalizeIdentifier -> name) cases) =
-  (pretty "#[derive(Serialize, Deserialize, Debug)]" <+> line)
-    <+> pretty "enum"
-    <+> pretty name
-    <+> braces
-      ( line
-          <+> indent 4 (vsep $ punctuate comma (map pretty cases))
-          <+> line
-      )
-prettyTypeDef _ = error "not a type definition"
+genTypeDefs :: TyEnv -> Doc a
+genTypeDefs env =
+  let f acc x = acc <> line <> x
+   in M.foldl f mempty (M.mapWithKey genTypeDefRust env)
 
-prettyType :: Type -> Doc a
-prettyType (SrcPosType _ ty) = prettyType ty
-prettyType PrimUnit = pretty "()"
-prettyType PrimString = pretty "String"
-prettyType PrimU8 = pretty "u8"
-prettyType PrimU16 = pretty "u16"
-prettyType PrimU32 = pretty "u32"
-prettyType PrimU64 = pretty "u64"
-prettyType PrimI8 = pretty "i8"
-prettyType PrimI16 = pretty "i16"
-prettyType PrimI32 = pretty "i32"
-prettyType PrimI64 = pretty "i64"
-prettyType PrimChar = pretty "char"
-prettyType PrimF32 = pretty "f32"
-prettyType PrimF64 = pretty "f64"
-prettyType (Optional ty) = hsep [pretty "Option<", prettyType ty, pretty ">"]
-prettyType (ListTy ty) = hsep [pretty "Vec<", prettyType ty, pretty ">"]
-prettyType (ExpectedTy ty ety) =
-  hsep [pretty "Result<", prettyType ty, pretty ",", prettyType ety, pretty ">"]
-prettyType (TupleTy ty_list) = parens (hsep $ punctuate comma (map prettyType ty_list))
-prettyType (Defined (normalizeIdentifier -> name)) = pretty name
+genTypeDefRust :: String -> TypeVal -> Doc a
+genTypeDefRust (normalizeIdentifier -> name) = \case
+  TyRecord fields ->
+    pretty "#[derive(Serialize, Deserialize, Debug)]"
+      <> line
+      <> pretty "struct"
+      <+> pretty name
+      <+> braces
+        ( line
+            <> indent
+              4
+              ( vsep $
+                  punctuate
+                    comma
+                    ( map
+                        (\(n, ty) -> hsep [pretty n, pretty ":", genTypeRust ty])
+                        fields
+                    )
+              )
+            <> line
+        )
+  TySum cases ->
+    pretty "#[derive(Serialize, Deserialize, Debug)]"
+      <> line
+      <> pretty "enum"
+      <+> pretty name
+      <+> braces (line <> indent 4 (vsep $ punctuate comma (map genCase cases)) <> line)
+    where
+      genCase :: (String, TypeVal) -> Doc a
+      genCase (normalizeIdentifier -> n, ty) = pretty n <> boxType ty
+      boxType :: TypeVal -> Doc a
+      boxType (TyOptional ty) = pretty "Option<" <> boxType ty <> pretty ">"
+      boxType (TyList ty) = pretty "Vec<" <> boxType ty <> pretty ">"
+      boxType (TyExpected a b) = pretty "Result" <> pretty "<" <> boxType a <> pretty "," <> boxType b <> pretty ">"
+      boxType (TyTuple []) = mempty
+      boxType (TyTuple ty_list) = parens (hsep $ punctuate comma (map boxType ty_list))
+      boxType (TyRef (normalizeIdentifier -> n)) =
+        if n == name
+          then pretty "Box" <> angles (pretty n)
+          else pretty n
+      boxType ty = genTypeRust ty
+  TyEnum cases ->
+    pretty "#[derive(Serialize, Deserialize, Debug)]"
+      <> line
+      <> pretty "enum"
+      <+> pretty name
+      <+> braces
+        ( line
+            <> indent 4 (vsep $ punctuate comma (map (pretty . normalizeIdentifier) cases))
+            <> line
+        )
+  ty -> pretty "type" <+> pretty name <+> pretty "=" <+> genTypeRust ty <> pretty ";"
+
+genTypeRust :: TypeVal -> Doc a
+genTypeRust = \case
+  TyString -> pretty "String"
+  TyUnit -> pretty "()"
+  TyU8 -> pretty "u8"
+  TyU16 -> pretty "u16"
+  TyU32 -> pretty "u32"
+  TyU64 -> pretty "u64"
+  TyI8 -> pretty "i8"
+  TyI16 -> pretty "i16"
+  TyI32 -> pretty "i32"
+  TyI64 -> pretty "i64"
+  TyChar -> pretty "char"
+  TyF32 -> pretty "f32"
+  TyF64 -> pretty "f64"
+  TyOptional ty -> pretty "Option<" <> genTypeRust ty <> pretty ">"
+  TyList ty -> pretty "Vec<" <> genTypeRust ty <> pretty ">"
+  TyExpected a b -> pretty "Result" <> pretty "<" <> genTypeRust a <> pretty "," <> genTypeRust b <> pretty ">"
+  TyTuple [] -> mempty
+  TyTuple ty_list -> parens (hsep $ punctuate comma (map genTypeRust ty_list))
+  TyRef (normalizeIdentifier -> name) -> pretty name
+  TyExternRef _ _ -> error "TODO: extern ref"
+  _ -> error "crash type"
