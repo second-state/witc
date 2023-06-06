@@ -1,29 +1,30 @@
 module Wit.Check
   ( CheckError (..),
-    parseFile,trackFile,
+    parseFile,
+    trackFile,
     check,
     emptyCheckState,
     CheckResult (..),
     TyEnv,
-    Context
+    Context,
   )
 where
 
-import Algebra.Graph.AdjacencyMap
-import Algebra.Graph.ToGraph
-import Control.Monad
-import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad.State
+import Algebra.Graph.AdjacencyMap (AdjacencyMap, connect, empty, overlays, vertex)
+import Algebra.Graph.ToGraph (ToGraph (topSort))
+import Control.Monad (forM, forM_)
+import Control.Monad.Except (MonadError (..), MonadIO (..))
+import Control.Monad.Reader (MonadReader (ask))
+import Control.Monad.State (MonadState (get, put), StateT (runStateT), modify)
 import Data.Map.Lazy ((!?))
 import Data.Map.Lazy qualified as M
 import Prettyprinter
 import System.Directory
-import System.FilePath
-import Text.Megaparsec (SourcePos, parse,sourcePosPretty,errorBundlePretty)
+import System.FilePath (normalise, (</>))
+import Text.Megaparsec (SourcePos, errorBundlePretty, parse, sourcePosPretty)
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
-import Wit.TypeValue
+import Wit.TypeValue (TypeSig (..), TypeVal (..))
 
 data CheckError
   = PErr ParserError
@@ -125,22 +126,26 @@ evaluateType (Defined name) = do
     Just _ -> return (TyRef name)
     Nothing -> report $ "Type `" <> name <> "` not found"
 
-trackFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) =>
-    FilePath -> m ([FilePath], M.Map FilePath WitFile)
+trackFile ::
+  (MonadIO m, MonadError CheckError m, MonadReader FilePath m) =>
+  FilePath ->
+  m ([FilePath], M.Map FilePath WitFile)
 trackFile filepath = do
-  (depGraph, map) <- runStateT (go filepath) M.empty
-  let todoList = topSort (depGraph)
+  (depGraph, parsed) <- runStateT (go filepath) M.empty
+  let todoList = topSort depGraph
   case todoList of
-    Left cycle -> throwError $ CheckError ("cyclic dependency: "<> show cycle) Nothing
-    Right r -> return (reverse r, map)
+    Left c -> throwError $ CheckError ("cyclic dependency: " <> show c) Nothing
+    Right r -> return (reverse r, parsed)
   where
-    go :: (MonadIO m, MonadState (M.Map FilePath WitFile) m, MonadError CheckError m, MonadReader FilePath m) =>
-      FilePath -> m (AdjacencyMap FilePath)
-    go filepath = do
-      wit_ast <- parseFile filepath
-      modify (\visited -> M.insert filepath wit_ast visited)
-      let deps = map (\dep -> dep <> ".wit") $ dependencies (use_list wit_ast)
-      let g = map (\d -> connect (vertex filepath) (vertex d)) deps
+    go ::
+      (MonadIO m, MonadState (M.Map FilePath WitFile) m, MonadError CheckError m, MonadReader FilePath m) =>
+      FilePath ->
+      m (AdjacencyMap FilePath)
+    go path = do
+      wit_ast <- parseFile path
+      modify (M.insert path wit_ast)
+      let deps = map (<> ".wit") $ dependencies (use_list wit_ast)
+      let g = map (connect (vertex path) . vertex) deps
       gs <- forM deps $ \dep -> do
         visited <- get
         if M.member dep visited

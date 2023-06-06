@@ -163,7 +163,7 @@ runWithErrorHandler act onErr onSuccess = do
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
 checkFile dirpath filepath = do
   (todoList, parsed) <- runReaderT (trackFile filepath) dirpath
-  forM todoList $ \file -> do
+  _ <- forM todoList $ \file -> do
     case M.lookup file parsed of
       Nothing -> error "impossible"
       Just ast -> runReaderT (evalStateT (check ast) emptyCheckState) dirpath

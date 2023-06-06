@@ -5,7 +5,6 @@ module Wit.Ast
     Function (..),
     Attr (..),
     Type (..),
-    Use,
     dependencies,
   )
 where
