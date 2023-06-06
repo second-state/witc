@@ -8,6 +8,7 @@ cli design
 -}
 module Main (main) where
 
+import Data.Map.Lazy qualified as M
 import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -161,5 +162,9 @@ runWithErrorHandler act onErr onSuccess = do
 
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
 checkFile dirpath filepath = do
-  ast <- runReaderT (parseFile filepath) dirpath
-  runReaderT (evalStateT (check ast) emptyCheckState) dirpath
+  (todoList, parsed) <- runReaderT (trackFile filepath) dirpath
+  forM todoList $ \file -> do
+    case M.lookup file parsed of
+      Nothing -> error "impossible"
+      Just ast -> runReaderT (evalStateT (check ast) emptyCheckState) dirpath
+  return CheckResult {tyEnv = M.empty, ctx = M.empty}

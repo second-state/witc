@@ -1,14 +1,16 @@
 module Wit.Check
   ( CheckError (..),
-    parseFile,
+    parseFile,trackFile,
     check,
     emptyCheckState,
     CheckResult (..),
     TyEnv,
-    Context,
+    Context
   )
 where
 
+import Algebra.Graph.AdjacencyMap
+import Algebra.Graph.ToGraph
 import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -18,7 +20,7 @@ import Data.Map.Lazy qualified as M
 import Prettyprinter
 import System.Directory
 import System.FilePath
-import Text.Megaparsec
+import Text.Megaparsec (SourcePos, parse,sourcePosPretty,errorBundlePretty)
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
 import Wit.TypeValue
@@ -122,6 +124,29 @@ evaluateType (Defined name) = do
     -- we will, however, expand a ref in codegen
     Just _ -> return (TyRef name)
     Nothing -> report $ "Type `" <> name <> "` not found"
+
+trackFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) =>
+    FilePath -> m ([FilePath], M.Map FilePath WitFile)
+trackFile filepath = do
+  (depGraph, map) <- runStateT (go filepath) M.empty
+  let todoList = topSort (depGraph)
+  case todoList of
+    Left cycle -> throwError $ CheckError ("cyclic dependency: "<> show cycle) Nothing
+    Right r -> return (reverse r, map)
+  where
+    go :: (MonadIO m, MonadState (M.Map FilePath WitFile) m, MonadError CheckError m, MonadReader FilePath m) =>
+      FilePath -> m (AdjacencyMap FilePath)
+    go filepath = do
+      wit_ast <- parseFile filepath
+      modify (\visited -> M.insert filepath wit_ast visited)
+      let deps = map (\dep -> dep <> ".wit") $ dependencies (use_list wit_ast)
+      let g = map (\d -> connect (vertex filepath) (vertex d)) deps
+      gs <- forM deps $ \dep -> do
+        visited <- get
+        if M.member dep visited
+          then return empty
+          else go dep
+      return $ overlays $ gs ++ g
 
 parseFile :: (MonadIO m, MonadError CheckError m, MonadReader FilePath m) => FilePath -> m WitFile
 parseFile filepath = do

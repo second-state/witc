@@ -5,6 +5,8 @@ module Wit.Ast
     Function (..),
     Attr (..),
     Type (..),
+    Use,
+    dependencies,
   )
 where
 
@@ -23,6 +25,12 @@ data Use
   | -- use * from mod
     UseAll String
   deriving (Show, Eq)
+
+dependencies :: [Use] -> [FilePath]
+dependencies [] = []
+dependencies (SrcPosUse _ use : xs) = dependencies (use : xs)
+dependencies (UseAll path : xs) = path : dependencies xs
+dependencies (Use _ path : xs) = path : dependencies xs
 
 data Definition
   = SrcPos SourcePos Definition
