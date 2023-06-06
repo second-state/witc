@@ -134,7 +134,7 @@ trackFile filepath = do
   (depGraph, parsed) <- runStateT (go filepath) M.empty
   let todoList = topSort depGraph
   case todoList of
-    Left c -> throwError $ CheckError ("cyclic dependency: " <> show c) Nothing
+    Left c -> throwError $ CheckError (filepath <> ": cyclic dependency\n  " <> show c) Nothing
     Right r -> return (reverse r, parsed)
   where
     go ::
