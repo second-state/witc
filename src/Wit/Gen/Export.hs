@@ -14,7 +14,7 @@ import Wit.Gen.Type
 import Wit.TypeValue
 
 -- instance
-toUnsafeExtern :: String -> TypeSig -> Reader (M.Map FilePath CheckResult) (Doc a)
+toUnsafeExtern :: MonadReader (M.Map FilePath CheckResult) m => String -> TypeSig -> m (Doc a)
 toUnsafeExtern name (TyArrow param_list _result_ty) = do
   ps <- mapM getParameter param_list
   return $
@@ -42,7 +42,7 @@ toUnsafeExtern name (TyArrow param_list _result_ty) = do
           )
       ]
   where
-    getParameter :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+    getParameter :: MonadReader (M.Map FilePath CheckResult) m => (String, TypeVal) -> m (Doc a)
     getParameter (x, ty) = do
       ty' <- genTypeRust ty
       return $
@@ -58,7 +58,7 @@ toUnsafeExtern name (TyArrow param_list _result_ty) = do
           ]
 
 -- runtime
-toHostFunction :: String -> TypeSig -> Reader (M.Map FilePath CheckResult) (Doc a)
+toHostFunction :: MonadReader (M.Map FilePath CheckResult) m => String -> TypeSig -> m (Doc a)
 toHostFunction name (TyArrow param_list _result_ty) = do
   ps <- mapM letParam param_list
   return $
@@ -88,7 +88,10 @@ toHostFunction name (TyArrow param_list _result_ty) = do
               )
         )
   where
-    letParam :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+    letParam ::
+      MonadReader (M.Map FilePath CheckResult) m =>
+      (String, TypeVal) ->
+      m (Doc a)
     letParam (x, ty) = do
       ty' <- genTypeRust ty
       return $

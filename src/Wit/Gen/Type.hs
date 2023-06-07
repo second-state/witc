@@ -12,7 +12,11 @@ import Wit.Check
 import Wit.Gen.Normalization
 import Wit.TypeValue
 
-genTypeDefRust :: String -> TypeVal -> Reader (M.Map FilePath CheckResult) (Doc a)
+genTypeDefRust ::
+  MonadReader (M.Map FilePath CheckResult) m =>
+  String ->
+  TypeVal ->
+  m (Doc a)
 genTypeDefRust (normalizeIdentifier -> name) = \case
   TyRecord fields -> do
     fields' <-
@@ -47,11 +51,11 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
         <+> pretty name
         <+> braces (line <> indent 4 (vsep $ punctuate comma cases') <> line)
     where
-      genCase :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+      genCase :: MonadReader (M.Map FilePath CheckResult) m => (String, TypeVal) -> m (Doc a)
       genCase (normalizeIdentifier -> n, ty) = do
         b <- boxType ty
         return $ pretty n <> b
-      boxType :: TypeVal -> Reader (M.Map FilePath CheckResult) (Doc a)
+      boxType :: MonadReader (M.Map FilePath CheckResult) m => TypeVal -> m (Doc a)
       boxType (TyOptional ty) = do
         b <- boxType ty
         return $ pretty "Option" <> angles b
@@ -89,7 +93,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
     b <- genTypeRust ty
     return $ pretty "type" <+> pretty name <+> pretty "=" <+> b <> pretty ";"
 
-genTypeRust :: TypeVal -> Reader (M.Map FilePath CheckResult) (Doc a)
+genTypeRust :: MonadReader (M.Map FilePath CheckResult) m => TypeVal -> m (Doc a)
 genTypeRust = \case
   TyString -> return $ pretty "String"
   TyUnit -> return $ pretty "()"

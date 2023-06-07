@@ -10,7 +10,7 @@ import Wit.Check
 import Wit.Gen.Normalization
 import Wit.TypeValue
 
-convertFuncRust :: String -> String -> TypeSig -> Reader (M.Map FilePath CheckResult) (Doc a)
+convertFuncRust :: MonadReader (M.Map FilePath CheckResult) m => String -> String -> TypeSig -> m (Doc a)
 convertFuncRust pluginName (normalizeIdentifier -> name) (TyArrow param_list result_ty) =
   return $
     pretty "#[link_name ="

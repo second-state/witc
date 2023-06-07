@@ -14,7 +14,7 @@ import Wit.Gen.Type
 import Wit.TypeValue
 
 -- runtime
-toVmWrapper :: String -> String -> TypeSig -> Reader (M.Map FilePath CheckResult) (Doc a)
+toVmWrapper :: MonadReader (M.Map FilePath CheckResult) m => String -> String -> TypeSig -> m (Doc a)
 toVmWrapper importName name (TyArrow param_list result_ty) = do
   params <-
     mapM
@@ -52,7 +52,7 @@ toVmWrapper importName name (TyArrow param_list result_ty) = do
             )
         )
   where
-    sendArgument :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+    sendArgument :: MonadReader (M.Map FilePath CheckResult) m => (String, TypeVal) -> m (Doc a)
     sendArgument (param_name, _) =
       return $
         pretty $
@@ -61,7 +61,11 @@ toVmWrapper importName name (TyArrow param_list result_ty) = do
             ++ ").unwrap()); }"
 
 -- instance
-prettyDefWrap :: String -> TypeSig -> Reader (M.Map FilePath CheckResult) (Doc a)
+prettyDefWrap ::
+  MonadReader (M.Map FilePath CheckResult) m =>
+  String ->
+  TypeSig ->
+  m (Doc a)
 prettyDefWrap name (TyArrow param_list result_ty) = do
   rty <- genTypeRust result_ty
   ps <- mapM prettyBinder param_list
@@ -94,7 +98,7 @@ prettyDefWrap name (TyArrow param_list result_ty) = do
               )
         )
   where
-    sendArgument :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+    sendArgument :: MonadReader (M.Map FilePath CheckResult) m => (String, TypeVal) -> m (Doc a)
     sendArgument (param_name, _) =
       return $
         pretty
@@ -102,11 +106,18 @@ prettyDefWrap name (TyArrow param_list result_ty) = do
           <> line'
           <> pretty "witc_abi::instance::write(id, r.as_ptr() as usize, r.len());"
 
-    prettyBinder :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+    prettyBinder ::
+      MonadReader (M.Map FilePath CheckResult) m =>
+      (String, TypeVal) ->
+      m (Doc a)
     prettyBinder (field_name, ty) = do
       ty' <- genTypeRust ty
       return $ pretty field_name <> pretty ":" <+> ty'
 
-prettyDefExtern :: String -> TypeSig -> Reader (M.Map FilePath CheckResult) (Doc a)
+prettyDefExtern ::
+  MonadReader (M.Map FilePath CheckResult) m =>
+  String ->
+  TypeSig ->
+  m (Doc a)
 prettyDefExtern (externalConvention -> name) (TyArrow {}) = do
   return $ pretty "fn" <+> pretty name <> pretty "(id: i32);"

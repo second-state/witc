@@ -14,15 +14,16 @@ import Wit.Gen.Plugin
 import Wit.Gen.Type
 
 genContext ::
+  MonadReader (M.Map FilePath CheckResult) m =>
   M.Map String t ->
-  (String -> t -> Reader (M.Map FilePath CheckResult) (Doc a)) ->
-  Reader (M.Map FilePath CheckResult) (Doc a)
+  (String -> t -> m (Doc a)) ->
+  m (Doc a)
 genContext m f = do
   let m' = M.toList m
   t <- forM m' (uncurry f)
   return $ foldl (\acc x -> acc <> line <> x) mempty t
 
-prettyFile :: Config -> String -> FilePath -> Reader (M.Map FilePath CheckResult) (Doc a)
+prettyFile :: MonadReader (M.Map FilePath CheckResult) m => Config -> String -> FilePath -> m (Doc a)
 prettyFile config inOutName targetMod = do
   checked <- ask
   let CheckResult {tyEnv = ty_env, ctx = context} = checked M.! targetMod
