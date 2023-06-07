@@ -7,7 +7,7 @@ module Wit.Check
   )
 where
 
-import Algebra.Graph.AdjacencyMap (AdjacencyMap, connect, empty, overlays, vertex)
+import Algebra.Graph.AdjacencyMap (AdjacencyMap, connect, empty, overlay, overlays, vertex)
 import Algebra.Graph.ToGraph (ToGraph (topSort))
 import Control.Monad
 import Control.Monad.Except
@@ -142,7 +142,7 @@ trackFile ::
   m ([FilePath], M.Map FilePath WitFile)
 trackFile filepath = do
   (depGraph, parsed) <- runStateT (go filepath) M.empty
-  let todoList = topSort depGraph
+  let todoList = topSort (vertex filepath `overlay` depGraph)
   case todoList of
     Left c -> throwError $ CheckError (filepath <> ": cyclic dependency\n  " <> show c) Nothing
     Right r -> return (reverse r, parsed)
@@ -184,7 +184,8 @@ check ::
 check checked wit_file = do
   forM_ wit_file.use_list (checkAndImportUse checked)
   bundle
-  forM_ wit_file.definition_list defineType
+  forM_ wit_file.definition_list (collect . defineType)
+  bundle
   forM_ (definition_list wit_file) (collect . defineTerm)
   bundle
   checkState <- get
@@ -206,9 +207,9 @@ check checked wit_file = do
     -- ensure required types are defined in the imported module
     ensureRequire :: (MonadError CheckError m) => String -> TyEnv -> String -> m ()
     ensureRequire mod_name env require_name =
-      if require_name `M.member` env
-        then return ()
-        else report ("no type `" ++ require_name ++ "` in module `" ++ mod_name ++ "`")
+      when
+        (require_name `M.notMember` env)
+        (report ("no type `" ++ require_name ++ "` in module `" ++ mod_name ++ "`"))
 
 defineType :: (MonadError CheckError m, MonadState CheckState m) => Definition -> m ()
 defineType (SrcPos _ def) = defineType def
@@ -252,29 +253,25 @@ defineTerm :: (MonadError CheckError m, MonadState CheckState m) => Definition -
 defineTerm (SrcPos pos def) = addPos pos $ defineTerm def
 defineTerm (Func f) = defineFn f
 defineTerm (Resource resource_name func_list) =
-  forM_
-    func_list
-    ( \(attr, Function name binders retTyp) -> do
-        let fn =
-              ( case attr of
-                  -- e.g.
-                  -- `static open: func(name: string) -> expected<keyvalue, keyvalue-error>`
-                  -- ~> out of resource
-                  -- `keyvalue_open: func(name: string) -> expected<keyvalue, keyvalue-error>`
-                  Static -> Function (resource_name <> "_" <> name) binders retTyp
-                  -- e.g.
-                  -- `get: func(key: string) -> expected<list<u8>, keyvalue-error> `
-                  -- ~> out of resource
-                  -- `keyvalue_get: func(handle: keyvalue, key: string) -> expected<list<u8>, keyvalue-error> `
-                  Member -> Function (resource_name <> "_" <> name) (("handle", Defined resource_name) : binders) retTyp
-              )
-        defineFn fn
-    )
+  forM_ func_list (\(attr, fn) -> defineFn (transform fn attr))
+  where
+    transform :: Function -> Attr -> Function
+    transform (Function name binders retTyp) = \case
+      -- e.g.
+      -- `static open: func(name: string) -> expected<keyvalue, keyvalue-error>`
+      -- ~> out of resource
+      -- `keyvalue_open: func(name: string) -> expected<keyvalue, keyvalue-error>`
+      Static -> Function (resource_name <> "_" <> name) binders retTyp
+      -- e.g.
+      -- `get: func(key: string) -> expected<list<u8>, keyvalue-error> `
+      -- ~> out of resource
+      -- `keyvalue_get: func(handle: keyvalue, key: string) -> expected<list<u8>, keyvalue-error> `
+      Member -> Function (resource_name <> "_" <> name) (("handle", Defined resource_name) : binders) retTyp
 defineTerm _ = return ()
 
 defineFn :: (MonadError CheckError m, MonadState CheckState m) => Function -> m ()
 defineFn (Function name binders result_ty) = do
-  binders' <- mapM (\(p, pTy) -> do pTy' <- evaluateType pTy; return (p, pTy')) binders
+  binders' <- forM binders (\(p, pTy) -> do pTy' <- evaluateType pTy; return (p, pTy'))
   resultTy <- evaluateType result_ty
   updateContext name (TyArrow binders' resultTy)
 
