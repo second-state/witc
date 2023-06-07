@@ -8,6 +8,7 @@ and this project adheres to the
 
 ## Unreleased
 
+- check circular imports
 - codegen rust FFI for plugin
 
 ## 0.3.1
