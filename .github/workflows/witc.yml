@@ -19,15 +19,11 @@ on:
       - "**.yml"
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: haskell/actions/setup@v2
-      - run: stack build
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: haskell/actions/setup@v2
-      - run: stack test
+      - run: |
+          stack build
+          stack test
