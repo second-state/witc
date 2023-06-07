@@ -5,33 +5,38 @@ import Control.Monad.Reader
 import Control.Monad.State
 import System.FilePath
 import Test.Hspec
-import Wit.Ast
 import Wit.Check
-
-check' :: FilePath -> WitFile -> ExceptT CheckError IO CheckResult
-check' dirpath wit_file = do
-  runReaderT (evalStateT (check wit_file) emptyCheckState) dirpath
+import Data.Map.Lazy qualified as M
 
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
 checkFile dirpath filepath = do
-  ast <- runReaderT (parseFile filepath) dirpath
-  check' dirpath ast
+  (toCheckList, parsed) <- runReaderT (trackFile filepath) dirpath
+  checked <-
+    foldM
+      ( \checked file -> do
+          let ast = parsed M.! file
+          c <- (runReaderT (evalStateT (check checked ast) emptyCheckState) dirpath)
+          return $ M.insert file c checked
+      )
+      M.empty
+      toCheckList
+  return $ checked M.! filepath
 
 specFile :: FilePath -> IO ()
 specFile file = do
   r <- runExceptT $ checkFile (takeDirectory file) (takeFileName file)
   case r of
     Left _ -> return ()
-    Right _ -> expectationFailure "checker should find out undefined type!"
+    Right _ -> expectationFailure "checker should find some errors"
 
 spec :: Spec
 spec = describe "check wit" $ do
   context "check definition" $ do
-    it "should report undefined type" $ do
+    it "`bad-types` should report undefined type" $ do
       specFile "test/data/bad-types.wit"
-    it "should report undefined type" $ do
+    it "`bad-types2` should report undefined type" $ do
       specFile "test/data/bad-types2.wit"
-    it "should report undefined type" $ do
+    it "`func-using-missing-type` should report undefined type" $ do
       specFile "test/data/func-using-missing-type.wit"
   context "check dependencies" $ do
     it "should report no such file" $ do

@@ -162,9 +162,14 @@ runWithErrorHandler act onErr onSuccess = do
 
 checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
 checkFile dirpath filepath = do
-  (todoList, parsed) <- runReaderT (trackFile filepath) dirpath
-  _ <- forM todoList $ \file -> do
-    case M.lookup file parsed of
-      Nothing -> error "impossible"
-      Just ast -> runReaderT (evalStateT (check ast) emptyCheckState) dirpath
-  return CheckResult {tyEnv = M.empty, ctx = M.empty}
+  (toCheckList, parsed) <- runReaderT (trackFile filepath) dirpath
+  checked <-
+    foldM
+      ( \checked file -> do
+          let ast = parsed M.! file
+          c <- (runReaderT (evalStateT (check checked ast) emptyCheckState) dirpath)
+          return $ M.insert file c checked
+      )
+      M.empty
+      toCheckList
+  return $ checked M.! filepath
