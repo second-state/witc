@@ -22,7 +22,12 @@ import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
 import Wit.TypeValue (TypeSig (..), TypeVal (..))
 
-checkFile :: (MonadIO m, MonadError CheckError m) => FilePath -> FilePath -> m CheckResult
+checkFile ::
+  (MonadIO m, MonadError CheckError m) =>
+  FilePath ->
+  FilePath ->
+  m
+    (FilePath, M.Map FilePath CheckResult)
 checkFile dirpath filepath = do
   (toCheckList, parsed) <- runReaderT (trackFile filepath) dirpath
   checked <-
@@ -34,7 +39,7 @@ checkFile dirpath filepath = do
       )
       M.empty
       toCheckList
-  return $ checked M.! filepath
+  return (filepath, checked)
 
 data CheckError
   = PErr ParserError
@@ -201,7 +206,7 @@ check checked wit_file = do
       forM_ imports $ \(pos, name) -> do
         let m = modEnv M.! (mod_name <> ".wit")
         addPos pos $ ensureRequire mod_name m.tyEnv name
-        updateEnvironment name (TyExternRef mod_name name)
+        updateEnvironment name (TyExternRef (mod_name <> ".wit") name)
     checkAndImportUse _ (UseAll _) = return ()
 
     -- ensure required types are defined in the imported module

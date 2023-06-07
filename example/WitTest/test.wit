@@ -1,7 +1,4 @@
-record person {
-  name : string,
-  age : u32
-}
+use { person } from types
 
 set-name: func(p : person, name : string) -> person
 

@@ -1,94 +1,123 @@
 {- Type & its definition should be the same for any direction, hence, it should be independent -}
 module Wit.Gen.Type
-  ( genTypeDefs,
+  ( genTypeDefRust,
     genTypeRust,
   )
 where
 
+import Control.Monad.Reader
 import Data.Map.Lazy qualified as M
 import Prettyprinter
 import Wit.Check
 import Wit.Gen.Normalization
 import Wit.TypeValue
 
-genTypeDefs :: TyEnv -> Doc a
-genTypeDefs env =
-  let f acc x = acc <> line <> x
-   in M.foldl f mempty (M.mapWithKey genTypeDefRust env)
-
-genTypeDefRust :: String -> TypeVal -> Doc a
+genTypeDefRust :: String -> TypeVal -> Reader (M.Map FilePath CheckResult) (Doc a)
 genTypeDefRust (normalizeIdentifier -> name) = \case
-  TyRecord fields ->
-    pretty "#[derive(Serialize, Deserialize, Debug)]"
-      <> line
-      <> pretty "struct"
-      <+> pretty name
-      <+> braces
-        ( line
-            <> indent
-              4
-              ( vsep $
-                  punctuate
-                    comma
-                    ( map
-                        (\(n, ty) -> hsep [pretty n, pretty ":", genTypeRust ty])
-                        fields
-                    )
-              )
-            <> line
+  TyRecord fields -> do
+    fields' <-
+      forM
+        fields
+        ( \(n, ty) -> do
+            b <- genTypeRust ty
+            return $ hsep [pretty n, pretty ":", b]
         )
-  TySum cases ->
-    pretty "#[derive(Serialize, Deserialize, Debug)]"
-      <> line
-      <> pretty "enum"
-      <+> pretty name
-      <+> braces (line <> indent 4 (vsep $ punctuate comma (map genCase cases)) <> line)
+    return $
+      pretty "#[derive(Serialize, Deserialize, Debug)]"
+        <> line
+        <> pretty "struct"
+        <+> pretty name
+        <+> braces
+          ( line
+              <> indent
+                4
+                ( vsep $
+                    punctuate
+                      comma
+                      fields'
+                )
+              <> line
+          )
+  TySum cases -> do
+    cases' <- forM cases genCase
+    return $
+      pretty "#[derive(Serialize, Deserialize, Debug)]"
+        <> line
+        <> pretty "enum"
+        <+> pretty name
+        <+> braces (line <> indent 4 (vsep $ punctuate comma cases') <> line)
     where
-      genCase :: (String, TypeVal) -> Doc a
-      genCase (normalizeIdentifier -> n, ty) = pretty n <> boxType ty
-      boxType :: TypeVal -> Doc a
-      boxType (TyOptional ty) = pretty "Option<" <> boxType ty <> pretty ">"
-      boxType (TyList ty) = pretty "Vec<" <> boxType ty <> pretty ">"
-      boxType (TyExpected a b) = pretty "Result" <> pretty "<" <> boxType a <> pretty "," <> boxType b <> pretty ">"
-      boxType (TyTuple []) = mempty
-      boxType (TyTuple ty_list) = parens (hsep $ punctuate comma (map boxType ty_list))
+      genCase :: (String, TypeVal) -> Reader (M.Map FilePath CheckResult) (Doc a)
+      genCase (normalizeIdentifier -> n, ty) = do
+        b <- boxType ty
+        return $ pretty n <> b
+      boxType :: TypeVal -> Reader (M.Map FilePath CheckResult) (Doc a)
+      boxType (TyOptional ty) = do
+        b <- boxType ty
+        return $ pretty "Option" <> angles b
+      boxType (TyList ty) = do
+        b <- boxType ty
+        return $ pretty "Vec" <> angles b
+      boxType (TyExpected a b) = do
+        a' <- boxType a
+        b' <- boxType b
+        return $ pretty "Result" <> angles (a' <> pretty "," <> b')
+      boxType (TyTuple []) = return mempty
+      boxType (TyTuple ty_list) = do
+        tys <- forM ty_list boxType
+        return $ parens (hsep $ punctuate comma tys)
       boxType (TyRef (normalizeIdentifier -> n)) =
         if n == name
-          then pretty "Box" <> angles (pretty n)
-          else pretty n
+          then return $ pretty "Box" <> angles (pretty n)
+          else return $ pretty n
       boxType ty = genTypeRust ty
   TyEnum cases ->
-    pretty "#[derive(Serialize, Deserialize, Debug)]"
-      <> line
-      <> pretty "enum"
-      <+> pretty name
-      <+> braces
-        ( line
-            <> indent 4 (vsep $ punctuate comma (map (pretty . normalizeIdentifier) cases))
-            <> line
-        )
-  ty -> pretty "type" <+> pretty name <+> pretty "=" <+> genTypeRust ty <> pretty ";"
+    return $
+      pretty "#[derive(Serialize, Deserialize, Debug)]"
+        <> line
+        <> pretty "enum"
+        <+> pretty name
+        <+> braces
+          ( line
+              <> indent 4 (vsep $ punctuate comma (map (pretty . normalizeIdentifier) cases))
+              <> line
+          )
+  TyExternRef mod_file ty_name -> do
+    checked <- ask
+    genTypeDefRust ty_name $ (checked M.! mod_file).tyEnv M.! ty_name
+  ty -> do
+    b <- genTypeRust ty
+    return $ pretty "type" <+> pretty name <+> pretty "=" <+> b <> pretty ";"
 
-genTypeRust :: TypeVal -> Doc a
+genTypeRust :: TypeVal -> Reader (M.Map FilePath CheckResult) (Doc a)
 genTypeRust = \case
-  TyString -> pretty "String"
-  TyUnit -> pretty "()"
-  TyU8 -> pretty "u8"
-  TyU16 -> pretty "u16"
-  TyU32 -> pretty "u32"
-  TyU64 -> pretty "u64"
-  TyI8 -> pretty "i8"
-  TyI16 -> pretty "i16"
-  TyI32 -> pretty "i32"
-  TyI64 -> pretty "i64"
-  TyChar -> pretty "char"
-  TyF32 -> pretty "f32"
-  TyF64 -> pretty "f64"
-  TyOptional ty -> pretty "Option<" <> genTypeRust ty <> pretty ">"
-  TyList ty -> pretty "Vec<" <> genTypeRust ty <> pretty ">"
-  TyExpected a b -> pretty "Result" <> pretty "<" <> genTypeRust a <> pretty "," <> genTypeRust b <> pretty ">"
-  TyTuple [] -> mempty
-  TyTuple ty_list -> parens (hsep $ punctuate comma (map genTypeRust ty_list))
-  TyRef (normalizeIdentifier -> name) -> pretty name
-  TyExternRef _ _ -> error "TODO: extern ref"
+  TyString -> return $ pretty "String"
+  TyUnit -> return $ pretty "()"
+  TyU8 -> return $ pretty "u8"
+  TyU16 -> return $ pretty "u16"
+  TyU32 -> return $ pretty "u32"
+  TyU64 -> return $ pretty "u64"
+  TyI8 -> return $ pretty "i8"
+  TyI16 -> return $ pretty "i16"
+  TyI32 -> return $ pretty "i32"
+  TyI64 -> return $ pretty "i64"
+  TyChar -> return $ pretty "char"
+  TyF32 -> return $ pretty "f32"
+  TyF64 -> return $ pretty "f64"
+  TyOptional ty -> do
+    b <- genTypeRust ty
+    return $ pretty "Option" <> angles b
+  TyList ty -> do
+    b <- genTypeRust ty
+    return $ pretty "Vec" <> angles b
+  TyExpected a b -> do
+    a' <- genTypeRust a
+    b' <- genTypeRust b
+    return $ pretty "Result" <> angles (a' <> pretty "," <> b')
+  TyTuple [] -> return mempty
+  TyTuple ty_list -> do
+    tys <- forM ty_list genTypeRust
+    return $ parens (hsep $ punctuate comma tys)
+  TyRef (normalizeIdentifier -> name) -> return $ pretty name
+  TyExternRef _ (normalizeIdentifier -> ty_name) -> return $ pretty ty_name
   _ -> error "crash type"

@@ -10,6 +10,7 @@ module Main (main) where
 
 import Control.Monad
 import Control.Monad.Except
+import Control.Monad.Reader
 import Data.List (isSuffixOf)
 import Options.Applicative
 import Prettyprinter
@@ -144,8 +145,9 @@ codegenPluginCmd file = do
 
 codegenCmd :: Mode -> FilePath -> String -> IO ()
 codegenCmd mode file importName = do
-  checkResult <- runExit $ checkFile (takeDirectory file) (takeFileName file)
-  (putDoc . prettyFile Config {language = Rust, codegenMode = mode} importName) checkResult
+  (targetMod, checked) <- runExit $ checkFile (takeDirectory file) (takeFileName file)
+  let doc = runReader (prettyFile Config {language = Rust, codegenMode = mode} importName targetMod) checked
+  putDoc doc
 
 runExit :: ExceptT CheckError IO a -> IO a
 runExit act = do
