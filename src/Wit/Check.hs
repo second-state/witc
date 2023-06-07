@@ -1,9 +1,6 @@
 module Wit.Check
   ( CheckError (..),
-    parseFile,
-    trackFile,
-    check,
-    emptyCheckState,
+    checkFile,
     CheckResult (..),
     TyEnv,
     Context,
@@ -12,10 +9,10 @@ where
 
 import Algebra.Graph.AdjacencyMap (AdjacencyMap, connect, empty, overlays, vertex)
 import Algebra.Graph.ToGraph (ToGraph (topSort))
-import Control.Monad (forM, forM_)
-import Control.Monad.Except (MonadError (..), MonadIO (..))
-import Control.Monad.Reader (MonadReader (ask))
-import Control.Monad.State (MonadState (get, put), StateT (runStateT), modify)
+import Control.Monad
+import Control.Monad.Except
+import Control.Monad.Reader
+import Control.Monad.State
 import Data.Map.Lazy qualified as M
 import Prettyprinter
 import System.Directory
@@ -24,6 +21,20 @@ import Text.Megaparsec (SourcePos, errorBundlePretty, parse, sourcePosPretty)
 import Wit.Ast
 import Wit.Parser (ParserError, pWitFile)
 import Wit.TypeValue (TypeSig (..), TypeVal (..))
+
+checkFile :: (MonadIO m, MonadError CheckError m) => FilePath -> FilePath -> m CheckResult
+checkFile dirpath filepath = do
+  (toCheckList, parsed) <- runReaderT (trackFile filepath) dirpath
+  checked <-
+    foldM
+      ( \checked file -> do
+          let ast = parsed M.! file
+          c <- runReaderT (evalStateT (check checked ast) emptyCheckState) dirpath
+          return $ M.insert file c checked
+      )
+      M.empty
+      toCheckList
+  return $ checked M.! filepath
 
 data CheckError
   = PErr ParserError
@@ -171,7 +182,7 @@ check ::
   WitFile ->
   m CheckResult
 check checked wit_file = do
-  forM_ (use_list wit_file) (checkAndImportUse checked)
+  forM_ wit_file.use_list (checkAndImportUse checked)
   bundle
   forM_ wit_file.definition_list defineType
   forM_ (definition_list wit_file) (collect . defineTerm)

@@ -1,26 +1,9 @@
 module Wit.CheckSpec (spec) where
 
 import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad.State
 import System.FilePath
 import Test.Hspec
 import Wit.Check
-import Data.Map.Lazy qualified as M
-
-checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
-checkFile dirpath filepath = do
-  (toCheckList, parsed) <- runReaderT (trackFile filepath) dirpath
-  checked <-
-    foldM
-      ( \checked file -> do
-          let ast = parsed M.! file
-          c <- (runReaderT (evalStateT (check checked ast) emptyCheckState) dirpath)
-          return $ M.insert file c checked
-      )
-      M.empty
-      toCheckList
-  return $ checked M.! filepath
 
 specFile :: FilePath -> IO ()
 specFile file = do

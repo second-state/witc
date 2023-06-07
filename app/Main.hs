@@ -8,11 +8,8 @@ cli design
 -}
 module Main (main) where
 
-import Data.Map.Lazy qualified as M
 import Control.Monad
 import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad.State
 import Data.List (isSuffixOf)
 import Options.Applicative
 import Prettyprinter
@@ -130,10 +127,10 @@ checkDir dir = do
 
 checkFileWithDoneHint :: FilePath -> FilePath -> IO ()
 checkFileWithDoneHint dir file = do
-  runWithErrorHandler
-    (checkFile dir file)
-    printCheckError
-    (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
+  result <- runExceptT (checkFile dir file)
+  case result of
+    Left e -> printCheckError e
+    Right _ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
 
 printCheckError :: CheckError -> IO ()
 printCheckError e = do
@@ -151,25 +148,8 @@ codegenCmd mode file importName = do
   (putDoc . prettyFile Config {language = Rust, codegenMode = mode} importName) checkResult
 
 runExit :: ExceptT CheckError IO a -> IO a
-runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure) pure
-
-runWithErrorHandler :: ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
-runWithErrorHandler act onErr onSuccess = do
+runExit act = do
   result <- runExceptT act
   case result of
-    Left e -> onErr e
-    Right a -> onSuccess a
-
-checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
-checkFile dirpath filepath = do
-  (toCheckList, parsed) <- runReaderT (trackFile filepath) dirpath
-  checked <-
-    foldM
-      ( \checked file -> do
-          let ast = parsed M.! file
-          c <- (runReaderT (evalStateT (check checked ast) emptyCheckState) dirpath)
-          return $ M.insert file c checked
-      )
-      M.empty
-      toCheckList
-  return $ checked M.! filepath
+    Left e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure
+    Right a -> pure a
