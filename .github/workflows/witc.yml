@@ -24,6 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: haskell/actions/setup@v2
-      - run: |
-          stack build
-          stack test
+      - run: stack test
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: haskell/actions/setup@v2
+      - run: stack build
