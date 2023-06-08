@@ -26,3 +26,6 @@ spec = describe "check wit" $ do
       specFile "test/data/bad-import.wit"
     it "should report no such definition in the dependency" $ do
       specFile "test/data/bad-import2.wit"
+  context "cyclic import" $ do
+    it "should report cyclic import" $ do
+      specFile "test/data/test/data/cycle-import-a.wit"
