@@ -11,7 +11,6 @@ module Main (main) where
 import Control.Monad
 import Control.Monad.Except
 import Control.Monad.Reader
-import Control.Monad.State
 import Data.List (isSuffixOf)
 import Options.Applicative
 import Prettyprinter
@@ -129,10 +128,10 @@ checkDir dir = do
 
 checkFileWithDoneHint :: FilePath -> FilePath -> IO ()
 checkFileWithDoneHint dir file = do
-  runWithErrorHandler
-    (checkFile dir file)
-    printCheckError
-    (\_ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line)
+  result <- runExceptT (checkFile dir file)
+  case result of
+    Left e -> printCheckError e
+    Right _ -> putDoc $ pretty file <+> annotate (color Green) (pretty "OK") <+> line
 
 printCheckError :: CheckError -> IO ()
 printCheckError e = do
@@ -146,20 +145,13 @@ codegenPluginCmd file = do
 
 codegenCmd :: Mode -> FilePath -> String -> IO ()
 codegenCmd mode file importName = do
-  checkResult <- runExit $ checkFile (takeDirectory file) (takeFileName file)
-  (putDoc . prettyFile Config {language = Rust, codegenMode = mode} importName) checkResult
+  (targetMod, checked) <- runExit $ checkFile (takeDirectory file) (takeFileName file)
+  let doc = runReader (prettyFile Config {language = Rust, codegenMode = mode} importName targetMod) checked
+  putDoc doc
 
 runExit :: ExceptT CheckError IO a -> IO a
-runExit act = runWithErrorHandler act (\e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure) pure
-
-runWithErrorHandler :: ExceptT CheckError IO a -> (CheckError -> IO b) -> (a -> IO b) -> IO b
-runWithErrorHandler act onErr onSuccess = do
+runExit act = do
   result <- runExceptT act
   case result of
-    Left e -> onErr e
-    Right a -> onSuccess a
-
-checkFile :: FilePath -> FilePath -> ExceptT CheckError IO CheckResult
-checkFile dirpath filepath = do
-  ast <- runReaderT (parseFile filepath) dirpath
-  runReaderT (evalStateT (check ast) emptyCheckState) dirpath
+    Left e -> putDoc (annotate (color Red) $ pretty e) *> exitFailure
+    Right a -> pure a

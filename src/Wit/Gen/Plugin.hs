@@ -3,24 +3,28 @@ module Wit.Gen.Plugin
   )
 where
 
+import Control.Monad.Reader
+import Data.Map.Lazy qualified as M
 import Prettyprinter
+import Wit.Check
 import Wit.Gen.Normalization
 import Wit.TypeValue
 
-convertFuncRust :: String -> String -> TypeSig -> Doc a
+convertFuncRust :: MonadReader (M.Map FilePath CheckResult) m => String -> String -> TypeSig -> m (Doc a)
 convertFuncRust pluginName (normalizeIdentifier -> name) (TyArrow param_list result_ty) =
-  pretty "#[link_name ="
-    <+> dquotes (pretty $ pluginName ++ "_" ++ name)
-      <> pretty "]"
-    <+> line'
-      <> pretty
-        "pub"
-    <+> pretty "fn"
-    <+> pretty name
-      <> parens (hsep (punctuate comma (map convertParamRust param_list)))
-    <+> pretty "->"
-    <+> convertTyRust result_ty
-      <> semi
+  return $
+    pretty "#[link_name ="
+      <+> dquotes (pretty $ pluginName ++ "_" ++ name)
+        <> pretty "]"
+      <+> line'
+        <> pretty
+          "pub"
+      <+> pretty "fn"
+      <+> pretty name
+        <> parens (hsep (punctuate comma (map convertParamRust param_list)))
+      <+> pretty "->"
+      <+> convertTyRust result_ty
+        <> semi
   where
     convertPtrTypeRust paramName =
       pretty (paramName ++ "_ptr")
