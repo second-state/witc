@@ -147,10 +147,9 @@ trackFile ::
   m ([FilePath], M.Map FilePath WitFile)
 trackFile filepath = do
   (depGraph, parsed) <- runStateT (go filepath) M.empty
-  let todoList = topSort (vertex filepath `overlay` depGraph)
-  case todoList of
+  case topSort (vertex filepath `overlay` depGraph) of
     Left c -> throwError $ CheckError (filepath <> ": cyclic dependency\n  " <> show c) Nothing
-    Right r -> return (reverse r, parsed)
+    Right todoList -> return (reverse todoList, parsed)
   where
     go ::
       (MonadIO m, MonadState (M.Map FilePath WitFile) m, MonadError CheckError m, MonadReader FilePath m) =>
