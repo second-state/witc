@@ -2,3 +2,5 @@ record person {
   name : string,
   age : u32
 }
+
+enum color { red, green, blue }
