@@ -200,13 +200,16 @@ check checked wit_file = do
       }
   where
     checkAndImportUse :: (MonadError CheckError m, MonadState CheckState m) => M.Map FilePath CheckResult -> Use -> m ()
-    checkAndImportUse modEnv (SrcPosUse pos u) = addPos pos $ checkAndImportUse modEnv u
-    checkAndImportUse modEnv (Use imports mod_name) = do
+    checkAndImportUse mod_env (SrcPosUse pos u) = addPos pos $ checkAndImportUse mod_env u
+    checkAndImportUse mod_env (Use imports mod_name) = do
       forM_ imports $ \(pos, name) -> do
-        let m = modEnv M.! (mod_name <> ".wit")
+        let m = mod_env M.! (mod_name <> ".wit")
         addPos pos $ ensureRequire mod_name m.tyEnv name
         updateEnvironment name (TyExternRef (mod_name <> ".wit") name)
-    checkAndImportUse _ (UseAll _) = return ()
+    checkAndImportUse mod_env (UseAll mod_name) = do
+      let m = mod_env M.! (mod_name <> ".wit")
+      forM_ (M.toList m.tyEnv) $ \(name, _) -> do
+        updateEnvironment name (TyExternRef (mod_name <> ".wit") name)
 
     -- ensure required types are defined in the imported module
     ensureRequire :: (MonadError CheckError m) => String -> TyEnv -> String -> m ()
