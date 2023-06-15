@@ -4,13 +4,14 @@ use std::{
     sync::atomic::{AtomicI32, Ordering},
 };
 use wasmedge_sdk::{
-    error::HostFuncError, host_function, Caller, ImportObject, ImportObjectBuilder, WasmEdgeResult,
-    WasmValue,
+    error::HostFuncError, host_function, Caller, ImportObject, ImportObjectBuilder, Memory,
+    WasmEdgeResult, WasmValue,
 };
 
 pub struct GlobalState {
     counter: AtomicI32,
     queue_pool: HashMap<i32, VecDeque<String>>,
+    mem_pool: HashMap<i32, Memory>,
 }
 
 impl GlobalState {
@@ -18,6 +19,7 @@ impl GlobalState {
         Self {
             counter: AtomicI32::new(0),
             queue_pool: HashMap::new(),
+            mem_pool: HashMap::new(),
         }
     }
 
@@ -41,9 +43,29 @@ impl GlobalState {
             .pop_front()
             .unwrap()
     }
+
+    pub fn register_memory(&mut self, mem: Memory) -> i32 {
+        let new_id = self.new_queue();
+        self.mem_pool.insert(new_id, mem);
+        return new_id;
+    }
+
+    pub fn copy_data(&mut self, mem_id_from: i32, mem_id_to: i32, offset: u32, len: u32) {
+        let from_mem = self.mem_pool.get(&mem_id_from).unwrap();
+        let data = from_mem.read_string(offset, len).unwrap();
+        let to_mem = self.mem_pool.get_mut(&mem_id_to).unwrap();
+        to_mem.write(data, 0).unwrap();
+    }
 }
 
 pub static mut STATE: Lazy<GlobalState> = Lazy::new(|| GlobalState::new());
+
+#[host_function]
+fn register_memory(caller: Caller, _: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
+    let mem = caller.memory(0).unwrap();
+    let mem_id = unsafe { STATE.register_memory(mem) };
+    Ok(vec![WasmValue::from_i32(mem_id)])
+}
 
 #[host_function]
 fn require_queue(_caller: Caller, _input: Vec<WasmValue>) -> Result<Vec<WasmValue>, HostFuncError> {
