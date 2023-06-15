@@ -50,11 +50,21 @@ impl GlobalState {
         return new_id;
     }
 
-    pub fn copy_data(&mut self, mem_id_from: i32, mem_id_to: i32, offset: u32, len: u32) {
+    pub fn copy_data(
+        &mut self,
+        mem_id_from: i32,
+        mem_id_to: i32,
+        offset: u32,
+        len: u32,
+    ) -> (u32, u32) {
         let from_mem = self.mem_pool.get(&mem_id_from).unwrap();
-        let data = from_mem.read_string(offset, len).unwrap();
+        let data = from_mem.read(offset, len).unwrap();
+        let data_len = data.len() as u32;
         let to_mem = self.mem_pool.get_mut(&mem_id_to).unwrap();
-        to_mem.write(data, 0).unwrap();
+        let mut offset = to_mem.size() as u32;
+        offset -= data_len;
+        to_mem.write(data, offset).unwrap();
+        (offset, data_len)
     }
 }
 
