@@ -8,6 +8,9 @@ and this project adheres to the
 
 ## Unreleased
 
+- plugin generation:
+  - generate type definition into Plugin
+  - allow local name ref type
 - check circular imports
 - codegen rust FFI for plugin
 

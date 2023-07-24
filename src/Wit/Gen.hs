@@ -81,11 +81,12 @@ prettyFile config inOutName targetMod = do
       r <- genContext context (convertFuncRust pluginName)
       return $
         vsep
-          [ pretty "#[link(wasm_import_module ="
+          [ prettyTyDefs,
+            pretty "#[link(wasm_import_module ="
               <+> dquotes (pretty pluginName)
                 <> pretty
                   ")]",
             pretty
-              "extern \"C\"",
-            braces $ indent 4 r
+              "extern \"C\""
+              <+> braces (indent 4 r)
           ]
