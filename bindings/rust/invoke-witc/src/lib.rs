@@ -21,8 +21,8 @@ fn name_value_meta(meta: &Meta) -> (String, String) {
 fn check_version() {
     let ver_output = Command::new("witc").args(["--version"]).output().unwrap();
     let ver = String::from_utf8(ver_output.stdout).unwrap();
-    if ver != "0.3.1\n" {
-        panic!("witc version mismatch: expected 0.3.1, got {}", ver);
+    if ver != "0.4\n" {
+        panic!("witc version mismatch: expected 0.4, got {}", ver);
     }
 }
 

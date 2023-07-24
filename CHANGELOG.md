@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+## 0.4
+
 - plugin generation:
   - generate type definition into Plugin
   - allow local name ref type
