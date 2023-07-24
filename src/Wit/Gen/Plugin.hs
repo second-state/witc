@@ -55,4 +55,5 @@ convertTyRust TyI64 = pretty "i64"
 convertTyRust TyChar = pretty "char"
 convertTyRust TyF32 = pretty "f32"
 convertTyRust TyF64 = pretty "f64"
+convertTyRust (TyRef (normalizeIdentifier -> name)) = pretty name
 convertTyRust _ = error "unsupported type occurs when generating plugin"
