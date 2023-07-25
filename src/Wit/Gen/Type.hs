@@ -29,7 +29,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
     return $
       pretty "#[derive(Serialize, Deserialize, Debug)]"
         <> line
-        <> pretty "struct"
+        <> pretty "pub struct"
         <+> pretty name
         <+> braces
           ( line
@@ -47,7 +47,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
     return $
       pretty "#[derive(Serialize, Deserialize, Debug)]"
         <> line
-        <> pretty "enum"
+        <> pretty "pub enum"
         <+> pretty name
         <+> braces (line <> indent 4 (vsep $ punctuate comma cases') <> line)
     where
@@ -79,7 +79,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
     return $
       pretty "#[derive(Serialize, Deserialize, Debug)]"
         <> line
-        <> pretty "enum"
+        <> pretty "pub enum"
         <+> pretty name
         <+> braces
           ( line
@@ -91,7 +91,7 @@ genTypeDefRust (normalizeIdentifier -> name) = \case
     genTypeDefRust ty_name $ (checked M.! mod_file).tyEnv M.! ty_name
   ty -> do
     b <- genTypeRust ty
-    return $ pretty "type" <+> pretty name <+> pretty "=" <+> b <> pretty ";"
+    return $ pretty "pub type" <+> pretty name <+> pretty "=" <+> b <> pretty ";"
 
 genTypeRust :: MonadReader (M.Map FilePath CheckResult) m => TypeVal -> m (Doc a)
 genTypeRust = \case
