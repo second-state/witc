@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## Unreleased
 
+- rust: export generated type
+
 ## 0.4
 
 - plugin generation:
