@@ -1,0 +1,54 @@
+name: Release witc artifacts
+
+on:
+  # Trigger the workflow on the new 'v*' tag created
+  push:
+    tags: ["v*"]
+
+jobs:
+  get_version:
+    name: Retrieve version information
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.prep.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Ensure git safe directory
+        run: |
+          git config --global --add safe.directory $(pwd)
+      - name: Get version
+        id: prep
+        run: |
+          # Retrieve annotated tags. Details: https://github.com/actions/checkout/issues/290
+          git fetch --tags --force
+          echo "Set version: $(git describe --match "[0-9].[0-9]*" --tag)"
+          echo "version=$(git describe --match '[0-9].[0-9]*' --tag)" >> $GITHUB_OUTPUT
+
+  create_release:
+    name: Create Github Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: haskell/actions/setup@v2
+        with:
+          ghc-version: "9.2.8"
+      - run: stack install
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: witc
+          path: "${{ env.HOME }}/.local/bin/witc"
+
+      - name: Get current date
+        id: date
+        run: echo "DATE=$(date +%Y-%m-%d-%H:%M)" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: github.ref_type == 'tag'
+        with:
+          name: witc-${{ needs.get_version.outputs.version }}-ubuntu
+          files: witc
