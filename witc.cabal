@@ -6,12 +6,15 @@ cabal-version: 1.12
 
 name:           witc
 version:        0.4.0.0
+synopsis:       compiler of WIT language
 description:    Please see the README on GitHub at <https://github.com/second-state/witc#readme>
+category:       Wasm
 homepage:       https://github.com/second-state/witc#readme
 bug-reports:    https://github.com/second-state/witc/issues
 author:         secondstate
-maintainer:     dannypsnl@secondstate.io,
-                dm4@users.noreply.github.com
+maintainer:     hydai@secondstate.io,
+                dannypsnl@secondstate.io,
+                dm4@secondstate.io
 copyright:      2023 secondstate
 license:        Apache-2.0
 license-file:   LICENSE

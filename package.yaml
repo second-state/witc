@@ -4,8 +4,9 @@ github: "second-state/witc"
 license: Apache-2.0
 author: "secondstate"
 maintainer:
+  - "hydai@secondstate.io"
   - "dannypsnl@secondstate.io"
-  - "dm4@users.noreply.github.com"
+  - "dm4@secondstate.io"
 copyright: "2023 secondstate"
 
 extra-source-files:
@@ -13,8 +14,8 @@ extra-source-files:
   - CHANGELOG.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+synopsis:            compiler of WIT language
+category:            Wasm
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
