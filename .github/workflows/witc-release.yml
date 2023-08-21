@@ -36,7 +36,7 @@ jobs:
           ghc-version: "9.2.8"
       - run: stack install
 
-      - name: Upload PDF file
+      - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: witc
