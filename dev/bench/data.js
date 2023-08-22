@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1692715060365,
+  "lastUpdate": 1692716801823,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -7253,6 +7253,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 205,
             "range": "± 1",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dannypsnl@secondstate.io",
+            "name": "Lîm Tsú-thuàn",
+            "username": "dannypsnl"
+          },
+          "committer": {
+            "email": "dannypsnl@secondstate.io",
+            "name": "Lîm Tsú-thuàn",
+            "username": "dannypsnl"
+          },
+          "distinct": true,
+          "id": "d5b7dfd12dd1aeaec2ba07a33f20c27a1efbb3d3",
+          "message": "update uploader\n\nSigned-off-by: Lîm Tsú-thuàn <dannypsnl@secondstate.io>",
+          "timestamp": "2023-08-22T23:01:12+08:00",
+          "tree_id": "28cace72c896f8f78ef6ad5ff4157daa07c685e0",
+          "url": "https://github.com/second-state/witc/commit/d5b7dfd12dd1aeaec2ba07a33f20c27a1efbb3d3"
+        },
+        "date": 1692716799762,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 123216,
+            "range": "± 18699",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 67855,
+            "range": "± 7161",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 59203,
+            "range": "± 10682",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1710,
+            "range": "± 225",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 14048,
+            "range": "± 2033",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 248,
+            "range": "± 19",
             "unit": "ns/iter"
           }
         ]
