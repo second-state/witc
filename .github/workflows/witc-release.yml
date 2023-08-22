@@ -4,6 +4,10 @@ on:
   # Trigger the workflow on the new 'v*' tag created
   push:
     tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   get_version:
