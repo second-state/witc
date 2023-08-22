@@ -38,13 +38,13 @@ jobs:
       - uses: haskell/actions/setup@v2
         with:
           ghc-version: "9.2.8"
-      - run: stack install
+      - run: stack install --local-bin-path ./
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: witc
-          path: "${{ env.HOME }}/.local/bin/witc"
+          path: "witc"
 
       - name: Get current date
         id: date
