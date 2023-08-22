@@ -11,31 +11,10 @@ permissions:
   contents: write
 
 jobs:
-  get_version:
-    name: Retrieve version information
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.prep.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Ensure git safe directory
-        run: |
-          git config --global --add safe.directory $(pwd)
-      - name: Get version
-        id: prep
-        run: |
-          # Retrieve annotated tags. Details: https://github.com/actions/checkout/issues/290
-          git fetch --tags --force
-          echo "Set version: $(git describe --match "[0-9].[0-9]*" --tag)"
-          echo "version=$(git describe --match '[0-9].[0-9]*' --tag)" >> $GITHUB_OUTPUT
-
   create_release:
     name: Create Github Release
-    needs: [get_version]
     env:
-      VERSION: "${{ needs.get_version.outputs.version }}"
+      VERSION: "${{ github.ref_name }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
