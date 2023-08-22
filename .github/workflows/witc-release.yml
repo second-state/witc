@@ -3,7 +3,8 @@ name: Release witc artifacts
 on:
   # Trigger the workflow on the new 'v*' tag created
   push:
-    tags: ["v*"]
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -38,13 +39,15 @@ jobs:
       - uses: haskell/actions/setup@v2
         with:
           ghc-version: "9.2.8"
-      - run: stack install --local-bin-path ./
+      - run: |
+          stack install --local-bin-path ./
+          mv witc witc-${{ needs.get_version.outputs.version }}-ubuntu
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
-          name: witc
-          path: "witc"
+          name: witc binary
+          path: witc-${{ needs.get_version.outputs.version }}-ubuntu
 
       - name: Get current date
         id: date
@@ -52,7 +55,5 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: github.ref_type == 'tag'
         with:
-          name: witc-${{ needs.get_version.outputs.version }}-ubuntu
-          files: witc
+          files: witc-${{ needs.get_version.outputs.version }}-ubuntu
