@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1692716801823,
+  "lastUpdate": 1692717271134,
   "repoUrl": "https://github.com/second-state/witc",
   "entries": {
     "Rust Benchmark": [
@@ -7319,6 +7319,72 @@ window.BENCHMARK_DATA = {
             "name": "tests::fib_native",
             "value": 248,
             "range": "± 19",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dannypsnl@secondstate.io",
+            "name": "Lîm Tsú-thuàn",
+            "username": "dannypsnl"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4e8d9b9b5e08bf1f07c308e6ceeb62b72cb97513",
+          "message": "upgrade wasmedge to 0.13.3 (#119)\n\nSigned-off-by: Lîm Tsú-thuàn <dannypsnl@secondstate.io>",
+          "timestamp": "2023-08-22T23:10:25+08:00",
+          "tree_id": "115acefc77fd9f2723558fefa0b2a3fb3c7986e9",
+          "url": "https://github.com/second-state/witc/commit/4e8d9b9b5e08bf1f07c308e6ceeb62b72cb97513"
+        },
+        "date": 1692717269855,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "tests::base_instance_invokes_instance",
+            "value": 103598,
+            "range": "± 1419",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_instance_invokes_runtime",
+            "value": 56068,
+            "range": "± 930",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_native",
+            "value": 0,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::base_runtime_invokes_instance",
+            "value": 49970,
+            "range": "± 605",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_host_function",
+            "value": 1504,
+            "range": "± 62",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_instance_invokes_runtime",
+            "value": 11786,
+            "range": "± 155",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "tests::fib_native",
+            "value": 205,
+            "range": "± 0",
             "unit": "ns/iter"
           }
         ]
