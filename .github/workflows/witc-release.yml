@@ -34,6 +34,8 @@ jobs:
   create_release:
     name: Create Github Release
     needs: [get_version]
+    env:
+      VERSION: "${{ needs.get_version.outputs.version }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -42,13 +44,13 @@ jobs:
           ghc-version: "9.2.8"
       - run: |
           stack install --local-bin-path ./
-          mv witc witc-${{ needs.get_version.outputs.version }}-ubuntu
+          mv witc witc-$VERSION-ubuntu
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: witc binary
-          path: witc-${{ needs.get_version.outputs.version }}-ubuntu
+          path: witc-${{ env.VERSION }}-ubuntu
 
       - name: Get current date
         id: date
@@ -57,4 +59,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: witc-${{ needs.get_version.outputs.version }}-ubuntu
+          files: witc-${{ env.VERSION }}-ubuntu
