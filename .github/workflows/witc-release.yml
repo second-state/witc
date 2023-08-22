@@ -33,6 +33,7 @@ jobs:
 
   create_release:
     name: Create Github Release
+    needs: [get_version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
