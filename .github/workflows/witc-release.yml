@@ -27,8 +27,8 @@ jobs:
       - run: stack install --local-bin-path ./
       - if: matrix.os == 'windows'
         run: |
-          mv witc.exe witc-$SUFFIX.exe
-          echo "artifactPath=witc-$SUFFIX.exe" >> $env:GITHUB_ENV
+          mv witc.exe witc-$env:SUFFIX.exe
+          echo "artifactPath=witc-$env:SUFFIX.exe" >> $env:GITHUB_ENV
       - if: matrix.os != 'windows'
         run: |
           mv witc witc-$SUFFIX
