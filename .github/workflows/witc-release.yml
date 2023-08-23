@@ -26,15 +26,19 @@ jobs:
           ghc-version: "9.2.8"
       - run: stack install --local-bin-path ./
       - if: matrix.os == 'windows-latest'
-        run: mv witc.exe witc-$SUFFIX.exe
+        run: |
+          mv witc.exe witc-$SUFFIX.exe
+          echo "artifactPath=witc-$SUFFIX.exe" >> $GITHUB_ENV
       - if: matrix.os != 'windows-latest'
-        run: mv witc witc-$SUFFIX
+        run: |
+          mv witc witc-$SUFFIX
+          echo "artifactPath=witc-$SUFFIX" >> $GITHUB_ENV
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: witc binary
-          path: witc-${{ env.SUFFIX }}*
+          path: ${{ env.artifactPath }}
 
       - name: Get current date
         id: date
@@ -43,4 +47,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: witc-${{ env.SUFFIX }}*
+          files: ${{ env.artifactPath }}
