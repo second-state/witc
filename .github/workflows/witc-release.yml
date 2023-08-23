@@ -24,9 +24,11 @@ jobs:
       - uses: haskell/actions/setup@v2
         with:
           ghc-version: "9.2.8"
-      - run: |
-          stack install --local-bin-path ./
-          mv witc witc-$SUFFIX
+      - run: stack install --local-bin-path ./
+      - if: matrix.os == 'windows-latest'
+        run: mv witc.exe witc-$SUFFIX.exe
+      - if: matrix.os != 'windows-latest'
+        run: mv witc witc-$SUFFIX
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
