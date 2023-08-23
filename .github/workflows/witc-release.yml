@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: witc binary
-          path: witc-${{ env.SUFFIX }}
+          path: witc-${{ env.SUFFIX }}*
 
       - name: Get current date
         id: date
@@ -43,4 +43,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: witc-${{ env.SUFFIX }}
+          files: witc-${{ env.SUFFIX }}*
