@@ -1,3 +1,3 @@
 imdecode: func(buf: list<u8>) -> u32
-imshow: func(window-name: string, mat-key: u32) -> unit
-waitkey: func(delay: u32) -> unit
+imshow: func(window-name: string, mat-key: u32)
+waitkey: func(delay: u32)

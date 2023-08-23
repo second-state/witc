@@ -8,6 +8,7 @@ and this project adheres to the
 
 ## Unreleased
 
+- syntax: allow omit return type
 - rust: export generated type
 
 ## 0.4

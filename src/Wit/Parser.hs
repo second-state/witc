@@ -83,10 +83,14 @@ pFunction = do
   fn_name <- identifier
   symbol ":"
   keyword "func"
-  Function
-    fn_name
-    <$> parens (sepEndBy pParam (symbol ","))
-    <*> pResultType
+  params <- parens (sepEndBy pParam (symbol ","))
+  result_ty <- optional pResultType
+  let f = Function fn_name params
+  return
+    ( case result_ty of
+        Nothing -> f PrimUnit
+        Just ret_ty -> f ret_ty
+    )
   where
     pParam :: Parser (String, Type)
     pParam = (,) <$> (identifier <* symbol ":") <*> pType
