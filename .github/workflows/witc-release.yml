@@ -13,9 +13,12 @@ permissions:
 jobs:
   create_release:
     name: Create Github Release
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     env:
-      VERSION: "${{ github.ref_name }}"
-    runs-on: ubuntu-latest
+      SUFFIX: "${{ github.ref_name }}-${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: haskell/actions/setup@v2
@@ -23,13 +26,13 @@ jobs:
           ghc-version: "9.2.8"
       - run: |
           stack install --local-bin-path ./
-          mv witc witc-$VERSION-ubuntu
+          mv witc witc-$SUFFIX
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: witc binary
-          path: witc-${{ env.VERSION }}-ubuntu
+          path: witc-${{ env.SUFFIX }}
 
       - name: Get current date
         id: date
@@ -38,4 +41,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: witc-${{ env.VERSION }}-ubuntu
+          files: witc-${{ env.SUFFIX }}
