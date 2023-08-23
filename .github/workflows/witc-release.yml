@@ -15,21 +15,21 @@ jobs:
     name: Create Github Release
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu, windows, macos]
     env:
       SUFFIX: "${{ github.ref_name }}-${{ matrix.os }}"
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v3
       - uses: haskell/actions/setup@v2
         with:
           ghc-version: "9.2.8"
       - run: stack install --local-bin-path ./
-      - if: matrix.os == 'windows-latest'
+      - if: matrix.os == 'windows'
         run: |
           mv witc.exe witc-$SUFFIX.exe
-          echo "artifactPath=witc-$SUFFIX.exe" >> $GITHUB_ENV
-      - if: matrix.os != 'windows-latest'
+          echo "artifactPath=witc-$SUFFIX.exe" >> $env:GITHUB_ENV
+      - if: matrix.os != 'windows'
         run: |
           mv witc witc-$SUFFIX
           echo "artifactPath=witc-$SUFFIX" >> $GITHUB_ENV
