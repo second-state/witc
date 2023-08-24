@@ -23,11 +23,22 @@ The thing is a bit out of control, not to say compound types like **structure**,
 
 ### Installation
 
-`witc` has pre-built binary can be installed via our installation script.
+`witc` has pre-built binary can be installed via our bash installation script.
 
 ```sh
 curl -sSf https://raw.githubusercontent.com/secondstate/witc/main/install.sh | bash
 ```
+
+#### Windows
+
+`witc` has a powershell installation script, but it's not full automatic.
+
+```powershell
+wget https://raw.githubusercontent.com/secondstate/witc/main/install.ps1
+./install.ps1
+```
+
+Once you run the installation script, it should download the latest executable to **current path** you run the script, so you have to add this path into `$env:PATH` or move the executable to somewhere in `$env:PATH`.
 
 #### Build from Haskell source
 
