@@ -23,6 +23,27 @@ The thing is a bit out of control, not to say compound types like **structure**,
 
 ### Installation
 
+`witc` has pre-built binary can be installed via our bash installation script.
+
+```sh
+curl -sSf https://raw.githubusercontent.com/secondstate/witc/main/install.sh | bash
+```
+
+#### Windows
+
+`witc` has a powershell installation script, but it's not full automatic.
+
+```powershell
+wget https://raw.githubusercontent.com/secondstate/witc/main/install.ps1
+./install.ps1
+```
+
+Once you run the installation script, it should download the latest executable to **current path** you run the script, so you have to add this path into `$env:PATH` or move the executable to somewhere in `$env:PATH`.
+
+#### Build from Haskell source
+
+If you want the latest executable, you need to build from source.
+
 ```sh
 stack install
 # install to `~/.local/bin`
@@ -56,7 +77,7 @@ cargo run --release
 
 This is new experiment we are doing, this ability will relief wasmedge plugin users from manually management for the standard API, there will have `*.wit` definitions for these plugins. All you need to is using witc to manage it, here is an example:
 
-```shell
+```sh
 $ witc plugin ./example/wasmedge_opencvmini.wit
 
 #[link(wasm_import_module = "wasmedge_opencvmini")]
