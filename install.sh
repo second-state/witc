@@ -11,7 +11,7 @@ case $(uname) in
     filename="witc-v${VERSION}-macos"
     ;;
   *)
-    echo "Unsupported platform: $unamestr"
+    echo "Unsupported platform"
     exit 1
     ;;
 esac
