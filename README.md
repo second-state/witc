@@ -26,7 +26,7 @@ The thing is a bit out of control, not to say compound types like **structure**,
 `witc` has pre-built binary can be installed via our bash installation script.
 
 ```sh
-curl -sSf https://raw.githubusercontent.com/secondstate/witc/main/install.sh | bash
+curl -sSf https://raw.githubusercontent.com/second-state/witc/main/install.sh | bash
 ```
 
 #### Windows
@@ -34,7 +34,7 @@ curl -sSf https://raw.githubusercontent.com/secondstate/witc/main/install.sh | b
 `witc` has a powershell installation script, but it's not full automatic.
 
 ```powershell
-wget https://raw.githubusercontent.com/secondstate/witc/main/install.ps1
+wget https://raw.githubusercontent.com/second-state/witc/main/install.ps1
 ./install.ps1
 ```
 
